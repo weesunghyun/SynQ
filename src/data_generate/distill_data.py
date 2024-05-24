@@ -29,10 +29,12 @@ def generate_calib_centers(args, teacher_model, beta_ce = 5):
             num_classes = 10
         elif model_name == 'resnet20_cifar100':
             num_classes = 100
+        elif model_name == 'resnet34_cifar100':
+            num_classes = 100
         else:
             num_classes = 1000
 
-        if model_name in ['resnet20_cifar10','resnet20_cifar100']:
+        if model_name in ['resnet20_cifar10','resnet20_cifar100', 'resnet34_cifar100']:
             shape = (args.batch_size, 3, 32, 32)
         else:
             shape = (args.batch_size, 3, 224, 224)
@@ -218,10 +220,12 @@ class DistillData(object):
             self.num_classes = 10
         elif model_name == 'resnet20_cifar100':
             self.num_classes = 100
+        elif model_name == 'resnet34_cifar100':
+            self.num_classes = 100
         else:
             self.num_classes = 1000
 
-        if model_name in ['resnet20_cifar10','resnet20_cifar100']:
+        if model_name in ['resnet20_cifar10','resnet20_cifar100', 'resnet34_cifar100']:
             shape = (batch_size, 3, 32, 32)
         else:
             shape = (batch_size, 3, 224, 224)
@@ -293,7 +297,7 @@ class DistillData(object):
         
         for i in range(self.args.num_data//batch_size):
 
-            if model_name in ['resnet20_cifar10', 'resnet20_cifar100']:
+            if model_name in ['resnet20_cifar10', 'resnet20_cifar100', 'resnet34_cifar100']:
                 RRC = transforms.RandomResizedCrop(size=32,scale=(augMargin, 1.0))
             else:
                 RRC = transforms.RandomResizedCrop(size=224,scale=(augMargin, 1.0))
@@ -313,7 +317,7 @@ class DistillData(object):
 
             batch_time = time.time()
             for it in range(500*2):
-                if model_name in ['resnet20_cifar10', 'resnet20_cifar100']:
+                if model_name in ['resnet20_cifar10', 'resnet20_cifar100', 'resnet34_cifar100']:
                     new_gaussian_data = []
                     for j in range(len(gaussian_data)):
                         new_gaussian_data.append(gaussian_data[j])

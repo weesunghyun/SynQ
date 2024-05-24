@@ -1,10 +1,15 @@
-
 import argparse
-import torch
+
 import numpy as np
-import torch.nn as nn
+
+import torch
+
+from pytorchcv.models.resnet_cifar import CIFARResNet
 from pytorchcv.model_provider import get_model as ptcv_get_model
+
 from distill_data import *
+
+from ..utils.get_resnet34 import *
 
 
 # model settings
@@ -12,9 +17,9 @@ def arg_parse():
     parser = argparse.ArgumentParser()
     parser.add_argument('--model',
                         type=str,
-                        default='resnet18',
+                        default='resnet34',
                         choices=[
-                            'resnet18', 'resnet50', 'mobilenet_w1',
+                            'resnet18', 'resnet34_cifar100', 'resnet50', 'mobilenet_w1',
                             'mobilenetv2_w1', 'shufflenet_g1_w1',
                             'resnet20_cifar10', 'resnet20_cifar100', 'regnetx_600m'
                         ],
@@ -66,8 +71,12 @@ if __name__ == '__main__':
     torch.backends.cudnn.deterministic = False
     torch.backends.cudnn.benchmark = True
 
-    model = ptcv_get_model(args.model, pretrained=True)
-    print('****** Full precision model loaded ******')
+    if args.model == 'resnet34_cifar100':
+        model = resnet34_get_model()
+        # model.load_state_dict(torch.load('resnet34_cifar100.pth'))
+    else:
+        model = ptcv_get_model(args.model, pretrained=True)
+        print('****** Full precision model loaded ******')
 
     if args.lbns:
         args.calib_centers = generate_calib_centers(args, model.cuda())
