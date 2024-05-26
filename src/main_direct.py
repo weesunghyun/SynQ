@@ -363,7 +363,7 @@ class ExperimentDesign:
 				self.freeze_model(self.model)
 
 
-				if epoch < 4:
+				if epoch % 5 != 0:
 					print(f"skip eval for epoch {epoch}")
 					self.logger.info(f"skip eval for epoch {epoch}")
 					continue

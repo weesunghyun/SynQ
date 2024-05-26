@@ -78,7 +78,7 @@ if __name__ == '__main__':
 
     if args.model == 'resnet34_cifar100':
         model = resnet34_get_model()
-        model.load_state_dict(torch.load('/home/jener05458/src/SWStarlab_Official/2nd/FSQ/checkpoints/resnet34.pth'))
+        model.load_state_dict(torch.load('../checkpoints/resnet34.pth'))
         print('****** Full precision model loaded ******')
     else:
         model = ptcv_get_model(args.model, pretrained=True)
