@@ -1,15 +1,20 @@
+import os
+import sys
 import argparse
 
 import numpy as np
 
 import torch
 
-from pytorchcv.models.resnet_cifar import CIFARResNet
 from pytorchcv.model_provider import get_model as ptcv_get_model
 
 from distill_data import *
 
-from ..utils.get_resnet34 import *
+module_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'utils'))
+if module_path not in sys.path:
+    sys.path.append(module_path)
+
+from get_resnet34 import resnet34_get_model
 
 
 # model settings
@@ -17,7 +22,7 @@ def arg_parse():
     parser = argparse.ArgumentParser()
     parser.add_argument('--model',
                         type=str,
-                        default='resnet34',
+                        default='resnet18',
                         choices=[
                             'resnet18', 'resnet34_cifar100', 'resnet50', 'mobilenet_w1',
                             'mobilenetv2_w1', 'shufflenet_g1_w1',
@@ -73,7 +78,8 @@ if __name__ == '__main__':
 
     if args.model == 'resnet34_cifar100':
         model = resnet34_get_model()
-        # model.load_state_dict(torch.load('resnet34_cifar100.pth'))
+        model.load_state_dict(torch.load('/home/jener05458/src/SWStarlab_Official/2nd/FSQ/checkpoints/resnet34.pth'))
+        print('****** Full precision model loaded ******')
     else:
         model = ptcv_get_model(args.model, pretrained=True)
         print('****** Full precision model loaded ******')
