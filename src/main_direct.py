@@ -29,6 +29,8 @@ import torch.distributed as dist
 from torch.nn.parallel import DistributedDataParallel as DDP
 from torch.utils.data.distributed import DistributedSampler
 
+from utils.get_resnet34 import resnet34_get_model
+
 class Generator(nn.Module):
 	def __init__(self, options=None, conf_path=None):
 		super(Generator, self).__init__()
@@ -185,7 +187,7 @@ class ExperimentDesign:
 		self.prepare()
 	
 	def set_logger(self):
-		if dist.get_rank()==0:
+		if dist.is_initialized() and dist.get_rank()==0:
 			file_formatter = logging.Formatter('%(asctime)s %(levelname)s: %(message)s')
 			file_handler = logging.FileHandler(os.path.join(self.settings.save_path, "train_test.log"))
 			file_handler.setFormatter(file_formatter)
@@ -195,8 +197,9 @@ class ExperimentDesign:
 
 	def prepare(self):
 		torch.cuda.set_device(self.args.local_rank)
-		dist.init_process_group(backend='nccl')
-		if dist.get_rank() == 0:
+		if self.args.local_rank == -1:
+			dist.init_process_group(backend='nccl')
+		if dist.is_initialized() and dist.get_rank() == 0:
 			self.settings.set_save_path()
 			print(self.settings.save_path)
 			shutil.copyfile(self.args.conf_path, os.path.join(self.settings.save_path, os.path.basename(self.args.conf_path)))
@@ -227,8 +230,12 @@ class ExperimentDesign:
 
 	def _set_model(self):
 		if self.settings.dataset in ["cifar100", "cifar10"]:
-			self.model = ptcv_get_model(self.settings.model_name, pretrained=True)
-			self.model_teacher = ptcv_get_model(self.settings.model_name, pretrained=True)
+			if self.settings.model_name == "resnet34_cifar100":
+				self.model = resnet34_get_model()
+				self.model_teacher = resnet34_get_model()
+			else:
+				self.model = ptcv_get_model(self.settings.model_name, pretrained=True)
+				self.model_teacher = ptcv_get_model(self.settings.model_name, pretrained=True)
 			self.generator = Generator(self.settings)
 			self.model_teacher.eval()
 
@@ -242,8 +249,9 @@ class ExperimentDesign:
 			assert False, "unsupport data set: " + self.settings.dataset
 		
 		self.model_teacher = torch.nn.SyncBatchNorm.convert_sync_batchnorm(self.model_teacher)
-		self.model_teacher = DDP(self.model_teacher.to(self.args.local_rank), device_ids=[self.args.local_rank], output_device=self.args.local_rank, broadcast_buffers=False)
-		self.generator = DDP(self.generator.to(self.args.local_rank), device_ids=[self.args.local_rank], output_device=self.args.local_rank, broadcast_buffers=False)
+		if dist.is_initialized():
+			self.model_teacher = DDP(self.model_teacher.to(self.args.local_rank), device_ids=[self.args.local_rank], output_device=self.args.local_rank, broadcast_buffers=False)
+			self.generator = DDP(self.generator.to(self.args.local_rank), device_ids=[self.args.local_rank], output_device=self.args.local_rank, broadcast_buffers=False)
 
 	def _set_trainer(self):
 		lr_master_S = utils.LRPolicy(self.settings.lr_S,
@@ -311,7 +319,8 @@ class ExperimentDesign:
 	def _replace(self):
 		self.model = self.quantize_model(self.model)
 		self.model = torch.nn.SyncBatchNorm.convert_sync_batchnorm(self.model)
-		self.model = DDP(self.model.to(self.args.local_rank), device_ids=[self.args.local_rank], output_device=self.args.local_rank, broadcast_buffers=False)
+		if dist.is_initialized():
+			self.model = DDP(self.model.to(self.args.local_rank), device_ids=[self.args.local_rank], output_device=self.args.local_rank, broadcast_buffers=False)
 	
 	def freeze_model(self,model):
 		if type(model) == QuantAct:

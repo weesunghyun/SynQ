@@ -2,7 +2,7 @@
 model_name = resnet34_cifar100
 generateDataPath = "../data/cifar100_lbns/resnet34_cifar100_refined_gaussian_hardsample_beta0.1_gamma0.5_group1.pickle"
 generateLabelPath = "../data/cifar100_lbns/resnet34_cifar100_labels_hardsample_beta0.1_gamma0.5_group1.pickle"
-dataPath = "/home/mjatwk/data/cifar100/"
+dataPath = "./data/cifar100/"
 dataset = "cifar100" # options: imagenet | cifar100
 
 # ------------- Data options -------------------------------------------
