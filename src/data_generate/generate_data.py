@@ -74,6 +74,7 @@ def arg_parse():
 
 if __name__ == '__main__':
     args = arg_parse()
+    print(args)
     torch.backends.cudnn.deterministic = False
     torch.backends.cudnn.benchmark = True
 
