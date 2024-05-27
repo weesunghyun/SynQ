@@ -1,7 +1,7 @@
 #  ------------ General options ----------------------------------------
 model_name = resnet34_cifar100
-generateDataPath = "./data/cifar/resnet34_cifar100_labels_hardsample_beta0.1_gamma0.5_group"
-generateLabelPath = "./data/cifar/resnet34_cifar100_refined_gaussian_hardsample_beta0.1_gamma0.5_group"
+generateDataPath = "./data/cifar/resnet34_cifar100_refined_gaussian_hardsample_beta0.1_gamma0.5_group"
+generateLabelPath = "./data/cifar/resnet34_cifar100_labels_hardsample_beta0.1_gamma0.5_group"
 dataPath = "./data/cifar100/"
 dataset = "cifar100" # options: imagenet | cifar100
 

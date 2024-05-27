@@ -11,9 +11,11 @@ import torch
 import warnings
 import numpy as np
 
+
 import torch.backends.cudnn as cudnn
 import torch.nn as nn
 import torchvision.transforms as transforms
+import torchvision.datasets as datasets
 
 from torch.autograd import Variable
 from torch.utils.data import Dataset
@@ -147,6 +149,25 @@ class direct_dataset(Dataset):
 				self.tmp_label = np.concatenate(labels_list, axis=0)
 			else:
 				self.tmp_label = np.concatenate((self.tmp_label, np.concatenate(labels_list, axis=0)))
+		
+		if self.args.few_shot:
+			cifar100_train = datasets.CIFAR100(root='./data/cifar100', train=True, download=True, transform=self.train_transform)
+			real_data, real_label = np.array(cifar100_train.data), np.array(cifar100_train.targets)
+
+			# Sample few-shot data
+			sampled_data = []
+			sampled_labels = []
+			for class_id in range(100):
+				class_indices = np.where(real_label == class_id)[0]
+				sampled_indices = np.random.choice(class_indices, 10, replace=False)
+				sampled_data.append(real_data[sampled_indices])
+				sampled_labels.append(real_label[sampled_indices])
+			sampled_data = np.concatenate(sampled_data, axis=0)
+			sampled_data = sampled_data.transpose(0, 3, 1, 2)
+			sampled_labels = np.concatenate(sampled_labels, axis=0)
+			
+			self.tmp_data = np.concatenate((self.tmp_data, sampled_data), axis=0)
+			self.tmp_label = np.concatenate((self.tmp_label, sampled_labels), axis=0)
 
 		if self.args.calib_centers:
 			temp = "_" + self.settings.model_name if not self.settings.model_name == 'resnet18' else ""
@@ -418,6 +439,7 @@ def main():
 	parser.add_argument('--calib_centers', type=bool, default=False, metavar='calib_centers') # False로 바꿈.
 	parser.add_argument('--save_model', type=bool, default=False, metavar='save_model')
 	parser.add_argument("--local_rank", default=-1, type=int)
+	parser.add_argument("--few_shot", default=False, type=bool)
 	args = parser.parse_args()
  
 	if not args.selce:
