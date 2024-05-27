@@ -415,7 +415,7 @@ def main():
 	parser.add_argument('--tau_selce', type=float, default=0.5, metavar='tau_selce')
 	parser.add_argument('--lambda_ce', type=float, default=5, metavar='lambda_ce')
 	parser.add_argument('--d_zero', type=int, default=80, metavar='d_zero')
-	parser.add_argument('--calib_centers', type=bool, default=False, metavar='calib_centers') # False로 바꿈.
+	parser.add_argument('--calib_centers', type=bool, default=True, metavar='calib_centers')
 	parser.add_argument('--save_model', type=bool, default=False, metavar='save_model')
 	parser.add_argument("--local_rank", default=-1, type=int)
 	args = parser.parse_args()

@@ -6,4 +6,5 @@ config_path="./config/cifar100_6bit.hocon"
 #     CUDA_VISIBLE_DEVICES=0,1,2,3 torchrun --nproc_per_node 4 main_direct.py --conf_path $config_path --lambda_ce $i --lambda_cam $j
 #     done
 # done
-torchrun --nproc_per_node 4 main_direct.py --conf_path $config_path --lambda_ce 0.05 --lambda_cam 50
+
+CUDA_VISIBLE_DEVICES=0,1,2,3 torchrun --nproc_per_node 4 main_direct.py --conf_path $config_path --lambda_ce 0.005 --lambda_cam 20

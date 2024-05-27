@@ -84,7 +84,7 @@ def resnet34_get_model():
                        bottleneck=None,
                        in_channels=3,
                        in_size=(32,32),
-                       num_classes=100)
+                       num_classes=100).to('cuda')
 
     return net
 

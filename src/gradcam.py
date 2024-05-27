@@ -6,7 +6,7 @@ from quantization_utils.quant_modules import *
 
 class GradCAM(object):
     def __init__(self, model_dict, verbose=False):
-        self.model_arch = model_dict['arch'].module
+        self.model_arch = model_dict['arch']
         self.layer_name = model_dict.get('layer_name', None)
         self.verbose = verbose
 
