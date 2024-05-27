@@ -1,12 +1,11 @@
 import os
+os.environ['CUDA_LAUNCH_BLOCKING'] = '1'
 import sys
 import argparse
 
 import numpy as np
 
 import torch
-
-from pytorchcv.model_provider import get_model as ptcv_get_model
 
 from distill_data import *
 
@@ -15,6 +14,8 @@ if module_path not in sys.path:
     sys.path.append(module_path)
 
 from get_resnet34 import resnet34_get_model
+
+from pytorchcv.model_provider import get_model as ptcv_get_model
 
 
 # model settings

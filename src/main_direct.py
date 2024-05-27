@@ -9,6 +9,7 @@ import traceback
 import shutil
 import torch
 import warnings
+import numpy as np
 
 import torch.backends.cudnn as cudnn
 import torch.nn as nn

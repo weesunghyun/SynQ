@@ -15,7 +15,7 @@ from pytorchcv.models.mobilenetv2 import LinearBottleneck
 from quantization_utils.quant_modules import *
 import torch.distributed as dist
 
-from gradcam import GradCAMpp, GradCAM#, CAM
+from gradcam import GradCAMpp, GradCAM
 
 __all__ = ["Trainer"]
 
@@ -262,7 +262,7 @@ class Trainer(object):
 			for m in self.model_teacher.module.modules():
 				if isinstance(m, ResUnit):
 					m.body.register_forward_hook(self.hook_activation_teacher)
-				# elif isinstance(m, DwsConvBlock):
+				# elif isinstance(m, sConvBlock):
 				# 	m.pw_conv.bn.register_forward_hook(self.hook_activation_teacher)
 				elif isinstance(m, LinearBottleneck):
 					m.conv3.register_forward_hook(self.hook_activation_teacher)
