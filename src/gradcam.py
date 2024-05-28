@@ -25,8 +25,14 @@ class GradCAM(object):
 
     def backward_hook(self, module, grad_input, grad_output):
         self.gradients['value'] = grad_output[0]
+        # if torch.isnan(grad_output[0]).any():
+        #     print("NaN detected in backward gradients")
         if torch.isnan(grad_output[0]).any():
-            print("NaN detected in backward gradients")
+            # print("NaN detected in backward gradients")
+            # print(f"grad_output: {grad_output.shape}")
+            for idx, grad in enumerate(grad_input):
+                if torch.isnan(grad).any():
+                    print(f"grad_input[{idx}] contains NaN")
         return None
 
     def forward_hook(self, module, input, output):
@@ -55,31 +61,63 @@ class GradCAM(object):
     def forward(self, input, class_idx=None, retain_graph=False):
         b, c, h, w = input.size()
         eps = 1e-10
+
+        if torch.isnan(input).any():
+            print(f"NaN detected in input before logits: {input.shape}")
+            raise ValueError("NaN detected in input before backward")
+
+        for name, param in self.model_arch.named_parameters():
+            if torch.isnan(param).any():
+                print(f"NaN detected in parameter: {name}")
+                print(f"Parameter stats: min={param.min().item()}, max={param.max().item()}, mean={param.mean().item()}")
+                raise ValueError(f"NaN detected in parameter: {name}")
+            if torch.isinf(param).any():
+                print(f"Inf detected in parameter: {name}")
+                print(f"Parameter stats: min={param.min().item()}, max={param.max().item()}, mean={param.mean().item()}")
+                raise ValueError(f"Inf detected in parameter: {name}")
+
         logit = self.model_arch(input)
+
+        if torch.isnan(logit).any():
+            raise ValueError("NaN detected in logits before backward")
+
         if class_idx is None:
             score = logit.gather(1, logit.max(1)[1].view(-1, 1)).squeeze()
         else:
             score = logit[:, class_idx].squeeze()
+        
+        if torch.isnan(score).any():
+            print(f"NaN detected in score: {score}")
+            raise ValueError("NaN detected in score computation")
 
         self.model_arch.zero_grad()
         score.backward(torch.ones_like(score), retain_graph=retain_graph)
         gradients = self.gradients['value']
+
         if torch.isnan(gradients).any():
+            print("NaN detected in gradients before processing")
             gradients = torch.nan_to_num(gradients)
+            if torch.isnan(gradients).any():
+                raise ValueError("NaN detected in gradients after processing")
+
+        # if torch.isnan(gradients).any():
+        #     gradients = torch.nan_to_num(gradients)
         while torch.any(gradients == 0):
             gradients += eps
         activations = self.activations['value']
+
+        if torch.isnan(activations).any():
+            print("NaN detected in activations")
+            raise ValueError("NaN detected in activations")
+
         b, k, u, v = gradients.size()
         
         assert not torch.isnan(input).any(), "Input contains NaN"
-        if torch.isnan(logit).any():
-            raise ValueError("NaN detected in logits before backward")
-        if torch.isnan(score).any():
-            raise ValueError("NaN detected in score computation")
-        if torch.isnan(gradients).any():
-            raise ValueError("NaN detected in gradients")
-        if torch.isnan(activations).any():
-            raise ValueError("NaN detected in activations")
+        
+        # if torch.isnan(gradients).any():
+        #     raise ValueError("NaN detected in gradients")
+        # if torch.isnan(activations).any():
+        #     raise ValueError("NaN detected in activations")
 
         alpha = gradients.view(b, k, -1).mean(2).clamp(min=1e-10)
         weights = alpha.view(b, k, 1, 1)
