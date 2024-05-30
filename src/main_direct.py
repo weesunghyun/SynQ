@@ -10,7 +10,7 @@ import shutil
 import torch
 import warnings
 import numpy as np
-
+from PIL import Image
 
 import torch.backends.cudnn as cudnn
 import torch.nn as nn
@@ -115,8 +115,6 @@ class direct_dataset(Dataset):
 		self.settings = settings
 		self.logger = logger
 		self.args = args
-		normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406],
-										 std=[0.229, 0.224, 0.225])
 
 		if dataset in ["cifar10", "cifar100"]:
 			self.train_transform = transforms.Compose([
@@ -155,9 +153,6 @@ class direct_dataset(Dataset):
 			self.tmp_data = sampled_data
 			self.tmp_label = sampled_labels
 
-			# self.tmp_data = np.concatenate((self.tmp_data, sampled_data), axis=0)
-			# self.tmp_label = np.concatenate((self.tmp_label, sampled_labels), axis=0)
-		
 		else:
 			self.tmp_data = None
 			self.tmp_label = None
@@ -198,7 +193,13 @@ class direct_dataset(Dataset):
 	def __getitem__(self, index):
 		img = self.tmp_data[index]
 		label = self.tmp_label[index]
-		img = self.train_transform(torch.from_numpy(img))
+		if self.args.few_shot:
+			img = img.transpose(1, 2, 0)
+			img = Image.fromarray(img)
+			img = self.fewshot_transform(img)
+			# img = self.fewshot_transform(torch.from_numpy(img))
+		else:
+			img = self.train_transform(torch.from_numpy(img))
 		return img, label
 
 	def __len__(self):
