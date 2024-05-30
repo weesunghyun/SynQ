@@ -129,27 +129,6 @@ class direct_dataset(Dataset):
 				transforms.RandomHorizontalFlip(),
 			])
 
-		self.tmp_data = None
-		self.tmp_label = None
-		for i in range(1,5):
-			path = self.settings.generateDataPath +str(i)+".pickle"
-			self.logger.info(path)
-			with open(path, "rb") as fp:
-				gaussian_data = pickle.load(fp)
-			if self.tmp_data is None:
-				self.tmp_data = np.concatenate(gaussian_data, axis=0)
-			else:
-				self.tmp_data = np.concatenate((self.tmp_data, np.concatenate(gaussian_data, axis=0)))
-
-			path = self.settings.generateLabelPath + str(i) + ".pickle"
-			self.logger.info(path)
-			with open(path, "rb") as fp:
-				labels_list = pickle.load(fp)
-			if self.tmp_label is None:
-				self.tmp_label = np.concatenate(labels_list, axis=0)
-			else:
-				self.tmp_label = np.concatenate((self.tmp_label, np.concatenate(labels_list, axis=0)))
-		
 		if self.args.few_shot:
 			self.fewshot_transform = transforms.Compose([
 				transforms.RandomResizedCrop(size=32, scale=(0.5, 1.0)),
@@ -173,9 +152,35 @@ class direct_dataset(Dataset):
 			sampled_data = sampled_data.transpose(0, 3, 1, 2)
 			sampled_labels = np.concatenate(sampled_labels, axis=0)
 			
-			self.tmp_data = np.concatenate((self.tmp_data, sampled_data), axis=0)
-			self.tmp_label = np.concatenate((self.tmp_label, sampled_labels), axis=0)
+			self.tmp_data = sampled_data
+			self.tmp_label = sampled_labels
 
+			# self.tmp_data = np.concatenate((self.tmp_data, sampled_data), axis=0)
+			# self.tmp_label = np.concatenate((self.tmp_label, sampled_labels), axis=0)
+		
+		else:
+			self.tmp_data = None
+			self.tmp_label = None
+
+			for i in range(1,5):
+				path = self.settings.generateDataPath +str(i)+".pickle"
+				self.logger.info(path)
+				with open(path, "rb") as fp:
+					gaussian_data = pickle.load(fp)
+				if self.tmp_data is None:
+					self.tmp_data = np.concatenate(gaussian_data, axis=0)
+				else:
+					self.tmp_data = np.concatenate((self.tmp_data, np.concatenate(gaussian_data, axis=0)))
+
+				path = self.settings.generateLabelPath + str(i) + ".pickle"
+				self.logger.info(path)
+				with open(path, "rb") as fp:
+					labels_list = pickle.load(fp)
+				if self.tmp_label is None:
+					self.tmp_label = np.concatenate(labels_list, axis=0)
+				else:
+					self.tmp_label = np.concatenate((self.tmp_label, np.concatenate(labels_list, axis=0)))
+		
 		if self.args.calib_centers:
 			temp = "_" + self.settings.model_name if not self.settings.model_name == 'resnet18' else ""
 			calib_path = f'../new_generate/data/{self.settings.dataset}{temp}_lbns/{self.settings.model_name}_calib_centers.pickle'
@@ -397,8 +402,8 @@ class ExperimentDesign:
 
 				self.freeze_model(self.model)
 
-
-				if (epoch > self.settings.nEpochs // 5) and (epoch % 5 == 0):
+				if epoch > 4:
+				# if (epoch > self.settings.nEpochs // 5) and (epoch % 5 == 0):
 					test_error, test_loss, test5_error = self.trainer.test(epoch=epoch)
 				else:
 					print(f"skip eval for epoch {epoch}")
