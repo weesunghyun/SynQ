@@ -20,12 +20,11 @@ class LRPolicy:
 
     def set_params(self, params_dict=None):
         """
-        set parameters of lr policy
+            set parameters of lr policy
+            Args:
+                params_dict: parameters of lr policy
         """
         if self.lr_policy == "multi_step":
-            """
-            params: decay_rate, step
-            """
             self.params_dict['decay_rate'] = params_dict['decay_rate']
             self.params_dict['step'] = sorted(params_dict['step'])
             if max(self.params_dict['step']) <= 1:
@@ -35,10 +34,6 @@ class LRPolicy:
                 self.params_dict['step'] = new_step_list
 
         elif self.lr_policy == "step":
-            """
-            params: end_lr, step
-            step: lr = base_lr*gamma^(floor(iter/step))
-            """
             self.params_dict['end_lr'] = params_dict['end_lr']
 
             self.params_dict['step'] = params_dict['step']
@@ -52,26 +47,15 @@ class LRPolicy:
                     self.params_dict['end_lr'] / self.base_lr, 1. / max_iter)
 
         elif self.lr_policy == "linear":
-            """
-            params: end_lr, step
-            """
             self.params_dict['end_lr'] = params_dict['end_lr']
             self.params_dict['step'] = params_dict['step']
 
         elif self.lr_policy == "exp":
-            """
-            params: end_lr
-            exp: lr = base_lr*gamma^iter
-            """
             self.params_dict['end_lr'] = params_dict['end_lr']
             self.params_dict['gamma'] = math.pow(
                 self.params_dict['end_lr'] / self.base_lr, 1. / (self.n_epochs - 1))
 
         elif self.lr_policy == "inv":
-            """
-            params: end_lr
-            inv: lr = base_lr*(1+gamma*iter)^(-power)
-            """
             self.params_dict['end_lr'] = params_dict['end_lr']
             self.params_dict['power'] = params_dict['power']
             self.params_dict['gamma'] = (math.pow(
@@ -79,10 +63,6 @@ class LRPolicy:
                 1. / self.params_dict['power']) - 1.) / (self.n_epochs - 1.)
 
         elif self.lr_policy == "const":
-            """
-            no params
-            const: lr = base_lr
-            """
             self.params_dict = None
 
         else:
@@ -90,7 +70,9 @@ class LRPolicy:
 
     def get_lr(self, epoch):
         """
-        get current learning rate
+            get current learning rate
+            Args:
+                epoch: current epoch
         """
         if self.lr_policy == "multi_step":
             gamma = 0
@@ -117,8 +99,6 @@ class LRPolicy:
                     1 + self.params_dict['gamma'] * epoch, -self.params_dict['power'])
 
         elif self.lr_policy == "exp":
-            # power = math.floor((epoch + 1) / self.params_dict['step'])
-            # lr = self.base_lr * math.pow(self.params_dict['gamma'], power)
             lr = self.base_lr * math.pow(self.params_dict['gamma'], epoch)
 
         elif self.lr_policy == "const":
