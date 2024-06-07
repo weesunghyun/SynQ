@@ -1,3 +1,7 @@
+"""
+    # TODO: Add description.
+"""
+
 import numpy as np
 
 import cv2
@@ -63,20 +67,20 @@ def find_resnet_layer(arch, target_layer_name):
 
         if len(hierarchy) >= 2:
             bottleneck_num = int(hierarchy[1].lower().lstrip('bottleneck').lstrip('basicblock'))
-            target_layer = target_layer[bottleneck_num]
+            target_layer = getattr(target_layer, bottleneck_num) # target_layer[bottleneck_num]
 
         if len(hierarchy) >= 3:
-            target_layer = target_layer._modules[hierarchy[2]]
+            target_layer = getattr(target_layer, hierarchy[2]) # target_layer._modules[hierarchy[2]]
 
         if len(hierarchy) == 4:
-            target_layer = target_layer._modules[hierarchy[3]]
+            target_layer = getattr(target_layer, hierarchy[3]) # target_layer._modules[hierarchy[3]]
 
     elif 'stage4' in target_layer_name:
         # raise KeyError(arch.module.features.stage4)
         target_layer = arch.module.features.stage4
 
     else:
-        target_layer = arch._modules[target_layer_name]
+        target_layer = getattr(arch, target_layer_name)  # arch._modules[target_layer_name]
 
     return target_layer
 
@@ -101,16 +105,16 @@ def find_densenet_layer(arch, target_layer_name):
     """
 
     hierarchy = target_layer_name.split('_')
-    target_layer = arch._modules[hierarchy[0]]
+    target_layer = getattr(arch, hierarchy[0]) # arch._modules[hierarchy[0]]
 
     if len(hierarchy) >= 2:
-        target_layer = target_layer._modules[hierarchy[1]]
+        target_layer = getattr(target_layer, hierarchy[1]) # target_layer._modules[hierarchy[1]]
 
     if len(hierarchy) >= 3:
-        target_layer = target_layer._modules[hierarchy[2]]
+        target_layer = getattr(target_layer, hierarchy[2]) #target_layer._modules[hierarchy[2]]
 
     if len(hierarchy) == 4:
-        target_layer = target_layer._modules[hierarchy[3]]
+        target_layer = getattr(target_layer, hierarchy[3]) # target_layer._modules[hierarchy[3]]
 
     return target_layer
 
@@ -182,16 +186,17 @@ def find_squeezenet_layer(arch, target_layer_name):
         target_layer: found layer which will be hooked to get forward/backward pass information.
     """
     hierarchy = target_layer_name.split('_')
-    target_layer = arch._modules[hierarchy[0]]
+    target_layer = getattr(arch, hierarchy[0]) # arch._modules[hierarchy[0]]
 
     if len(hierarchy) >= 2:
-        target_layer = target_layer._modules[hierarchy[1]]
+        target_layer = getattr(target_layer, hierarchy[1]) # target_layer._modules[hierarchy[1]]
 
     if len(hierarchy) == 3:
-        target_layer = target_layer._modules[hierarchy[2]]
+        target_layer = getattr(target_layer, hierarchy[2]) # target_layer._modules[hierarchy[2]]
 
     elif len(hierarchy) == 4:
-        target_layer = target_layer._modules[hierarchy[2]+'_'+hierarchy[3]]
+        h = hierarchy[2] + '_' + hierarchy[3]
+        target_layer = getattr(target_layer, h) # target_layer._modules[h]
 
     return target_layer
 
@@ -234,7 +239,7 @@ def normalize(tensor, mean, std):
     return tensor.sub(mean).div(std)
 
 
-class Normalize(object):
+class Normalize:
     """Normalize a tensor image with mean and standard deviation."""
     def __init__(self, mean, std):
         """
