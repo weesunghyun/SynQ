@@ -327,11 +327,11 @@ class ExperimentDesign:
         act_bit = self.settings.qa
 
         if type(model) == nn.Conv2d:
-            quant_mod = Quant_Conv2d(weight_bit=weight_bit)
+            quant_mod = QuantConv2d(weight_bit=weight_bit)
             quant_mod.set_param(model)
             return quant_mod
         elif type(model) == nn.Linear:
-            quant_mod = Quant_Linear(weight_bit=weight_bit)
+            quant_mod = QuantLinear(weight_bit=weight_bit)
             quant_mod.set_param(model)
             return quant_mod
         elif type(model) == nn.ReLU or type(model) == nn.ReLU6:

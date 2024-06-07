@@ -1,8 +1,13 @@
+"""
+    Module docstring # TODO
+"""
+
 import torch
 from torch.nn import functional as F
 from torch.nn import Module, Parameter
 
-from .quant_utils import *
+from .quant_utils import lp_loss, find_MSESmallest, \
+    AsymmetricQuantFunction, SymmetricQuantFunction_DSG
 
 
 class QuantAct(Module):
@@ -22,15 +27,23 @@ class QuantAct(Module):
             full_precision_flag: full precision or not
             running_stat: determines whether the activation range is updated or froze
         """
-        super(QuantAct, self).__init__()
+        super().__init__()
         self.activation_bit = activation_bit
         self.full_precision_flag = full_precision_flag
         self.running_stat = running_stat
-        self.register_buffer('x_min', torch.zeros(1))
-        self.register_buffer('x_max', torch.zeros(1))
-        self.register_buffer('beta', torch.Tensor([beta]))
-        self.register_buffer('beta_t', torch.ones(1))
+
+        self.x_min = torch.zeros(1)
+        self.x_max = torch.zeros(1)
+        self.beta = torch.Tensor([beta])
+        self.beta_t = torch.ones(1)
+
+        self.register_buffer('x_min', self.x_min)
+        self.register_buffer('x_max', self.x_max)
+        self.register_buffer('beta', self.beta)
+        self.register_buffer('beta_t', self.beta_t)
+
         self.act_function = AsymmetricQuantFunction.apply
+        # TODO: check if it occurs error when using this
 
     def __repr__(self):
         return (
@@ -70,10 +83,10 @@ class QuantAct(Module):
         if not self.full_precision_flag:
             quant_act = self.act_function(x, self.activation_bit, self.x_min, self.x_max)
             return quant_act
-        else:
-            return x
 
-class QuantAct_MSE(Module):
+        return x
+
+class QuantActMSE(Module):
     """
         Class to quantize given activations
     """
@@ -90,17 +103,25 @@ class QuantAct_MSE(Module):
             full_precision_flag: full precision or not
             running_stat: determines whether the activation range is updated or froze
         """
-        super(QuantAct_MSE, self).__init__()
+        super().__init__()
         self.activation_bit = activation_bit
         self.full_precision_flag = full_precision_flag
         self.running_stat = running_stat
-        self.register_buffer('x_min', torch.zeros(1))
-        self.register_buffer('x_max', torch.zeros(1))
-        self.register_buffer('beta', torch.Tensor([beta]))
-        self.register_buffer('beta_t', torch.ones(1))
 
-        self.register_buffer('cur_x_min', torch.zeros(1))
-        self.register_buffer('cur_x_max', torch.zeros(1))
+        self.x_min = torch.zeros(1)
+        self.x_max = torch.zeros(1)
+        self.beta = torch.Tensor([beta])
+        self.beta_t = torch.ones(1)
+        self.cur_x_min = torch.zeros(1)
+        self.cur_x_max = torch.zeros(1)
+
+        self.register_buffer('x_min', self.x_min)
+        self.register_buffer('x_max', self.x_max)
+        self.register_buffer('beta', self.beta)
+        self.register_buffer('beta_t', self.beta_t)
+        self.register_buffer('cur_x_min', self.cur_x_min)
+        self.register_buffer('cur_x_max', self.cur_x_max)
+
         self.act_function = AsymmetricQuantFunction.apply
 
     def __repr__(self):
@@ -158,6 +179,9 @@ class QuantAct_MSE(Module):
                     best_score = score
                     save_min = new_min
                     save_max = new_max
+                else:
+                    save_min = 0
+                    save_max = 0
 
             self.beta_t = self.beta_t * self.beta
             self.x_min = self.x_min * self.beta + save_min * (1 - self.beta)
@@ -167,10 +191,10 @@ class QuantAct_MSE(Module):
         if not self.full_precision_flag:
             quant_act = self.act_function(x, self.activation_bit, self.x_min, self.x_max)
             return quant_act
-        else:
-            return x
 
-class Quant_Linear(Module):
+        return x
+
+class QuantLinear(Module):
     """
         Class to quantize given linear layer weights
     """
@@ -183,7 +207,13 @@ class Quant_Linear(Module):
             full_precision_flag: full precision or not
             running_stat: determines whether the activation range is updated or froze
         """
-        super(Quant_Linear, self).__init__()
+        super().__init__()
+
+        self.in_features = None
+        self.out_features = None
+        self.weight = None
+        self.bias = None
+
         self.full_precision_flag = full_precision_flag
         self.weight_bit = weight_bit
         self.weight_function = AsymmetricQuantFunction.apply
@@ -192,7 +222,7 @@ class Quant_Linear(Module):
         """
             Return the string representation of the class
         """
-        s = super(Quant_Linear, self).__repr__()
+        s = super().__repr__()
         s = f"({s} weight_bit={self.weight_bit}, full_precision_flag={self.full_precision_flag})"
         return s
 
@@ -223,7 +253,7 @@ class Quant_Linear(Module):
         return F.linear(x, weight=w, bias=self.bias)
 
 
-class Quant_Conv2d(Module):
+class QuantConv2d(Module):
     """
         Class to quantize given convolutional layer weights
     """
@@ -235,7 +265,18 @@ class Quant_Conv2d(Module):
                 weight_bit: bit-setting for weight
                 full_precision_flag: full precision or not
         """
-        super(Quant_Conv2d, self).__init__()
+        super().__init__()
+
+        self.in_channels = None
+        self.out_channels = None
+        self.kernel_size = None
+        self.stride = None
+        self.padding = None
+        self.dilation = None
+        self.groups = None
+        self.weight = None
+        self.bias = None
+
         self.full_precision_flag = full_precision_flag
         self.weight_bit = weight_bit
         self.weight_function = AsymmetricQuantFunction.apply
@@ -244,7 +285,7 @@ class Quant_Conv2d(Module):
         """
             Return the string representation of the class
         """
-        s = super(Quant_Conv2d, self).__repr__()
+        s = super().__repr__()
         s = f"({s} weight_bit={self.weight_bit}, full_precision_flag={self.full_precision_flag})"
         return s
 
@@ -284,7 +325,7 @@ class Quant_Conv2d(Module):
                         self.dilation, self.groups)
 
 
-class QuantAct_DSG(Module):
+class QuantActDSG(Module):
     """
     Class to quantize given activations
     """
@@ -299,14 +340,21 @@ class QuantAct_DSG(Module):
         full_precision_flag: full precision or not
         running_stat: determines whether the activation range is updated or froze
         """
-        super(QuantAct_DSG, self).__init__()
+        super().__init__()
         self.activation_bit = activation_bit
         self.full_precision_flag = full_precision_flag
         self.running_stat = running_stat
-        self.register_buffer('x_min', torch.zeros(1))
-        self.register_buffer('x_max', torch.zeros(1))
-        self.register_buffer('beta', torch.Tensor([beta]))
-        self.register_buffer('beta_t', torch.ones(1))
+
+        self.x_min = torch.zeros(1)
+        self.x_max = torch.zeros(1)
+        self.beta = torch.Tensor([beta])
+        self.beta_t = torch.ones(1)
+
+        self.register_buffer('x_min', self.x_min)
+        self.register_buffer('x_max', self.x_max)
+        self.register_buffer('beta', self.beta)
+        self.register_buffer('beta_t', self.beta_t)
+
         self.act_function = SymmetricQuantFunction_DSG.apply
 
     def __repr__(self):
@@ -361,11 +409,11 @@ class QuantAct_DSG(Module):
             quant_act = self.act_function(x, self.activation_bit, self.x_min,
                                           self.x_max)
             return quant_act
-        else:
-            return x
+
+        return x
 
 
-class QuantLinear_DSG(Module):
+class QuantLinearDSG(Module):
     """
     Class to quantize given linear layer weights
     """
@@ -376,13 +424,19 @@ class QuantLinear_DSG(Module):
         full_precision_flag: full precision or not
         running_stat: determines whether the activation range is updated or froze
         """
-        super(QuantLinear_DSG, self).__init__()
+        super().__init__()
+
+        self.in_features = None
+        self.out_features = None
+        self.weight = None
+        self.bias = None
+
         self.full_precision_flag = full_precision_flag
         self.weight_bit = weight_bit
         self.weight_function = SymmetricQuantFunction_DSG.apply
 
     def __repr__(self):
-        s = super(QuantLinear_DSG, self).__repr__()
+        s = super().__repr__()
         s = f"({s} weight_bit={self.weight_bit}, full_precision_flag={self.full_precision_flag})"
         return s
 
@@ -416,19 +470,30 @@ class QuantLinear_DSG(Module):
         return F.linear(x, weight=w, bias=self.bias)
 
 
-class QuantConv2d_DSG(Module):
+class QuantConv2dDSG(Module):
     """
         Class to quantize given convolutional layer weights
     """
 
     def __init__(self, weight_bit, full_precision_flag=False):
-        super(QuantConv2d_DSG, self).__init__()
+        super().__init__()
+
+        self.in_channels = None
+        self.out_channels = None
+        self.kernel_size = None
+        self.stride = None
+        self.padding = None
+        self.dilation = None
+        self.groups = None
+        self.weight = None
+        self.bias = None
+
         self.full_precision_flag = full_precision_flag
         self.weight_bit = weight_bit
         self.weight_function = SymmetricQuantFunction_DSG.apply
 
     def __repr__(self):
-        s = super(QuantConv2d_DSG, self).__repr__()
+        s = super().__repr__()
         s = f"({s} weight_bit={self.weight_bit}, full_precision_flag={self.full_precision_flag})"
         return s
 
