@@ -1,4 +1,7 @@
-import torch
+"""
+    # TODO: add description
+"""
+
 from torch import nn
 from torch.nn import init
 from torch.nn import functional as F
@@ -18,7 +21,7 @@ class ConditionalBatchNorm2d(nn.BatchNorm2d):
             affine: If True, apply learned scale and shift transformation
             track_running_stats: If True, track the running mean and variance"""
 
-        super(ConditionalBatchNorm2d, self).__init__(
+        super().__init__(
             num_features, eps, momentum, affine, track_running_stats
         )
 
@@ -72,7 +75,7 @@ class CategoricalConditionalBatchNorm2d(ConditionalBatchNorm2d):
             affine: If True, apply learned scale and shift transformation
             track_running_stats: If True, track the running mean and variance"""
 
-        super(CategoricalConditionalBatchNorm2d, self).__init__(
+        super().__init__(
             num_features, eps, momentum, affine, track_running_stats
         )
         self.weights = nn.Embedding(num_classes, num_features)
@@ -90,63 +93,63 @@ class CategoricalConditionalBatchNorm2d(ConditionalBatchNorm2d):
         weight = self.weights(c)
         bias = self.biases(c)
 
-        return super(CategoricalConditionalBatchNorm2d, self).forward(_input, weight, bias)
+        return super().forward(_input, weight, bias)
 
 
-class CategoricalConditionalBatchNorm2dHard(ConditionalBatchNorm2d):
-    """Categorical Conditional Batch Normalization with Hard Mixing Coefficients"""
-    def __init__(self, num_classes, num_features, eps=1e-5, momentum=0.1,
-                 affine=False, track_running_stats=True):
-        """
-        Initialize Categorical Conditional Batch Normalization with Hard Mixing Coefficients
-        Args:
-            num_classes: Number of classes
-            num_features: Number of features in input
-            eps: Small constant to prevent division by zero
-            momentum: Momentum factor applied to running mean and variance
-            affine: If True, apply learned scale and shift transformation
-            track_running_stats: If True, track the running mean and variance
-        """
-        super(CategoricalConditionalBatchNorm2dHard, self).__init__(
-            num_features, eps, momentum, affine, track_running_stats
-        )
-        self.weights = nn.Embedding(num_classes, num_features)
-        self.biases = nn.Embedding(num_classes, num_features)
+# class CategoricalConditionalBatchNorm2dHard(ConditionalBatchNorm2d):
+#     """Categorical Conditional Batch Normalization with Hard Mixing Coefficients"""
+#     def __init__(self, num_classes, num_features, eps=1e-5, momentum=0.1,
+#                  affine=False, track_running_stats=True):
+#         """
+#         Initialize Categorical Conditional Batch Normalization with Hard Mixing Coefficients
+#         Args:
+#             num_classes: Number of classes
+#             num_features: Number of features in input
+#             eps: Small constant to prevent division by zero
+#             momentum: Momentum factor applied to running mean and variance
+#             affine: If True, apply learned scale and shift transformation
+#             track_running_stats: If True, track the running mean and variance
+#         """
+#         super().__init__(
+#             num_features, eps, momentum, affine, track_running_stats
+#         )
+#         self.weights = nn.Embedding(num_classes, num_features)
+#         self.biases = nn.Embedding(num_classes, num_features)
 
-        self._initialize()
+#         self._initialize()
 
-    def _initialize(self):
-        """Initialize weights and biases"""
-        init.ones_(self.weights.weight.data)
-        init.zeros_(self.biases.weight.data)
+#     def _initialize(self):
+#         """Initialize weights and biases"""
+#         init.ones_(self.weights.weight.data)
+#         init.zeros_(self.biases.weight.data)
 
-    def forward(self, _input, c, use_mix, **kwargs):
-        """
-        Forward pass of Categorical Conditional Batch Normalization with Hard Mixing Coefficients
-        """
-        if not use_mix:
-            weight = self.weights(c)
-            bias = self.biases(c)
-        else:
-            tmp_weight = []
-            tmp_bias = []
-            mix_num = len(c[0])
+#     def forward(self, _input, c, use_mix, **kwargs):
+#         """
+#         Forward pass of Categorical Conditional Batch Normalization with Hard Mixing Coefficients
+#         """
+#         if not use_mix:
+#             weight = self.weights(c)
+#             bias = self.biases(c)
+#         else:
+#             tmp_weight = []
+#             tmp_bias = []
+#             mix_num = len(c[0])
 
-            for _, ci in enumerate(c):
-                t = self.wegights(ci[0])
-                for j in range(1, len(self.weights(ci))):
-                    t += self.weights(ci[j])
-                tmp_weight.append(1/mix_num * t)
+#             for ci in c:
+#                 t = self.weights(ci[0])
+#                 for j in range(1, len(self.weights(ci))):
+#                     t += self.weights(ci[j])
+#                 tmp_weight.append(1/mix_num * t)
 
-                t = self.biases(ci[0])
-                for j in range(1, len(self.biases(ci))):
-                    t += self.biases(ci[j])
-                tmp_bias.append(1/mix_num*t)
+#                 t = self.biases(ci[0])
+#                 for j in range(1, len(self.biases(ci))):
+#                     t += self.biases(ci[j])
+#                 tmp_bias.append(1/mix_num*t)
 
-            weight = torch.stack(tmp_weight, dim=0)
-            bias = torch.stack(tmp_bias, dim=0)
+#             weight = torch.stack(tmp_weight, dim=0)
+#             bias = torch.stack(tmp_bias, dim=0)
 
-        return super(CategoricalConditionalBatchNorm2dHard, self).forward(_input, weight, bias)
+#         return super().forward(_input, weight, bias)
 
 if __name__ == '__main__':
     pass
