@@ -391,6 +391,7 @@ class ExperimentDesign:
                                                       batch_size=min(self.settings.batchSize, len(dataset)),
                                                       sampler = DistributedSampler(dataset))
         test_error, test_loss, test5_error = self.trainer.test(epoch=-1)
+
         try:
             for epoch in range(self.start_epoch, self.settings.nEpochs):
                 self.epoch = epoch

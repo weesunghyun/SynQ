@@ -34,7 +34,7 @@ class QuantAct(Module):
 
     def __repr__(self):
         return (
-             f"{self._class__.__name__}("
+             f"{self.__class__.__name__}("
              f"activation_bit={self.activation_bit}, "
              f"full_precision_flag={self.full_precision_flag} "
              f"running_stat={self.running_stat}, "
@@ -314,7 +314,7 @@ class QuantAct_DSG(Module):
             Return the string representation of the class
         """
         return (
-             f"{self._class__.__name__}("
+             f"{self.__class__.__name__}("
              f"activation_bit={self.activation_bit}, "
              f"full_precision_flag={self.full_precision_flag} "
              f"running_stat={self.running_stat}, "

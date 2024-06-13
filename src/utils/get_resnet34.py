@@ -101,7 +101,7 @@ def resnet34_get_model():
 if __name__ == '__main__':
     net = resnet34_get_model()
 
-    dummy = torch.randn(1, 3, 32, 32)
+    dummy = torch.randn(1, 3, 32, 32).cuda()
 
     out = net(dummy)
     print(f"Inference OK! {out.shape}")
