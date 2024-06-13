@@ -7,4 +7,4 @@ do
     done
 done
 
-CUDA_VISIBLE_DEVICES=3 torchrun --nproc_per_node 1 main_direct.py --conf_path $config_path --lambda_ce 0.005 --lambda_cam 20 --few_shot True
+CUDA_VISIBLE_DEVICES=3 torchrun --nproc_per_node 1 --master_port 29501 main_direct.py --conf_path $config_path --lambda_ce 0.005 --lambda_cam 20 --few_shot True --save_model True
