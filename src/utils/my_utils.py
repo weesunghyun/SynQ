@@ -1,7 +1,3 @@
-"""
-    # TODO: Add description
-"""
-
 import os
 import sys
 import random
@@ -12,7 +8,7 @@ from datetime import datetime
 import numpy as np
 
 import torch
-# from torch import nn
+from torch import nn
 
 def fix_seed(seed):
     """
@@ -52,8 +48,8 @@ def to_device(gpu):
     """
     if gpu is not None and torch.cuda.is_available():
         return torch.device(f'cuda:{gpu}')
-
-    return torch.device('cpu')
+    else:
+        return torch.device('cpu')
 
 
 def print_tensors_shape(l):
@@ -99,7 +95,7 @@ def setup_logging_with_path(log_path):
     logging.getLogger('').addHandler(console)
 
 
-    class StreamToLogger:
+    class StreamToLogger(object):
         """
         Fake file-like stream object that redirects writes to a logger instance.
         """
@@ -149,37 +145,37 @@ def basic_setup(filename):
     setup_logging(filename)
 
 
-# def freeze_model(self,model):
-#     """
-#     freeze the activation range
-#     Args:
-#         model: model to freeze
-#     """
+def freeze_model(self,model):
+    """
+    freeze the activation range
+    Args:
+        model: model to freeze
+    """
 
-#     if isinstance(model, torch.nn.Sequential):
-#         for _, m in model.named_children():
-#             self.freeze_model(m)
-#     else:
-#         for attr in dir(model):
-#             mod = getattr(model, attr)
-#             if isinstance(mod, nn.Module) and 'norm' not in attr:
-#                 self.freeze_model(mod)
-#         return model
+    if isinstance(model, torch.nn.Sequential):
+        for _, m in model.named_children():
+            self.freeze_model(m)
+    else:
+        for attr in dir(model):
+            mod = getattr(model, attr)
+            if isinstance(mod, nn.Module) and 'norm' not in attr:
+                self.freeze_model(mod)
+        return model
 
 
-# def unfreeze_model(self,model):
-#     """
-#     unfreeze the activation range
-#     Args:
-#         model: model to unfreeze
-#     """
+def unfreeze_model(self,model):
+    """
+    unfreeze the activation range
+    Args:
+        model: model to unfreeze
+    """
 
-#     if isinstance(model, nn.Sequential):
-#         for _, m in model.named_children():
-#             self.unfreeze_model(m)
-#     else:
-#         for attr in dir(model):
-#             mod = getattr(model, attr)
-#             if isinstance(mod, torch.nn.Module) and 'norm' not in attr:
-#                 self.unfreeze_model(mod)
-#         return model
+    if isinstance(model, nn.Sequential):
+        for _, m in model.named_children():
+            self.unfreeze_model(m)
+    else:
+        for attr in dir(model):
+            mod = getattr(model, attr)
+            if isinstance(mod, torch.nn.Module) and 'norm' not in attr:
+                self.unfreeze_model(mod)
+        return model
