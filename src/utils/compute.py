@@ -1,18 +1,12 @@
+import numpy as np
+import math
+
 import torch
 
 __all__ = ["compute_tencrop", "compute_singlecrop", "AverageMeter"]
 
 
 def compute_tencrop(outputs, labels):
-    """
-        Compute the top1 and top5 error
-        Args:
-            outputs: the output of the model
-            labels: the ground truth label
-        Returns:
-            top1_error: the top1 error
-            top5_error: the top5 error
-    """
     output_size = outputs.size()
     outputs = outputs.view(output_size[0] / 10, 10, output_size[1])
     outputs = outputs.sum(1).squeeze(1)
@@ -35,26 +29,13 @@ def compute_tencrop(outputs, labels):
 
 
 def compute_singlecrop(outputs, labels, loss, top5_flag=False, mean_flag=False):
-    """
-        Compute the top1 and top5 error
-        Args:
-            outputs: the output of the model
-            labels: the ground truth label
-            loss: the loss of the model
-            top5_flag: whether to compute top5 error
-            mean_flag: whether to compute mean error
-        Returns:
-            top1_error: the top1 error
-            top1_loss: the loss of the model
-            top5_error: the top5 error
-        """
     with torch.no_grad():
         if isinstance(outputs, list):
             top1_loss = []
             top1_error = []
             top5_error = []
-            for i, out_i in enumerate(outputs):
-                top1_accuracy, top5_accuracy = accuracy(out_i, labels, topk=(1, 5))
+            for i in range(len(outputs)):
+                top1_accuracy, top5_accuracy = accuracy(outputs[i], labels, topk=(1, 5))
                 top1_error.append(100 - top1_accuracy)
                 top5_error.append(100 - top5_accuracy)
                 top1_loss.append(loss[i].item())
@@ -70,15 +51,7 @@ def compute_singlecrop(outputs, labels, loss, top5_flag=False, mean_flag=False):
             return top1_error, top1_loss
 
 def accuracy(output, target, topk=(1,)):
-    """
-        Computes the Accuracy@k for the specified values of k
-        Args:
-            output: the output of the model
-            target: the ground truth label
-            topk: the top k
-        Returns:
-            res: the accuracuy of the top k
-    """
+    """Computes the precision@k for the specified values of k"""
     with torch.no_grad():
         maxk = max(topk)
         batch_size = target.size(0)
@@ -98,9 +71,6 @@ class AverageMeter(object):
     """Computes and stores the average and current value"""
 
     def __init__(self):
-        """
-            init all parameters
-        """
         self.reset()
 
     def reset(self):
