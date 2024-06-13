@@ -6,8 +6,8 @@ import torch
 from torch.nn import functional as F
 from torch.nn import Module, Parameter
 
-from .quant_utils import lp_loss, find_smallest_mse, \
-    AsymmetricQuantFunction, SymmetricQuantFunctionDSG
+from .quant_utils import lp_loss, find_MSESmallest, \
+    AsymmetricQuantFunction, SymmetricQuantFunction_DSG
 
 
 class QuantAct(Module):
@@ -171,7 +171,7 @@ class QuantActMSE(Module):
                 new_min = x_min * (1.0 - (i * 0.01))
                 new_max = x_max * (1.0 - (i * 0.01))
 
-                quant_act = find_smallest_mse(x_clone, self.activation_bit, new_min, new_max)
+                quant_act = find_MSESmallest(x_clone, self.activation_bit, new_min, new_max)
                 # L_p norm minimization as described in LAPQ
                 # https://arxiv.org/abs/1911.07190
                 score = lp_loss(x_clone, quant_act, p=2.4, reduction='all')
@@ -355,7 +355,7 @@ class QuantActDSG(Module):
         self.register_buffer('beta', self.beta)
         self.register_buffer('beta_t', self.beta_t)
 
-        self.act_function = SymmetricQuantFunctionDSG.apply
+        self.act_function = SymmetricQuantFunction_DSG.apply
 
     def __repr__(self):
         """
@@ -433,7 +433,7 @@ class QuantLinearDSG(Module):
 
         self.full_precision_flag = full_precision_flag
         self.weight_bit = weight_bit
-        self.weight_function = SymmetricQuantFunctionDSG.apply
+        self.weight_function = SymmetricQuantFunction_DSG.apply
 
     def __repr__(self):
         s = super().__repr__()
@@ -490,7 +490,7 @@ class QuantConv2dDSG(Module):
 
         self.full_precision_flag = full_precision_flag
         self.weight_bit = weight_bit
-        self.weight_function = SymmetricQuantFunctionDSG.apply
+        self.weight_function = SymmetricQuantFunction_DSG.apply
 
     def __repr__(self):
         s = super().__repr__()
