@@ -316,10 +316,7 @@ class Trainer(object):
 				except:
 					iterator = iter(direct_dataload)
 					images, labels = next(iterator)
-				if self.args.few_shot: # Add for few-shot samples (few-shot samples do not utilize low-pass filter)
-					pass
-				else:
-					images = self.apply_filters(images, self.args.d_zero)
+				images = self.apply_filters(images, self.args.d_zero)
 				if torch.isnan(images).any():
 					images = torch.nan_to_num(images)
 				images, labels = images.to(self.args.local_rank), labels.to(self.args.local_rank)
