@@ -415,7 +415,7 @@ class ExperimentDesign:
             optimizer_state=self.optimizer_state,
             run_count=self.start_epoch)
 
-    def quantize_model(self,model):
+    def quantize_model(self, model):
         """
             Get quantized model
             Args:
@@ -559,6 +559,8 @@ class ExperimentDesign:
                     f"Top1 Accuracy: {100 - best_top1}, "
                     f"Top5 Accuracy: {100 - best_top5}"
                     )
+                
+                break # ADD
 
         except Exception as e:
             self.logger.error(f"Training is terminating due to exception: {str(e)}")

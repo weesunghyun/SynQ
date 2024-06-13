@@ -153,7 +153,7 @@ class GradCAM:
 
         b, k, _, _ = gradients.size()
 
-        assert not torch.isnan(input).any(), "Input contains NaN"
+        assert not torch.isnan(_input).any(), "Input contains NaN"
 
         alpha = gradients.view(b, k, -1).mean(2).clamp(min=1e-10)
         weights = alpha.view(b, k, 1, 1)

@@ -356,7 +356,7 @@ class Trainer:
         """
         self.activation.append(self.channel_attention(output.clone()))
 
-    def hook_fn_forward(self,module, _input, output):
+    def hook_fn_forward(self, module, _input, output):
         """
         Hook forward function
         Args:
