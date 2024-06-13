@@ -538,7 +538,6 @@ class Trainer:
 
         else:
             log_message = (
-<<<<<<< HEAD
                 f"[Epoch {epoch + 1}/{self.settings.nEpochs}] [Batch {i+1}/{iters}] "
                 f"[train acc: {100 * fp_acc.avg:.4f}%] [loss: {loss_s.item():.2f}] "
                 f"loss KL: {loss_kl.item():.2f} "
@@ -547,14 +546,6 @@ class Trainer:
                 f"loss KLp: {loss_kl_perturbed.item():.2f} "
                 f"loss CEp: {self.args.lambda_ce * loss_ce_perturbed.item():.2f} "
                 f"loss FAp: {loss_fa_perturbed.item():.2f}"
-=======
-                f"[Epoch {epoch + 1}/{self.settings.nEpochs}}] [Batch {i+1}/{iters}] "
-                f"[train acc: {100 * fp_acc.avg:.4f}%] [loss: {loss_S.item():.2f}] "
-                f"loss KL: {loss_KL.item():.2f} loss CE: {self.args.lambda_ce * loss_CE.item():.2f} "
-                f"loss FA: {loss_FA.item():.2f} loss CAM: {self.args.lambda_cam * loss_cam:.2f} "
-                f"loss KLp: {loss_KL_perturbed.item():.2f} loss CEp: {self.args.lambda_ce * loss_CE_perturbed.item():.2f} "
-                f"loss FAp: {loss_FA_perturbed.item():.2f}"
->>>>>>> parent of 59f1dbb... 240604 commit (1)
             )
 
         self.logger.info(log_message)
