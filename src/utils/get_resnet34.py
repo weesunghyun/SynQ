@@ -1,7 +1,3 @@
-"""
-    # TODO: Add description
-"""
-
 import torch
 from torch import nn
 from torch.nn import init
@@ -31,7 +27,7 @@ class CIFARResNet(nn.Module):
                 in_size: spatial size of the expected input image.
                 num_classes: number of classification classes.
         """
-        super().__init__()
+        super(CIFARResNet, self).__init__()
         self.in_size = in_size
         self.num_classes = num_classes
 
@@ -102,10 +98,10 @@ def resnet34_get_model():
 
     return net
 
-# if __name__ == '__main__':
-#     net = resnet34_get_model()
+if __name__ == '__main__':
+    net = resnet34_get_model()
 
-#     dummy = torch.randn(1, 3, 32, 32)
+    dummy = torch.randn(1, 3, 32, 32)
 
-#     out = net(dummy)
-#     print(f"Inference OK! {out.shape}")
+    out = net(dummy)
+    print(f"Inference OK! {out.shape}")

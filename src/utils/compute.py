@@ -1,7 +1,3 @@
-"""
-    Module docstring # TODO
-"""
-
 import torch
 
 __all__ = ["compute_tencrop", "compute_singlecrop", "AverageMeter"]
@@ -38,8 +34,7 @@ def compute_tencrop(outputs, labels):
     return top1_error, 0, top5_error
 
 
-# def compute_singlecrop(outputs, labels, loss, top5_flag=False, mean_flag=False):
-def compute_singlecrop(outputs, labels, loss, top5_flag=False):
+def compute_singlecrop(outputs, labels, loss, top5_flag=False, mean_flag=False):
     """
         Compute the top1 and top5 error
         Args:
@@ -47,6 +42,7 @@ def compute_singlecrop(outputs, labels, loss, top5_flag=False):
             labels: the ground truth label
             loss: the loss of the model
             top5_flag: whether to compute top5 error
+            mean_flag: whether to compute mean error
         Returns:
             top1_error: the top1 error
             top1_loss: the loss of the model
@@ -70,8 +66,8 @@ def compute_singlecrop(outputs, labels, loss, top5_flag=False):
 
         if top5_flag:
             return top1_error, top1_loss, top5_error
-
-        return top1_error, top1_loss
+        else:
+            return top1_error, top1_loss
 
 def accuracy(output, target, topk=(1,)):
     """
@@ -98,19 +94,13 @@ def accuracy(output, target, topk=(1,)):
             res.append(correct_k.mul_(100.0 / batch_size).item())
         return res
 
-class AverageMeter:
+class AverageMeter(object):
     """Computes and stores the average and current value"""
 
     def __init__(self):
         """
             init all parameters
         """
-
-        self.val = None
-        self.avg = None
-        self.sum = None
-        self.count = None
-
         self.reset()
 
     def reset(self):
