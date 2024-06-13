@@ -151,7 +151,14 @@ class direct_dataset(Dataset):
 				self.tmp_label = np.concatenate((self.tmp_label, np.concatenate(labels_list, axis=0)))
 		
 		if self.args.few_shot:
-			cifar100_train = datasets.CIFAR100(root='./data/cifar100', train=True, download=True, transform=self.train_transform)
+			self.fewshot_transform = transforms.Compose([
+				transforms.RandomResizedCrop(size=32, scale=(0.5, 1.0)),
+				transforms.RandomHorizontalFlip(),
+				transforms.ToTensor(),
+				transforms.Normalize([0.50705882, 0.48666667, 0.44078431], [0.26745098, 0.25568627, 0.27607843])
+			])
+
+			cifar100_train = datasets.CIFAR100(root='./data/cifar100', train=True, download=True, transform=self.fewshot_transform)
 			real_data, real_label = np.array(cifar100_train.data), np.array(cifar100_train.targets)
 
 			# Sample few-shot data
@@ -309,7 +316,7 @@ class ExperimentDesign:
 			optimizer_state=self.optimizer_state,
 			run_count=self.start_epoch)
 
-	def quantize_model(self,model):		
+	def quantize_model(self,model):
 		weight_bit = self.settings.qw
 		act_bit = self.settings.qa
 		
@@ -391,13 +398,12 @@ class ExperimentDesign:
 				self.freeze_model(self.model)
 
 
-				if epoch % 5 != 0:
+				if (epoch > self.settings.nEpochs // 5) and (epoch % 5 == 0):
+					test_error, test_loss, test5_error = self.trainer.test(epoch=epoch)
+				else:
 					print(f"skip eval for epoch {epoch}")
 					self.logger.info(f"skip eval for epoch {epoch}")
 					continue
-				else:
-					test_error, test_loss, test5_error = self.trainer.test(epoch=epoch)
-
 
 				if best_top1 >= test_error:
 					best_top1 = test_error
