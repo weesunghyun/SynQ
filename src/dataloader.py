@@ -1,7 +1,3 @@
-"""
-    # TODO: Add description
-"""
-
 import os
 
 import torch
@@ -11,8 +7,7 @@ from torchvision import transforms
 from torchvision import datasets as dsets
 
 
-# __all__ = ["DataLoader", "PartDataLoader"]
-__all__ = ["DataLoader"]
+__all__ = ["DataLoader", "PartDataLoader"]
 
 
 class ImageLoader(data.Dataset):
@@ -51,7 +46,7 @@ class ImageLoader(data.Dataset):
         return len(self.datasets)
 
 
-class DataLoader:
+class DataLoader(object):
     """Data Loader"""
     def __init__(self, dataset, batch_size, n_threads=4,
 	             ten_crop=False, data_path='/home/dataset/', logger=None):
@@ -87,9 +82,6 @@ class DataLoader:
 
     def imagenet(self, dataset="imagenet"):
         """Get the ImageNet data loader"""
-        if dataset !="imagenet":
-            assert False, "Invalid dataset"
-
         testdir = os.path.join(self.data_path, "val")
         normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406],
                                          std=[0.229, 0.224, 0.225])

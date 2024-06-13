@@ -1,50 +1,41 @@
-"""
-    # TODO: add description
-"""
-
-import os
-import copy
-import time
-import pickle
-import shutil
-import logging
 import argparse
+import copy
 import datetime
-import warnings
+import logging
+import pickle
+import os
+import time
 import traceback
-
+import shutil
+import torch
+import warnings
 import numpy as np
 from PIL import Image
 
-import torch
-from torch import nn
-from torch.backends import cudnn
-import torch.distributed as dist
+import torch.backends.cudnn as cudnn
+import torch.nn as nn
+import torchvision.transforms as transforms
+import torchvision.datasets as datasets
+
 from torch.utils.data import Dataset
-from torch.utils.data.distributed import DistributedSampler
-from torch.nn.parallel import DistributedDataParallel as DDP
-
-from torchvision import datasets
-from torchvision import transforms
-
-import utils
 from options import Option
 from dataloader import DataLoader
 from trainer_direct import Trainer
-from utils.get_resnet34 import resnet34_get_model
+from quantization_utils.quant_modules import *
 from pytorchcv.model_provider import get_model as ptcv_get_model
 from conditional_batchnorm import CategoricalConditionalBatchNorm2d
-from quantization_utils.quant_modules import QuantAct, QuantLinear, QuantConv2d
+
+import utils as utils
+import torch.distributed as dist
+
+from torch.nn.parallel import DistributedDataParallel as DDP
+from torch.utils.data.distributed import DistributedSampler
+
+from utils.get_resnet34 import resnet34_get_model
 
 class Generator(nn.Module):
-    """
-        Generator for CIFAR10 and CIFAR100
-        Args:
-            options: Option class
-            conf_path: path of configuration file
-    """
     def __init__(self, options=None, conf_path=None):
-        super().__init__()
+        super(Generator, self).__init__()
         self.settings = options or Option(conf_path)
         self.label_emb = nn.Embedding(self.settings.nClasses, self.settings.latent_dim)
         self.init_size = self.settings.img_size // 4
@@ -70,12 +61,6 @@ class Generator(nn.Module):
         )
 
     def forward(self, z, labels):
-        """
-            Forward pass of the generator
-            Args:
-                z: latent vector (noise)
-                labels: labels of the dataset
-        """
         gen_input = torch.mul(self.label_emb(labels), z)
         out = self.l1(gen_input)
         out = out.view(out.shape[0], 128, self.init_size, self.init_size)
@@ -86,17 +71,11 @@ class Generator(nn.Module):
         img = self.conv_blocks2(img)
         return img
 
-class GeneratorImagenet(nn.Module):
-    """
-        Generator for ImageNet
-        Args:
-            options: Option class
-            conf_path: path of configuration file
-    """
+class Generator_imagenet(nn.Module):
     def __init__(self, options=None, conf_path=None):
         self.settings = options or Option(conf_path)
 
-        super().__init__()
+        super(Generator_imagenet, self).__init__()
 
         self.init_size = self.settings.img_size // 4
         self.l1 = nn.Sequential(nn.Linear(self.settings.latent_dim, 128 * self.init_size ** 2))
@@ -115,12 +94,6 @@ class GeneratorImagenet(nn.Module):
         self.conv_blocks2_5 = nn.BatchNorm2d(self.settings.channels, affine=False)
 
     def forward(self, z, labels):
-        """
-            Forward pass of the generator
-            Args:
-                z: latent vector (noise)
-                labels: labels of the dataset
-        """
         out = self.l1(z)
         out = out.view(out.shape[0], 128, self.init_size, self.init_size)
         img = self.conv_blocks0_0(out, labels)
@@ -137,15 +110,7 @@ class GeneratorImagenet(nn.Module):
         img = self.conv_blocks2_5(img)
         return img
 
-class DirectDataset(Dataset):
-    """
-        Dataset class for direct dataset
-        Args:
-            args: arguments
-            settings: Option class
-            logger: logger
-            dataset: dataset name
-    """
+class direct_dataset(Dataset):
     def __init__(self, args, settings, logger, dataset):
         self.settings = settings
         self.logger = logger
@@ -167,15 +132,11 @@ class DirectDataset(Dataset):
                 transforms.RandomResizedCrop(size=32, scale=(0.5, 1.0)),
                 transforms.RandomHorizontalFlip(),
                 transforms.ToTensor(),
-                transforms.Normalize([0.50705882, 0.48666667, 0.44078431],
-                                     [0.26745098, 0.25568627, 0.27607843])
+                transforms.Normalize([0.50705882, 0.48666667, 0.44078431], [0.26745098, 0.25568627, 0.27607843])
             ])
 
-            cifar100_train = datasets.CIFAR100(root='./data/cifar100', train=True,
-                                               download=True, transform=self.fewshot_transform)
-
-            real_data = np.array(cifar100_train.data)
-            real_label = np.array(cifar100_train.targets)
+            cifar100_train = datasets.CIFAR100(root='./data/cifar100', train=True, download=True, transform=self.fewshot_transform)
+            real_data, real_label = np.array(cifar100_train.data), np.array(cifar100_train.targets)
 
             # Sample few-shot data
             sampled_data = []
@@ -204,8 +165,7 @@ class DirectDataset(Dataset):
                 if self.tmp_data is None:
                     self.tmp_data = np.concatenate(gaussian_data, axis=0)
                 else:
-                    self.tmp_data = np.concatenate((self.tmp_data,
-                                                    np.concatenate(gaussian_data, axis=0)))
+                    self.tmp_data = np.concatenate((self.tmp_data, np.concatenate(gaussian_data, axis=0)))
 
                 path = self.settings.generateLabelPath + str(i) + ".pickle"
                 self.logger.info(path)
@@ -214,25 +174,15 @@ class DirectDataset(Dataset):
                 if self.tmp_label is None:
                     self.tmp_label = np.concatenate(labels_list, axis=0)
                 else:
-                    self.tmp_label = np.concatenate((self.tmp_label,
-                                                     np.concatenate(labels_list, axis=0)))
+                    self.tmp_label = np.concatenate((self.tmp_label, np.concatenate(labels_list, axis=0)))
 
         if self.args.calib_centers:
-            if not self.settings.model_name =='resnet18':
-                temp = f"_{self.settings.model_name}"
-            else:
-                temp = ""
-
-            calib_path = (f"../new_generate/data/{self.settings.dataset}{temp}_lbns/"
-                          f"{self.settings.model_name}_calib_centers.pickle")
-
+            temp = "_" + self.settings.model_name if not self.settings.model_name == 'resnet18' else ""
+            calib_path = f'../new_generate/data/{self.settings.dataset}{temp}_lbns/{self.settings.model_name}_calib_centers.pickle'
             with open(calib_path, "rb") as fp:
                 gaussian_data = pickle.load(fp)
             labels_list = range(self.settings.nClasses)
-            self.tmp_data = np.concatenate((
-                self.tmp_data,
-                np.concatenate(gaussian_data, axis=0)[:len(labels_list)]
-                                            ))
+            self.tmp_data = np.concatenate((self.tmp_data, np.concatenate(gaussian_data, axis=0)[:len(labels_list)]))
             self.tmp_label = np.concatenate((self.tmp_label, np.array(labels_list)))
 
         print(self.tmp_data.shape, self.tmp_label.shape)
@@ -256,13 +206,6 @@ class DirectDataset(Dataset):
         return len(self.tmp_label)
 
 class ExperimentDesign:
-    """
-        ExperimentDesign class
-        Args:
-            options: Option class
-            args: arguments
-            logger: logger
-    """
     def __init__(self, options=None, args=None, logger=None):
         self.settings = options
         self.args = args
@@ -275,45 +218,27 @@ class ExperimentDesign:
         self.optimizer_state = None
         self.trainer = None
         self.start_epoch = 0
-        self.epoch = None
-        self.generator = None
 
         self.prepare()
 
     def set_logger(self):
-        """
-            Set logger
-        """
         if dist.get_rank()==0:
             file_formatter = logging.Formatter('%(asctime)s %(levelname)s: %(message)s')
-            file_handler = \
-                logging.FileHandler(os.path.join(self.settings.save_path, "train_test.log"))
+            file_handler = logging.FileHandler(os.path.join(self.settings.save_path, "train_test.log"))
             file_handler.setFormatter(file_formatter)
             self.logger.addHandler(file_handler)
         self.logger.setLevel(logging.INFO if self.args.local_rank in [-1, 0] else logging.WARN)
         return self.logger
 
     def prepare(self):
-        """
-            Prepare the experiment
-        """
         torch.cuda.set_device(self.args.local_rank)
         dist.init_process_group(backend='nccl')
         if dist.get_rank() == 0:
             self.settings.set_save_path()
             print(self.settings.save_path)
-            shutil.copyfile(
-                self.args.conf_path,
-                os.path.join(self.settings.save_path, os.path.basename(self.args.conf_path))
-                )
-            shutil.copyfile(
-                './main_direct.py',
-                os.path.join(self.settings.save_path, 'main_direct.py')
-                )
-            shutil.copyfile(
-                './trainer_direct.py',
-                os.path.join(self.settings.save_path, 'trainer_direct.py')
-                )
+            shutil.copyfile(self.args.conf_path, os.path.join(self.settings.save_path, os.path.basename(self.args.conf_path)))
+            shutil.copyfile('./main_direct.py', os.path.join(self.settings.save_path, 'main_direct.py'))
+            shutil.copyfile('./trainer_direct.py', os.path.join(self.settings.save_path, 'trainer_direct.py'))
         self.logger = self.set_logger()
         self.settings.paramscheck(self.logger)
         self._set_gpu()
@@ -323,17 +248,11 @@ class ExperimentDesign:
         self._set_trainer()
 
     def _set_gpu(self):
-        """
-            Set GPU
-        """
         torch.manual_seed(self.settings.manualSeed)
         torch.cuda.manual_seed(self.settings.manualSeed)
         cudnn.benchmark = True
 
     def _set_dataloader(self):
-        """
-            Set data loader
-        """
         data_loader = DataLoader(dataset=self.settings.dataset,
                                  batch_size=self.settings.batchSize,
                                  data_path=self.settings.dataPath,
@@ -344,9 +263,6 @@ class ExperimentDesign:
         self.train_loader, self.test_loader = data_loader.getloader()
 
     def _set_model(self):
-        """
-            Set model
-        """
         if self.settings.dataset in ["cifar100", "cifar10"]:
             if self.settings.model_name == "resnet34_cifar100":
                 self.model = resnet34_get_model()
@@ -360,45 +276,36 @@ class ExperimentDesign:
         elif self.settings.dataset in ["imagenet"]:
             self.model = ptcv_get_model(self.settings.model_name, pretrained=True)
             self.model_teacher = ptcv_get_model(self.settings.model_name, pretrained=True)
-            self.generator = GeneratorImagenet(self.settings)
+            self.generator = Generator_imagenet(self.settings)
             self.model_teacher.eval()
 
         else:
             assert False, "unsupport data set: " + self.settings.dataset
 
         self.model_teacher = torch.nn.SyncBatchNorm.convert_sync_batchnorm(self.model_teacher)
-        self.model_teacher = DDP(self.model_teacher.to(self.args.local_rank),
-                                 device_ids=[self.args.local_rank],
-                                 output_device=self.args.local_rank,
-                                 broadcast_buffers=False)
-        self.generator = DDP(self.generator.to(self.args.local_rank),
-                             device_ids=[self.args.local_rank],
-                             output_device=self.args.local_rank,
-                             broadcast_buffers=False)
+        self.model_teacher = DDP(self.model_teacher.to(self.args.local_rank), device_ids=[self.args.local_rank], output_device=self.args.local_rank, broadcast_buffers=False)
+        self.generator = DDP(self.generator.to(self.args.local_rank), device_ids=[self.args.local_rank], output_device=self.args.local_rank, broadcast_buffers=False)
 
     def _set_trainer(self):
-        """
-            Set trainer
-        """
-        lr_master_s = utils.LRPolicy(self.settings.lr_S,
+        lr_master_S = utils.LRPolicy(self.settings.lr_S,
                                      self.settings.nEpochs,
                                      self.settings.lrPolicy_S)
-        lr_master_g = utils.LRPolicy(self.settings.lr_G,
+        lr_master_G = utils.LRPolicy(self.settings.lr_G,
                                      self.settings.nEpochs,
                                      self.settings.lrPolicy_G)
 
-        params_dict_s = {
+        params_dict_S = {
             'step': self.settings.step_S,
             'decay_rate': self.settings.decayRate_S
         }
 
-        params_dict_g = {
+        params_dict_G = {
             'step': self.settings.step_G,
             'decay_rate': self.settings.decayRate_G
         }
 
-        lr_master_s.set_params(params_dict=params_dict_s)
-        lr_master_g.set_params(params_dict=params_dict_g)
+        lr_master_S.set_params(params_dict=params_dict_S)
+        lr_master_G.set_params(params_dict=params_dict_G)
 
         self.trainer = Trainer(
             model=self.model,
@@ -406,8 +313,8 @@ class ExperimentDesign:
             generator = self.generator,
             train_loader=self.train_loader,
             test_loader=self.test_loader,
-            lr_master_S=lr_master_s,
-            lr_master_G=lr_master_g,
+            lr_master_S=lr_master_S,
+            lr_master_G=lr_master_G,
             settings=self.settings,
             args = self.args,
             logger=self.logger,
@@ -416,61 +323,42 @@ class ExperimentDesign:
             run_count=self.start_epoch)
 
     def quantize_model(self,model):
-        """
-            Get quantized model
-            Args:
-                model: model
-        """
         weight_bit = self.settings.qw
         act_bit = self.settings.qa
 
-        if isinstance(model, nn.Conv2d):
+        if type(model) == nn.Conv2d:
             quant_mod = QuantConv2d(weight_bit=weight_bit)
             quant_mod.set_param(model)
-
-        elif isinstance(model, nn.Linear):
+            return quant_mod
+        elif type(model) == nn.Linear:
             quant_mod = QuantLinear(weight_bit=weight_bit)
             quant_mod.set_param(model)
-
-        elif isinstance(model, (nn.ReLU, nn.ReLU6)):
-            quant_mod = nn.Sequential(*[model, QuantAct(activation_bit=act_bit)])
-
-        elif isinstance(model, nn.Sequential):
+            return quant_mod
+        elif type(model) == nn.ReLU or type(model) == nn.ReLU6:
+            return nn.Sequential(*[model, QuantAct(activation_bit=act_bit)])
+        elif type(model) == nn.Sequential:
             mods = []
-            for _, m in model.named_children():
+            for n, m in model.named_children():
                 mods.append(self.quantize_model(m))
-            quant_mod = nn.Sequential(*mods)
-
+            return nn.Sequential(*mods)
         else:
-            quant_mod = copy.deepcopy(model)
+            q_model = copy.deepcopy(model)
             for attr in dir(model):
                 mod = getattr(model, attr)
                 if isinstance(mod, nn.Module) and 'norm' not in attr:
-                    setattr(quant_mod, attr, self.quantize_model(mod))
-
-        return quant_mod
+                    setattr(q_model, attr, self.quantize_model(mod))
+            return q_model
 
     def _replace(self):
-        """
-            Replace the model
-        """
         self.model = self.quantize_model(self.model)
         self.model = torch.nn.SyncBatchNorm.convert_sync_batchnorm(self.model)
-        self.model = DDP(self.model.to(self.args.local_rank),
-                         device_ids=[self.args.local_rank],
-                         output_device=self.args.local_rank,
-                         broadcast_buffers=False)
+        self.model = DDP(self.model.to(self.args.local_rank), device_ids=[self.args.local_rank], output_device=self.args.local_rank, broadcast_buffers=False)
 
-    def freeze_model(self, model):
-        """
-            Freeze the model
-            Args:
-                model: model
-        """
-        if isinstance(model, QuantAct):
+    def freeze_model(self,model):
+        if type(model) == QuantAct:
             model.fix()
-        elif isinstance(model, nn.Sequential):
-            for _, m in model.named_children():
+        elif type(model) == nn.Sequential:
+            for n, m in model.named_children():
                 self.freeze_model(m)
         else:
             for attr in dir(model):
@@ -480,15 +368,10 @@ class ExperimentDesign:
             return model
 
     def unfreeze_model(self,model):
-        """
-            Unfreeze the model
-            Args:
-                model: model
-        """
-        if isinstance(model, QuantAct):
+        if type(model) == QuantAct:
             model.unfix()
-        elif isinstance(model, nn.Sequential):
-            for _, m in model.named_children():
+        elif type(model) == nn.Sequential:
+            for n, m in model.named_children():
                 self.unfreeze_model(m)
         else:
             for attr in dir(model):
@@ -498,20 +381,16 @@ class ExperimentDesign:
             return model
 
     def run(self):
-        """
-            Run the experiment
-        """
         best_top1 = 100
         best_top5 = 100
         start_time = time.time()
 
-        dataset = DirectDataset(self.args, self.settings, self.logger, self.settings.dataset)
+        dataset = direct_dataset(self.args, self.settings, self.logger, self.settings.dataset)
 
         direct_dataload = torch.utils.data.DataLoader(dataset,
-                                                      batch_size=min(self.settings.batchSize,
-                                                                     len(dataset)),
+                                                      batch_size=min(self.settings.batchSize, len(dataset)),
                                                       sampler = DistributedSampler(dataset))
-        test_error, _, test5_error = self.trainer.test(epoch=-1)
+        test_error, test_loss, test5_error = self.trainer.test(epoch=-1)
         try:
             for epoch in range(self.start_epoch, self.settings.nEpochs):
                 self.epoch = epoch
@@ -520,14 +399,13 @@ class ExperimentDesign:
                 if epoch < 4:
                     self.unfreeze_model(self.model)
 
-                self.trainer.train(epoch=epoch, direct_dataload=direct_dataload)
+                train_error, train_loss, train5_error = self.trainer.train(epoch=epoch, direct_dataload=direct_dataload)
 
                 self.freeze_model(self.model)
 
                 if epoch > 4:
                 # if (epoch > self.settings.nEpochs // 5) and (epoch % 5 == 0):
-                    test_error, _, test5_error = \
-                        self.trainer.test(epoch=epoch)
+                        test_error, test_loss, test5_error = self.trainer.test(epoch=epoch)
                 else:
                     print(f"skip eval for epoch {epoch}")
                     self.logger.info(f"skip eval for epoch {epoch}")
@@ -538,30 +416,16 @@ class ExperimentDesign:
                     best_top5 = test5_error
 
                     if self.args.save_model:
-                        self.logger.info(
-                            f"Save model! The path is "
-                            f"{os.path.join(self.settings.save_path, 'model.pth')}"
-                            )
-                        print(f"Save model! The path is "
-                              f"{os.path.join(self.settings.save_path, 'model.pth')}")
-                        torch.save(self.model.state_dict(),
-                                   os.path.join(self.settings.save_path, "model.pth"))
+                        self.logger.info('Save model! The path is ' + os.path.join(self.settings.save_path, "model.pth"))
+                        print('Save model! The path is ' + os.path.join(self.settings.save_path, "model.pth"))
+                        torch.save(self.model.state_dict(), os.path.join(self.settings.save_path, "model.pth"))
 
-                self.logger.info(
-                    f"#==>Best Result is: Top1 Error: {best_top1}, Top5 Error: {best_top5}"
-                    )
-                self.logger.info(
-                    f"#==>Best Result is: Top1 Accuracy: {100 - best_top1}, "
-                    f"Top5 Accuracy: {100 - best_top5}"
-                    )
-                print(
-                    f"#==>Best Result is: "
-                    f"Top1 Accuracy: {100 - best_top1}, "
-                    f"Top5 Accuracy: {100 - best_top5}"
-                    )
+                self.logger.info("#==>Best Result is: Top1 Error: {:f}, Top5 Error: {:f}".format(best_top1, best_top5))
+                self.logger.info("#==>Best Result is: Top1 Accuracy: {:f}, Top5 Accuracy: {:f}".format(100 - best_top1, 100 - best_top5))
+                print("#==>Best Result is: Top1 Accuracy: {:f}, Top5 Accuracy: {:f}".format(100 - best_top1, 100 - best_top5))
 
-        except Exception as e:
-            self.logger.error(f"Training is terminating due to exception: {str(e)}")
+        except BaseException as e:
+            self.logger.error("Training is terminating due to exception: {}".format(str(e)))
             traceback.print_exc()
 
         end_time = time.time()
@@ -573,9 +437,6 @@ class ExperimentDesign:
 
 
 def main():
-    """
-        Main function to run the experiment
-    """
     logger = logging.getLogger()
     parser = argparse.ArgumentParser(description='Baseline')
     parser.add_argument('--conf_path', type=str, metavar='conf_path',
@@ -587,7 +448,7 @@ def main():
     parser.add_argument('--tau_selce', type=float, default=0.5, metavar='tau_selce')
     parser.add_argument('--lambda_ce', type=float, default=5, metavar='lambda_ce')
     parser.add_argument('--d_zero', type=int, default=80, metavar='d_zero')
-    parser.add_argument('--calib_centers', type=bool, default=False, metavar='calib_centers')
+    parser.add_argument('--calib_centers', type=bool, default=False, metavar='calib_centers') # False로 바꿈.
     parser.add_argument('--save_model', type=bool, default=False, metavar='save_model')
     parser.add_argument("--local_rank", default=-1, type=int)
     parser.add_argument("--few_shot", default=False, type=bool)
