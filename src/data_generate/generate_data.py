@@ -1,14 +1,11 @@
-"""
-    Module docstring # TODO
-"""
-
 import os
 import sys
 import argparse
 
 import torch
 
-from distill_data import DistillData, generate_calib_centers
+from distill_data import *
+
 from pytorchcv.model_provider import get_model as ptcv_get_model
 
 os.environ['CUDA_LAUNCH_BLOCKING'] = '1'
@@ -16,7 +13,7 @@ os.environ['CUDA_LAUNCH_BLOCKING'] = '1'
 # model settings
 def arg_parse():
     """
-        Parses arguments for data generation.
+    Parses arguments for data generation.
     """
     parser = argparse.ArgumentParser()
     parser.add_argument('--model',
@@ -60,14 +57,14 @@ def arg_parse():
     parser.add_argument('--lbns', type=bool, default=False, metavar='lbns')
     parser.add_argument('--fft', type=bool, default=False, metavar='fft')
 
-    arguments = parser.parse_args()
+    args = parser.parse_args()
 
-    if arguments.lbns:
-        arguments.save_path_head = arguments.save_path_head + "_lbns"
+    if args.lbns:
+        args.save_path_head = args.save_path_head + "_lbns"
 
-    if arguments.fft:
-        arguments.save_path_head = arguments.save_path_head + "_fft"
-    return arguments
+    if args.fft:
+        args.save_path_head = args.save_path_head + "_fft"
+    return args
 
 
 if __name__ == '__main__':
@@ -93,7 +90,7 @@ if __name__ == '__main__':
         args.calib_centers = generate_calib_centers(args, model.cuda())
 
     DD = DistillData(args)
-    dataloader = DD.get_distil_data(
+    dataloader = DD.getDistilData(
         model_name=args.model,
         teacher_model=model.cuda(),
         batch_size=args.batch_size,

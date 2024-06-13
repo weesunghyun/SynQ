@@ -1,7 +1,3 @@
-"""
-    Module docstring # TODO
-"""
-
 import torch
 from torch.autograd import Function
 

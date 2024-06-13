@@ -2,7 +2,7 @@ import torch
 from torch import nn
 from torch.nn import functional as F
 
-from quantization_utils.quant_modules import QuantConv2d
+from quantization_utils.quant_modules import Quant_Conv2d
 
 class GradCAM(object):
     """Calculate GradCAM salinecy map."""
@@ -72,7 +72,7 @@ class GradCAM(object):
 
         target_layer = None
         for _, module in self.model_arch.named_modules():
-            if isinstance(module, (nn.Conv2d, QuantConv2d)):
+            if isinstance(module, (nn.Conv2d, Quant_Conv2d)):
                 target_layer = module
 
         if target_layer is None:
