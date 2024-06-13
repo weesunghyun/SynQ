@@ -1,11 +1,14 @@
-import math
-import numpy as np
-from torch.autograd import Function, Variable
 import torch
+from torch.autograd import Function
 
 def lp_loss(pred, tgt, p=2.0, reduction='none'):
     """
-    loss function measured in L_p Norm
+        loss function measured in L_p Norm
+        Args:
+            pred: predicted value
+            tgt: target value
+            p: p value for L_p Norm
+            reduction: reduction method for loss
     """
     if reduction == 'none':
         return (pred-tgt).abs().pow(p).sum(1).mean()
@@ -14,6 +17,14 @@ def lp_loss(pred, tgt, p=2.0, reduction='none'):
 
 
 def find_MSESmallest(x, k, x_min=None, x_max=None):
+    """
+    Find the smallest MSE
+    Args:
+        x: single-precision value to be quantized
+        k: bit-setting for x
+        x_min: lower bound for quantization range
+        x_max: upper bound for quantization range
+    """
 
     scale, zero_point = asymmetric_linear_quantization_params(
         k, x_min, x_max)
@@ -29,7 +40,11 @@ def find_MSESmallest(x, k, x_min=None, x_max=None):
 def clamp(input, min, max, inplace=False):
     """
     Clamp tensor input to (min, max).
-    input: input tensor to be clamped
+    Args:
+        input: input tensor to be clamped
+        min: lower bound for clamping
+        max: upper bound for clamping
+        inplace: whether to modify the input tensor in place
     """
 
     if inplace:
@@ -41,9 +56,11 @@ def clamp(input, min, max, inplace=False):
 def linear_quantize(input, scale, zero_point, inplace=False):
     """
     Quantize single-precision input tensor to integers with the given scaling factor and zeropoint.
-    input: single-precision input tensor to be quantized
-    scale: scaling factor for quantization
-    zero_pint: shift for quantization
+    Args:
+        input: single-precision input tensor to be quantized
+        scale: scaling factor for quantization
+        zero_pint: shift for quantization
+        inplace: whether to modify the input tensor in place
     """
 
     # reshape scale and zeropoint for convolutional weights and activation
@@ -64,9 +81,11 @@ def linear_quantize(input, scale, zero_point, inplace=False):
 def linear_dequantize(input, scale, zero_point, inplace=False):
     """
     Map integer input tensor to fixed point float point with given scaling factor and zeropoint.
-    input: integer input tensor to be mapped
-    scale: scaling factor for quantization
-    zero_pint: shift for quantization
+    Args:
+        input: integer input tensor to be mapped
+        scale: scaling factor for quantization
+        zero_pint: shift for quantization
+        inplace: whether to modify the input tensor in place
     """
 
     # reshape scale and zeropoint for convolutional weights and activation
@@ -91,8 +110,12 @@ def asymmetric_linear_quantization_params(num_bits,
                                           signed=True):
     """
     Compute the scaling factor and zeropoint with the given quantization range.
-    saturation_min: lower bound for quantization range
-    saturation_max: upper bound for quantization range
+    Args:
+        num_bits: bit-setting for quantization
+        saturation_min: lower bound for quantization range
+        saturation_max: upper bound for quantization range
+        intergral_zero_point: whether to round the zero point to the nearest integer
+        signed: whether to use signed or unsigned quantization
     """
     n = 2**num_bits - 1
     scale = n / torch.clamp((saturation_max - saturation_min), min=1e-8)
@@ -116,17 +139,16 @@ class AsymmetricQuantFunction(Function):
     @staticmethod
     def forward(ctx, x, k, x_min=None, x_max=None):
         """
-        x: single-precision value to be quantized
-        k: bit-setting for x
-        x_min: lower bound for quantization range
-        x_max=None
+        Forward pass for quantization function.
+        Args:
+            ctx: context for back-propagation # TODO
+            x: single-precision value to be quantized
+            k: bit-setting for x
+            x_min: lower bound for quantization range
+            x_max: upper bound for quantization range
         """
 
-        # if x_min is None or x_max is None or (sum(x_min == x_max) == 1
-        #                                       and x_min.numel() == 1):
-        #     x_min, x_max = x.min(), x.max()
-        scale, zero_point = asymmetric_linear_quantization_params(
-            k, x_min, x_max)
+        scale, zero_point = asymmetric_linear_quantization_params(k, x_min, x_max)
         new_quant_x = linear_quantize(x, scale, zero_point, inplace=False)
         n = 2**(k - 1)
         new_quant_x = torch.clamp(new_quant_x, -n, n - 1)
@@ -138,24 +160,22 @@ class AsymmetricQuantFunction(Function):
 
     @staticmethod
     def backward(ctx, grad_output):
+        """
+        Backward pass for quantization function.
+        Args:
+            ctx: context for back-propagation # TODO
+            grad_output: gradient of the output
+        """
         return grad_output, None, None, None
-
-
-
-import math
-import numpy as np
-from torch.autograd import Function, Variable
-import torch
-
-
-
 
 def linear_quantize_DSG(input, scale, zero_point, inplace=False):
     """
-    Quantize single-precision input tensor to integers with the given scaling factor and zeropoint.
-    input: single-precision input tensor to be quantized
-    scale: scaling factor for quantization
-    zero_pint: shift for quantization
+        Quantize single-precision input to integers with the given scaling factor and zeropoint.
+        Args:
+            input: single-precision input tensor to be quantized
+            scale: scaling factor for quantization
+            zero_pint: shift for quantization
+            inplace: whether to modify the input tensor in place
     """
 
     # reshape scale and zeropoint for convolutional weights and activation
@@ -175,10 +195,12 @@ def linear_quantize_DSG(input, scale, zero_point, inplace=False):
 
 def linear_dequantize_DSG(input, scale, zero_point, inplace=False):
     """
-    Map integer input tensor to fixed point float point with given scaling factor and zeropoint.
-    input: integer input tensor to be mapped
-    scale: scaling factor for quantization
-    zero_pint: shift for quantization
+        Map integer input tensor to fixed point float point with given scaling factor and zeropoint.
+        Args:
+            input: integer input tensor to be mapped
+            scale: scaling factor for quantization
+            zero_pint: shift for quantization
+            inplace: whether to modify the input tensor in place
     """
 
     # reshape scale and zeropoint for convolutional weights and activation
@@ -202,9 +224,13 @@ def symmetric_linear_quantization_params_DSG(num_bits,
                                          integral_zero_point=True,
                                          signed=True):
     """
-    Compute the scaling factor and zeropoint with the given quantization range.
-    saturation_min: lower bound for quantization range
-    saturation_max: upper bound for quantization range
+        Compute the scaling factor and zeropoint with the given quantization range.
+        Args:
+            num_bits: bit-setting for quantization
+            saturation_min: lower bound for quantization range
+            saturation_max: upper bound for quantization range
+            intergral_zero_point: whether to round the zero point to the nearest integer
+            signed: whether to use signed or unsigned quantization
     """
     n = 2 ** num_bits - 1
     scale = n / torch.clamp((saturation_max - saturation_min), min=1e-8)
@@ -222,17 +248,20 @@ def symmetric_linear_quantization_params_DSG(num_bits,
 
 class SymmetricQuantFunction_DSG(Function):
     """
-    Class to quantize the given floating-point values with given range and bit-setting.
-    Currently only support inference, but not support back-propagation.
+        Class to quantize the given floating-point values with given range and bit-setting.
+        Currently only support inference, but not support back-propagation.
     """
 
     @staticmethod
     def forward(ctx, x, k, x_min=None, x_max=None):
         """
-        x: single-precision value to be quantized
-        k: bit-setting for x
-        x_min: lower bound for quantization range
-        x_max=None
+            Forward pass for quantization function.
+            Args:
+                ctx: context for back-propagation # TODO
+                x: single-precision value to be quantized
+                k: bit-setting for x
+                x_min: lower bound for quantization range
+                x_max: upper bound for quantization range
         """
 
         scale, zero_point = symmetric_linear_quantization_params_DSG(
@@ -248,4 +277,10 @@ class SymmetricQuantFunction_DSG(Function):
 
     @staticmethod
     def backward(ctx, grad_output):
+        """
+            Backward pass for quantization function.
+            Args:
+                ctx: context for back-propagation # TODO
+                grad_output: gradient of the output
+        """
         return grad_output, None, None, None

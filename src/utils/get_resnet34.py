@@ -7,22 +7,8 @@ from pytorchcv.models.common import conv3x3_block
 
 class CIFARResNet(nn.Module):
     """
-    ResNet model for CIFAR from 'Deep Residual Learning for Image Recognition,' https://arxiv.org/abs/1512.03385.
-
-    Parameters:
-    ----------
-    channels : list of list of int
-        Number of output channels for each unit.
-    init_block_channels : int
-        Number of output channels for the initial unit.
-    bottleneck : bool
-        Whether to use a bottleneck or simple block in units.
-    in_channels : int, default 3
-        Number of input channels.
-    in_size : tuple of two ints, default (32, 32)
-        Spatial size of the expected input image.
-    num_classes : int, default 10
-        Number of classification classes.
+        ResNet model for CIFAR from 'Deep Residual Learning for Image Recognition'
+        Reference: https://arxiv.org/abs/1512.03385.
     """
     def __init__(self,
                  channels,
@@ -31,6 +17,16 @@ class CIFARResNet(nn.Module):
                  in_channels=3,
                  in_size=(32, 32),
                  num_classes=10):
+        """
+            Initialize the model.
+            Args:
+                channels: number of output channels for each unit.
+                init_block_channels: number of output channels for the initial unit.
+                bottleneck: whether to use a bottleneck or simple block in units.
+                in_channels: number of input channels.
+                in_size: spatial size of the expected input image.
+                num_classes: number of classification classes.
+        """
         super(CIFARResNet, self).__init__()
         self.in_size = in_size
         self.num_classes = num_classes
@@ -44,14 +40,14 @@ class CIFARResNet(nn.Module):
             stage = nn.Sequential()
             for j, out_channels in enumerate(channels_per_stage):
                 stride = 2 if (j == 0) and (i != 0) else 1
-                stage.add_module("unit{}".format(j + 1), ResUnit(
+                stage.add_module(f"unit{j+1}", ResUnit(
                     in_channels=in_channels,
                     out_channels=out_channels,
                     stride=stride,
                     bottleneck=bottleneck,
                     conv1_stride=False))
                 in_channels = out_channels
-            self.features.add_module("stage{}".format(i + 1), stage)
+            self.features.add_module(f"stage{i+1}", stage)
         self.features.add_module("final_pool", nn.AdaptiveAvgPool2d((1, 1)))
 
         self.output = nn.Linear(
@@ -61,23 +57,35 @@ class CIFARResNet(nn.Module):
         self._init_params()
 
     def _init_params(self):
-        for name, module in self.named_modules():
+        """
+            Initialize model parameters.
+        """
+        for _, module in self.named_modules():
             if isinstance(module, nn.Conv2d):
                 init.kaiming_uniform_(module.weight)
                 if module.bias is not None:
                     init.constant_(module.bias, 0)
 
     def forward(self, x):
+        """
+            Forward pass the model.
+            Args:
+                x: the input data
+        """
         x = self.features(x)
         x = x.view(x.size(0), -1)
         x = self.output(x)
         return x
-    
+
 def resnet34_get_model():
-    # channels_per_layers = [64, 128, 256, 512]
-    # layers = [3, 4, 6, 3]
-    # channels = [[ci] * li for (ci, li) in zip(channels_per_layers, layers)]
-    channels = [[64, 64, 64], [128, 128, 128, 128], [256, 256, 256, 256, 256, 256], [512, 512, 512]]
+    """
+        Get the ResNet-34 model for CIFAR-100 dataset
+    """
+
+    channels = [[64, 64, 64],
+                [128, 128, 128, 128],
+                [256, 256, 256, 256, 256, 256],
+                [512, 512, 512]]
 
     net = CIFARResNet(channels= channels,
                        init_block_channels=64,
