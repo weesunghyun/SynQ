@@ -15,7 +15,7 @@ momentum = 0.9  # momentum 0.9
 weightDecay = 1e-4  # weight decay 1e-4
 opt_type = "SGD"
 
-lr_S = 0.000001 # initial learning rate = 0.00001
+lr_S = 0.00005 # initial learning rate = 0.00001
 lrPolicy_S = "multi_step"  # options: multi_step | linear | exp | const | step
 step_S = [20,40,60]  # step for linear or exp learning rate policy default [100, 200, 300]
 decayRate_S = 0.1 # lr decay rate
