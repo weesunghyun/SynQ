@@ -1,19 +1,18 @@
-import gc
+
 import os
-import sys
-import time
-import pickle
-import random
-
-import numpy as np
-
+import json
 import torch
-from torch import nn
-from torch import optim
-from torch.nn import functional as F
-
-from torchvision import transforms
-
+import torch.nn as nn
+import copy
+import torch.optim as optim
+import numpy as np
+import torch.nn.functional as F
+import random
+import pickle
+import sys
+import torchvision.transforms as transforms
+import time
+import gc
 
 def check_path(model_path):
     directory = os.path.dirname(model_path)
@@ -21,11 +20,11 @@ def check_path(model_path):
         os.makedirs(directory)
 
 def generate_calib_centers(args, teacher_model, beta_ce = 5):
-
+    
     calib_path = os.path.join(args.save_path_head, args.model + "_calib_centers" + ".pickle")
     if not os.path.exists(calib_path):
         model_name = args.model
-
+            
         if model_name == 'resnet20_cifar10':
             num_classes = 10
         elif model_name == 'resnet20_cifar100':
@@ -47,7 +46,7 @@ def generate_calib_centers(args, teacher_model, beta_ce = 5):
 
         CE_loss = nn.CrossEntropyLoss(reduction='none').cuda()
         MSE_loss = nn.MSELoss().cuda()
-
+        
         mean_list = []
         var_list = []
         teacher_running_mean = []
@@ -62,13 +61,13 @@ def generate_calib_centers(args, teacher_model, beta_ce = 5):
             var_list.append(var)
             teacher_running_mean.append(module.running_mean)
             teacher_running_var.append(module.running_var)
-
+        
         for n, m in teacher_model.named_modules():
             if isinstance(m, nn.BatchNorm2d):
                 m.register_forward_hook(hook_fn_forward)
 
         total_time = time.time()
-
+                
         for i in range(num_classes//args.batch_size + 1):
             gaussian_data = torch.randn(shape).cuda()
             gaussian_data.requires_grad = True
@@ -81,7 +80,7 @@ def generate_calib_centers(args, teacher_model, beta_ce = 5):
             labels = torch.tensor([i * args.batch_size + j for j in range(args.batch_size)] if (i + 1) * args.batch_size <= num_classes else [i * args.batch_size + j for j in range(num_classes % args.batch_size)], dtype=torch.long, device='cuda')
             if len(labels) < args.batch_size:
                 labels = torch.nn.functional.pad(labels, (0, args.batch_size - len(labels)))
-
+                
             batch_time = time.time()
             for it in range(1500):
                 new_gaussian_data = []
@@ -95,7 +94,7 @@ def generate_calib_centers(args, teacher_model, beta_ce = 5):
                 teacher_running_var.clear()
 
                 output = teacher_model(new_gaussian_data)
-                loss_target = beta_ce * (CE_loss(output, labels)).mean()
+                loss_target = beta_ce * (CE_loss(output, labels)).mean()    
 
                 mean_loss = torch.zeros(1).cuda()
                 var_loss = torch.zeros(1).cuda()
@@ -105,13 +104,13 @@ def generate_calib_centers(args, teacher_model, beta_ce = 5):
                         var_loss += 0.2 * MSE_loss(var_list[num], teacher_running_var[num].detach())
                     else:
                         mean_loss += 1.1 * MSE_loss(mean_list[num], teacher_running_mean[num].detach())
-                        var_loss += 1.1 * MSE_loss(var_list[num], teacher_running_var[num].detach())
+                        var_loss += 1.1 * MSE_loss(var_list[num], teacher_running_var[num].detach())    
 
                 mean_loss = mean_loss / len(mean_list)
                 var_loss = var_loss / len(mean_list)
 
                 total_loss = mean_loss + var_loss + loss_target
-
+                
                 print(i, it, 'lr', optimizer.state_dict()['param_groups'][0]['lr'],
                     'mean_loss', mean_loss.item(), 'var_loss',
                     var_loss.item(), 'loss_target', loss_target.item())
@@ -139,10 +138,10 @@ def generate_calib_centers(args, teacher_model, beta_ce = 5):
 
         print(f"Total time for {num_classes//args.batch_size} batches: {time.time()-total_time:.2f} sec.")
         check_path(calib_path)
-        with open(calib_path, "wb") as fp:
+        with open(calib_path, "wb") as fp: 
             pickle.dump(refined_gaussian, fp, protocol=pickle.HIGHEST_PROTOCOL)
         del refined_gaussian
-
+             
     with open(calib_path, 'rb') as f:
         refined_gaussian = pickle.load(f)
     return refined_gaussian
@@ -168,8 +167,8 @@ class LabelSmoothing(nn.Module):
 
 class output_hook(object):
     """
-        Forward_hook used to get the output of the intermediate layer. 
-    """
+	Forward_hook used to get the output of the intermediate layer. 
+	"""
     def __init__(self):
         super(output_hook, self).__init__()
         self.outputs = None
@@ -213,10 +212,10 @@ class DistillData(object):
                     + "beta"+ str(beta) +"_gamma" + str(gamma) + "_group" + str(group) + ".pickle")
 
         print(data_path, label_path)
-
+        
         check_path(data_path)
         check_path(label_path)
-
+        
         if model_name == 'resnet20_cifar10':
             self.num_classes = 10
         elif model_name == 'resnet20_cifar100':
@@ -286,16 +285,16 @@ class DistillData(object):
 
             self.calib_running_mean = global_means
             self.calib_running_var = global_vars
-
+            
             print(len(self.calib_running_mean))
-
+            
         total_time = time.time()
-
+        
         if self.args.lbns:
             assert self.calib_centers
-
+        
         assert self.num_classes
-
+        
         for i in range(self.args.num_data//batch_size):
 
             if model_name in ['resnet20_cifar10', 'resnet20_cifar100', 'resnet34_cifar100']:
@@ -311,7 +310,7 @@ class DistillData(object):
                                                              min_lr=1e-4,
                                                              verbose=False,
                                                              patience=50)
-
+            
             labels = torch.randint(0, self.num_classes, (len(gaussian_data),)).cuda()
             labels_mask = F.one_hot(labels, num_classes=self.num_classes).float()
             gt = labels.data.cpu().numpy()
@@ -348,8 +347,8 @@ class DistillData(object):
                 mask=mask.scatter_(1,b,torch.ones_like(b).float())
                 p=a[mask.bool()]
 
-                # loss_target = beta * F.kl_div(input=F.log_softmax(output, dim=1), target=labels_mask.to(output.device), reduction='batchmean')
-                loss_target = beta * ((1-p).pow(gamma) * CE_loss(output, labels)).mean()
+                # loss_target = beta * F.kl_div(input=F.log_softmax(output, dim=1), target=labels_mask.to(output.device), reduction='batchmean')   
+                loss_target = beta * ((1-p).pow(gamma) * CE_loss(output, labels)).mean()             
 
                 mean_loss = torch.zeros(1).cuda()
                 var_loss = torch.zeros(1).cuda()
@@ -363,18 +362,15 @@ class DistillData(object):
                     for num in range(len(self.mean_list)):
                         if num >= (len(self.mean_list)+2) // 2 - 2 :
                             lmean_loss = MSE_loss(self.mean_list[num].cuda(), self.calib_running_mean[num].detach().cuda())
-                            lvar_loss = MSE_loss(self.var_list[num].cuda(), self.calib_running_var[num].detach().cuda())
+                            lvar_loss = MSE_loss(self.var_list[num].cuda(), self.calib_running_var[num].detach().cuda())    
                             lbns_loss += lmean_loss + lvar_loss
                     lbns_loss = lbns_loss / (len(self.mean_list) * len(labels))
-
+ 
                 mean_loss = mean_loss / len(self.mean_list)
                 var_loss = var_loss / len(self.mean_list)
 
-                if self.args.lbns:
-                    total_loss = 0.4 * (mean_loss + var_loss) + loss_target + 0.02 * lbns_loss
-                else:
-                    total_loss = mean_loss + var_loss + loss_target if not self.args.lbns else
-
+                total_loss = mean_loss + var_loss + loss_target if not self.args.lbns else 0.4 * (mean_loss + var_loss) + loss_target + 0.02 * lbns_loss
+           
                 print(i, it, 'lr', optimizer.state_dict()['param_groups'][0]['lr'],
                         'mean_loss', mean_loss.item(), 'var_loss',
                         var_loss.item(), 'loss_target', loss_target.item())
@@ -391,7 +387,7 @@ class DistillData(object):
                 print('d_acc', d_acc)
 
             refined_gaussian.append(gaussian_data.detach().cpu().numpy())
-
+            
             labels_list.append(labels.detach().cpu().numpy())
 
             print(f"Time for {i} batch for {it} iters: {time.time()-batch_time:.2f} sec.")
@@ -403,10 +399,10 @@ class DistillData(object):
             del labels
             torch.cuda.empty_cache()
 
-        print(f"Total time for {self.args.num_data//batch_size} "
-              f"batches: {time.time()-total_time:.2f} sec.")
+        print(f"Total time for {self.args.num_data//batch_size} batches: {time.time()-total_time:.2f} sec.")
         with open(data_path, "wb") as fp:  # Pickling
             pickle.dump(refined_gaussian, fp, protocol=pickle.HIGHEST_PROTOCOL)
         with open(label_path, "wb") as fp:  # Pickling
             pickle.dump(labels_list, fp, protocol=pickle.HIGHEST_PROTOCOL)
         sys.exit()
+        

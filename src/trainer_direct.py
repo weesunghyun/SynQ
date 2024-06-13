@@ -1,53 +1,28 @@
-import os
-import time
 from builtins import isinstance
-
-import numpy as np
-
-import torch
-from torch import nn
+from importlib.machinery import DEBUG_BYTECODE_SUFFIXES
+import time
+import os
 import torch.autograd
-import torch.distributed as dist
+import torch.nn as nn
 from torch.autograd import Variable
-from torch.nn import functional as F
-
-import utils
-
-from gradcam import GradCAM, GradCAMpp
-
+import torch.nn.functional as F
+import utils as utils
+import numpy as np
+import torch
 from pytorchcv.models.resnet import ResUnit
 from pytorchcv.models.mobilenet import DwsConvBlock
 from pytorchcv.models.mobilenetv2 import LinearBottleneck
-
 from quantization_utils.quant_modules import *
+import torch.distributed as dist
+
+from gradcam import GradCAMpp, GradCAM
 
 __all__ = ["Trainer"]
 
 class Trainer(object):
-    """
-    Trainer class
-    """
     def __init__(self, model, model_teacher, generator, lr_master_S, lr_master_G,
                  train_loader, test_loader, settings, args, logger, tensorboard_logger=None,
                  opt_type="SGD", optimizer_state=None, run_count=0):
-        """
-        Initialize the trainer class
-        Args:
-            model: student model
-            model_teacher: teacher model
-            generator: generator model
-            lr_master_S: learning rate scheduler for student model
-            lr_master_G: learning rate scheduler for generator model
-            train_loader: training data loader
-            test_loader: testing data loader
-            settings: settings
-            args: arguments
-            logger: logger
-            tensorboard_logger: tensorboard logger
-            opt_type: optimizer type
-            optimizer_state: optimizer state
-            run_count: run count
-        """
 
         self.settings = settings
         self.args = args
@@ -113,32 +88,20 @@ class Trainer(object):
 
 
         if self.settings.dataset == "imagenet":
-            self.teacher_dict = dict(type='resnet',
-                                     arch=model_teacher,
-                                     layer_name='stage4',
-                                     input_size=(224, 224))
+            self.teacher_dict = dict(type='resnet', arch=model_teacher, layer_name='stage4', input_size=(224, 224))
         else:
-            self.teacher_dict = dict(type='resnet',
-                                     arch=model_teacher,
-                                     layer_name='stage4',
-                                     input_size=(32, 32))
+            self.teacher_dict = dict(type='resnet', arch=model_teacher, layer_name='stage4', input_size=(32, 32))
 
-        # if self.args.cam_type == 'cam':
-        #     self.cam_teacher = CAM(self.teacher_dict, True)
-        if self.args.cam_type == 'gradcam':
+        if self.args.cam_type == 'cam':
+            self.cam_teacher = CAM(self.teacher_dict, True)
+        elif self.args.cam_type == 'gradcam':
             self.cam_teacher = GradCAM(self.teacher_dict, True)
         elif self.args.cam_type == 'gradcampp':
             self.cam_teacher = GradCAMpp(self.teacher_dict, True)
         self.update_cam()
 
     def apply_filters(self, images, d_zero=80):
-        """
-        Apply low-pass filter to images
-        Args:
-            images: target images
-            d_zero: ...??? # TODO
-        """
-        _, _, height, width = images.shape
+        batch_size, channels, height, width = images.shape
         center_x, center_y = width // 2, height // 2
 
         Y, X = torch.meshgrid(torch.arange(height, device=images.device),
@@ -157,11 +120,6 @@ class Trainer(object):
         return filtered_images
 
     def update_lr(self, epoch):
-        """
-        Update learning rate
-        Args:
-            epoch: current epoch
-        """
         lr_S = self.lr_master_S.get_lr(epoch)
         lr_G = self.lr_master_G.get_lr(epoch)
 
@@ -172,27 +130,17 @@ class Trainer(object):
             param_group['lr'] = lr_G
 
     def loss_fn_kd(self, output, labels, teacher_outputs):
-        """
-        Compute loss function for knowledge distillation
-        Args:
-            output: student output
-            labels: labels
-            teacher_outputs: teacher output
-        """
         criterion_d = nn.CrossEntropyLoss().cuda()
         alpha = self.settings.alpha
         T = self.settings.temperature
         a = F.log_softmax(output / T, dim=1) + 1e-7
-        b = F.softmax(teacher_outputs / T, dim=1)
+        b = F.softmax(teacher_outputs / T, dim=1) 
         c = (alpha * T * T)
         d = criterion_d(output, labels)
         KD_loss = self.KLloss(a, b) * c
         return KD_loss, d
 
     def loss_fa(self):
-        """
-        Compute feature alignment loss
-        """
         fa = torch.zeros(1).to(self.args.local_rank)
         for l in range(len(self.activation)):
             fa += (self.activation[l] - self.activation_teacher[l]).pow(2).mean()
@@ -200,19 +148,10 @@ class Trainer(object):
         return fa
 
     def update_cam(self):
-        """
-        Update class activation map (CAM)
-        """
         if self.settings.dataset == "imagenet":
-            self.student_dict = dict(type='resnet',
-                                     arch=self.model,
-                                     layer_name='stage4',
-                                     input_size=(224, 224))
+            self.student_dict = dict(type='resnet', arch=self.model, layer_name='stage4', input_size=(224, 224))
         else:
-            self.student_dict = dict(type='resnet',
-                                     arch=self.model,
-                                     layer_name='stage4',
-                                     input_size=(32, 32))
+            self.student_dict = dict(type='resnet', arch=self.model, layer_name='stage4', input_size=(32, 32))
 
         if self.args.cam_type == 'gradcam':
             self.cam_student = GradCAM(self.student_dict, True)
@@ -222,12 +161,7 @@ class Trainer(object):
             self.cam_student = GradCAMpp(self.student_dict, True)
 
     def loss_cam(self, images):
-        """
-        Compute class activation map (CAM) loss
-        Args:
-            images: input images
-        """
-        assert not torch.isnan(images).any()
+        assert not torch.isnan(images).any()  
         mask_teacher, _ = self.cam_teacher(images, retain_graph=True)
         mask_student, _ = self.cam_student(images, retain_graph=True)
 
@@ -243,20 +177,11 @@ class Trainer(object):
         return F.mse_loss(mask_teacher, mask_student)
 
     def forward(self, images, teacher_outputs, labels=None, mask_selce=None):
-        """
-        Forward pass
-        Args:
-            images: input images
-            teacher_outputs: teacher outputs
-            labels: labels
-            mask_selce: mask for selective cross-entropy  # TODO: Check this descriptsion
-        """
         output = self.model(images)
         loss_KL, loss_CE = self.loss_fn_kd(output, labels, teacher_outputs)
         if mask_selce is not None:
             mask_selce = mask_selce.bool()
-            masked_output = torch.where(mask_selce.unsqueeze(-1),
-                                        output, torch.tensor(0.).to(output.device))
+            masked_output = torch.where(mask_selce.unsqueeze(-1), output, torch.tensor(0.).to(output.device))
             masked_labels = torch.where(mask_selce, labels, torch.tensor(0).to(labels.device))
             loss_CE = self.criterion(masked_output, masked_labels)
         loss_FA = self.loss_fa()
@@ -264,31 +189,16 @@ class Trainer(object):
         return output, loss_KL, loss_FA, loss_CE
 
     def backward_G(self, loss_G):
-        """
-        Backward pass for generator
-        Args:
-            loss_G: loss for generator
-        """
         self.optimizer_G.zero_grad()
         loss_G.backward()
         self.optimizer_G.step()
 
     def backward_S(self, loss_S):
-        """
-        Backward pass for student model
-        Args:
-            loss_S: loss for student model
-        """
         self.optimizer_S.zero_grad()
         loss_S.backward()
-        self.optimizer_S.step()
+        self.optimizer_S.step()       
 
     def backward(self, loss):
-        """
-        Backward pass for both generator and student model
-        Args:
-            loss: loss
-        """
         self.optimizer_G.zero_grad()
         self.optimizer_S.zero_grad()
         loss.backward()
@@ -296,9 +206,6 @@ class Trainer(object):
         self.optimizer_S.step()
 
     def reduce_minmax(self):
-        """
-        Reduce min and max values
-        """
         for m in self.model.module.modules():
             if isinstance(m, QuantAct):
                 dist.all_reduce(m.x_min, op=dist.ReduceOp.SUM)
@@ -307,49 +214,18 @@ class Trainer(object):
                 m.x_max = m.x_max / dist.get_world_size()
 
     def spatial_attention(self, x):
-        """
-        Compute spatial attention
-        Args:
-            x: input tensor
-        """
         return F.normalize(x.pow(2).mean([1]).view(x.size(0), -1))
 
     def channel_attention(self, x):
-        """
-        Compute channel attention
-        Args:
-            x: input tensor
-        """
         return F.normalize(x.pow(2).mean([2,3]).view(x.size(0), -1))
 
     def hook_activation_teacher(self, module, input, output):
-        """
-        Hook activation for teacher model
-        Args:
-            module: target module
-            input: input
-            output: output
-        """
         self.activation_teacher.append(self.channel_attention(output.clone()))
 
     def hook_activation(self, module, input, output):
-        """
-        Hook activation
-        Args:
-            module: target module
-            input: input
-            output: output
-        """
         self.activation.append(self.channel_attention(output.clone()))
 
     def hook_fn_forward(self,module, input, output):
-        """
-        Hook forward function
-        Args:
-            module: target module
-            input: input
-            output: output
-        """
         input = input[0]
         mean = input.mean([0, 2, 3])
         # use biased var in train
@@ -361,12 +237,6 @@ class Trainer(object):
         self.teacher_running_var.append(module.running_var)
 
     def train(self, epoch, direct_dataload=None):
-        """
-        Train the model
-        Args:
-            epoch: current epoch
-            direct_dataload: direct data loader
-        """
         top1_error = utils.AverageMeter()
         top1_loss = utils.AverageMeter()
         top5_error = utils.AverageMeter()
@@ -423,10 +293,8 @@ class Trainer(object):
             self.update_cam()
 
             if epoch < 4:
-                z = Variable(torch.randn(16,
-                                         self.settings.latent_dim)).to(self.args.local_rank)
-                labels = Variable(torch.randint(0, self.settings.nClasses,
-                                                (16,))).to(self.args.local_rank)
+                z = Variable(torch.randn(16, self.settings.latent_dim)).to(self.args.local_rank)
+                labels = Variable(torch.randint(0, self.settings.nClasses, (16,))).to(self.args.local_rank)
                 z = z.contiguous()
                 labels = labels.contiguous()
                 images = self.generator(z, labels)
@@ -437,9 +305,9 @@ class Trainer(object):
 
                 loss_one_hot = self.criterion(output_teacher_batch, labels)
                 BNS_loss = torch.zeros(1).to(self.args.local_rank)
-                for i in range(len(self.mean_list)):
-                    BNS_loss += self.MSE_loss(self.mean_list[i], self.teacher_running_mean[i]) + \
-                        self.MSE_loss(self.var_list[i], self.teacher_running_var[i])
+                for num in range(len(self.mean_list)):
+                    BNS_loss += self.MSE_loss(self.mean_list[num], self.teacher_running_mean[num]) + self.MSE_loss(
+                         self.var_list[num], self.teacher_running_var[num])
 
                 BNS_loss = BNS_loss / len(self.mean_list)
                 loss_G = loss_one_hot + 0.1 * BNS_loss
@@ -452,7 +320,7 @@ class Trainer(object):
                 except:
                     iterator = iter(direct_dataload)
                     images, labels = next(iterator)
-                if self.args.few_shot: # Real samples do not utilize low-pass filter
+                if self.args.few_shot: # Add for few-shot samples (few-shot samples do not utilize low-pass filter)
                     pass
                 else:
                     images = self.apply_filters(images, self.args.d_zero)
@@ -463,6 +331,9 @@ class Trainer(object):
                 self.activation_teacher.clear()
                 self.activation.clear()
 
+                # if self.args.few_shot:
+                # 	pass
+                # else:
                 images.requires_grad = True
 
                 output_teacher_batch = self.model_teacher(images)
@@ -485,21 +356,12 @@ class Trainer(object):
                     images_perturbed = images + self.settings.eps * perturbation
                     output_teacher_batch_perturbed = self.model_teacher(images_perturbed.detach())
 
-                _, loss_KL_perturbed, loss_FA_perturbed, loss_CE_perturbed = self.forward(images_perturbed.detach(),
-                                                                                          output_teacher_batch_perturbed.detach(),
-                                                                                          labels,
-                                                                                          mask_selce)
-
-                loss_S_perturbed = loss_KL_perturbed + \
-                                   self.args.lambda_ce * loss_CE_perturbed + \
-                                   loss_FA_perturbed if self.settings.dataset == "imagenet" \
-                                   else loss_KL_perturbed + self.args.lambda_ce * loss_CE_perturbed 
+                output_perturbed, loss_KL_perturbed, loss_FA_perturbed, loss_CE_perturbed = self.forward(images_perturbed.detach(), output_teacher_batch_perturbed.detach(), labels, mask_selce)
+                loss_S_perturbed = loss_KL_perturbed + self.args.lambda_ce * loss_CE_perturbed + loss_FA_perturbed if self.settings.dataset == "imagenet" else loss_KL_perturbed + self.args.lambda_ce * loss_CE_perturbed 
 
                 loss_cam = self.loss_cam(images)
 
-                loss_S = loss_S + \
-                         self.args.lambda_pert * loss_S_perturbed + \
-                         self.args.lambda_cam * loss_cam
+                loss_S = loss_S + self.args.lambda_pert * loss_S_perturbed + self.args.lambda_cam * loss_cam
 
                 self.optimizer_S.zero_grad()
                 loss_S.backward()
@@ -508,7 +370,7 @@ class Trainer(object):
             single_error, single_loss, single5_error = utils.compute_singlecrop(
                 outputs=output, labels=labels,
                 loss=loss_S, top5_flag=True, mean_flag=True)
-
+			
             top1_error.update(single_error, images.size(0))
             top1_loss.update(single_loss, images.size(0))
             top5_error.update(single5_error, images.size(0))
@@ -520,21 +382,11 @@ class Trainer(object):
             fp_acc.update(d_acc)
 
         if epoch < 4:
-            log_message = (
-                f"[Epoch {epoch + 1}/{self.settings.nEpochs}] [Batch {i + 1}/{iters}] "
-                f"[train acc: {100 * fp_acc.avg:.4f}%] G loss: {loss_G.item():.2f} "
-                f"One-hot loss: {loss_one_hot.item():.2f} BNS_loss: {BNS_loss.item():.2f}"
-                )
-
+            log_message = "[Epoch %d/%d] [Batch %d/%d] [train acc: %.4f%%] G loss: %.2f One-hot loss: %.2f BNS_loss: %.2f" \
+                % (epoch + 1, self.settings.nEpochs, i + 1, iters, 100 * fp_acc.avg, loss_G.item(), loss_one_hot.item(), BNS_loss.item())
         else:
-            log_message = (
-                f"[Epoch {epoch + 1}/{self.settings.nEpochs}}] [Batch {i+1}/{iters}] "
-                f"[train acc: {100 * fp_acc.avg:.4f}%] [loss: {loss_S.item():.2f}] "
-                f"loss KL: {loss_KL.item():.2f} loss CE: {self.args.lambda_ce * loss_CE.item():.2f} "
-                f"loss FA: {loss_FA.item():.2f} loss CAM: {self.args.lambda_cam * loss_cam:.2f} "
-                f"loss KLp: {loss_KL_perturbed.item():.2f} loss CEp: {self.args.lambda_ce * loss_CE_perturbed.item():.2f} "
-                f"loss FAp: {loss_FA_perturbed.item():.2f}"
-            )
+            log_message = "[Epoch %d/%d] [Batch %d/%d] [train acc: %.4f%%] [loss: %.2f] loss KL: %.2f loss CE: %.2f loss FA: %.2f loss CAM: %.2f loss KLp: %.2f loss CEp: %.2f loss FAp: %.2f" \
+            % (epoch + 1, self.settings.nEpochs, i+1, iters, 100 * fp_acc.avg, loss_S.item(), loss_KL.item(), self.args.lambda_ce * loss_CE.item(), loss_FA.item(), self.args.lambda_cam * loss_cam, loss_KL_perturbed.item(), self.args.lambda_ce * loss_CE_perturbed.item(), loss_FA_perturbed.item())
 
         self.logger.info(log_message)
         print(log_message)
@@ -543,11 +395,6 @@ class Trainer(object):
 
 
     def test(self, epoch):
-        """
-        Test the model
-        Args:
-            epoch: current epoch
-        """
         top1_error = utils.AverageMeter()
         top1_loss = utils.AverageMeter()
         top5_error = utils.AverageMeter()
@@ -593,11 +440,6 @@ class Trainer(object):
         return top1_error.avg, top1_loss.avg, top5_error.avg
 
     def test_teacher(self, epoch):
-        """
-        Test the teacher model
-        Args:
-            epoch: current epoch
-        """
         top1_error = utils.AverageMeter()
         top1_loss = utils.AverageMeter()
         top5_error = utils.AverageMeter()
@@ -653,9 +495,10 @@ class Trainer(object):
                 end_time = time.time()
                 iter_time = end_time - start_time
 
-        print(f"Teacher network: [Epoch {epoch + 1}/{self.settings.nEpochs}] "
-              f"[Batch {i + 1}/{iters}] "
-              f"[acc: {100.00 - top1_error.avg:.4f}%]")
+        print(
+                "Teacher network: [Epoch %d/%d] [Batch %d/%d] [acc: %.4f%%]"
+                % (epoch + 1, self.settings.nEpochs, i + 1, iters, (100.00 - top1_error.avg))
+                    )
 
         self.run_count += 1
 

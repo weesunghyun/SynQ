@@ -168,8 +168,8 @@ class GradCAM(object):
         saliency_map_min = saliency_map.view(b, -1).min(1)[0]
         saliency_map_max = saliency_map.view(b, -1).max(1)[0]
 
-        saliency_map -= saliency_map_min.view(b, 1, 1, 1)
-        saliency_map /= saliency_map_max.view(b, 1, 1, 1) - saliency_map_min.view(b, 1, 1, 1) + eps
+        saliency_map = (saliency_map - saliency_map_min.view(b, 1, 1, 1))
+        saliency_map = saliency_map / (saliency_map_max.view(b, 1, 1, 1) - saliency_map_min.view(b, 1, 1, 1) + eps)
 
         return saliency_map, logit
 
