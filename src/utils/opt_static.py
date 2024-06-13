@@ -4,12 +4,17 @@ TODO: add doc for module
 import torch
 
 __all__ = ["NetOption"]
+
 """
 You can run your script with CUDA_VISIBLE_DEVICES=5,6 python your_script.py
 or set the environment variable in the script by os.environ['CUDA_VISIBLE_DEVICES'] = '5,6'
 to map GPU 5, 6 to device_ids 0, 1, respectively.
 """
+
 class NetOption(object):
+    """
+    Options for training and testing
+    """
 
     def __init__(self):
         #  ------------ General options ----------------------------------------
@@ -50,7 +55,9 @@ class NetOption(object):
 
         # ---------- Resume or Retrain options ---------------------------------------------
         self.retrain = None  # path to model to retrain with, load model state_dict only
-        self.resume = None  # path to directory containing checkpoint, load state_dicts of model and optimizer, as well as training epoch
+        self.resume = None  # path to directory containing checkpoint
+                            # load state_dicts of model and optimizer
+                            # as well as training epoch
 
         # ---------- Visualization options -------------------------------------
         self.drawNetwork = True
@@ -63,19 +70,27 @@ class NetOption(object):
         # self.paramscheck()
 
     def paramscheck(self):
+        """
+        Check the parameters
+        """
         if self.torch_version != "0.2.0":
             self.drawNetwork = False
-            print("|===>DrawNetwork is supported by PyTorch with version: 0.2.0. The used version is ", self.torch_version)
+            print(
+                f"|===>DrawNetwork is supported by PyTorch with version: 0.2.0. "
+                f"The used version is {self.torch_version}"
+                )
 
         if self.netType in ["PreResNet", "ResNet"]:
-            self.save_path = "log_%s%d_%s_bs%d_lr%0.3f_%s/" % (
-                self.netType, self.depth, self.dataset,
-                self.batchSize, self.lr, self.experimentID)
-        else:
+            self.save_path = (
+                f"log {self.netType}{self.depth}_{self.dataset}_"
+                f"bs{self.batchSize}_lr{self.lr:.3f}_{self.experimentID}/"
+            )
 
-            self.save_path = "log_%s_%s_bs%d_lr%0.3f_%s/" % (
-                self.netType, self.dataset,
-                self.batchSize, self.lr, self.experimentID)
+        else:
+            self.save_path = (
+                f"log_{self.netType}_{self.dataset}_"
+                f"bs{self.batchSize}_lr{self.lr:.3f}_{self.experimentID}/"
+            )
 
         if self.dataset in ["cifar10", "mnist"]:
             self.nClasses = 10
