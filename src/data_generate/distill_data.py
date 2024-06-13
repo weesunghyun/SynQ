@@ -78,14 +78,7 @@ def generate_calib_centers(args, teacher_model, beta_ce = 5):
                                                                 verbose=False,
                                                                 patience=50)
 
-            if (i + 1) * args.batch_size <= num_classes:
-                labels = torch.tensor([i * args.batch_size + j for j in range(args.batch_size)],
-                                      dtype=torch.long, device='cuda')
-            else:
-                labels = torch.tensor([i * args.batch_size + j \
-                                       for j in range(num_classes % args.batch_size)],
-                                      dtype=torch.long, device='cuda')
-
+            labels = torch.tensor([i * args.batch_size + j for j in range(args.batch_size)] if (i + 1) * args.batch_size <= num_classes else [i * args.batch_size + j for j in range(num_classes % args.batch_size)], dtype=torch.long, device='cuda')
             if len(labels) < args.batch_size:
                 labels = torch.nn.functional.pad(labels, (0, args.batch_size - len(labels)))
 
@@ -108,15 +101,11 @@ def generate_calib_centers(args, teacher_model, beta_ce = 5):
                 var_loss = torch.zeros(1).cuda()
                 for num in range(len(mean_list)):
                     if num < (len(mean_list)+2) // 2 - 2 :
-                        mean_loss += 0.2 * MSE_loss(mean_list[num],
-                                                    teacher_running_mean[num].detach())
-                        var_loss += 0.2 * MSE_loss(var_list[num],
-                                                   teacher_running_var[num].detach())
+                        mean_loss += 0.2 * MSE_loss(mean_list[num], teacher_running_mean[num].detach())
+                        var_loss += 0.2 * MSE_loss(var_list[num], teacher_running_var[num].detach())
                     else:
-                        mean_loss += 1.1 * MSE_loss(mean_list[num],
-                                                    teacher_running_mean[num].detach())
-                        var_loss += 1.1 * MSE_loss(var_list[num],
-                                                   teacher_running_var[num].detach())
+                        mean_loss += 1.1 * MSE_loss(mean_list[num], teacher_running_mean[num].detach())
+                        var_loss += 1.1 * MSE_loss(var_list[num], teacher_running_var[num].detach())
 
                 mean_loss = mean_loss / len(mean_list)
                 var_loss = var_loss / len(mean_list)
@@ -148,8 +137,7 @@ def generate_calib_centers(args, teacher_model, beta_ce = 5):
             del labels
             torch.cuda.empty_cache()
 
-        print(f"Total time for {num_classes//args.batch_size} "
-              f"batches: {time.time()-total_time:.2f} sec.")
+        print(f"Total time for {num_classes//args.batch_size} batches: {time.time()-total_time:.2f} sec.")
         check_path(calib_path)
         with open(calib_path, "wb") as fp:
             pickle.dump(refined_gaussian, fp, protocol=pickle.HIGHEST_PROTOCOL)
@@ -217,8 +205,7 @@ class DistillData(object):
         self.teacher_running_mean.append(module.running_mean)
         self.teacher_running_var.append(module.running_var)
 
-    def getDistilData(self, model_name="resnet18", teacher_model=None, batch_size=256,
-                      num_batch=1, group=1, augMargin=0.4, beta=1.0, gamma=0, save_path_head=""):
+    def getDistilData(self, model_name="resnet18", teacher_model=None, batch_size=256, num_batch=1, group=1, augMargin=0.4, beta=1.0, gamma=0, save_path_head=""):
 
         data_path = os.path.join(save_path_head, model_name+"_refined_gaussian_hardsample_" \
                     + "beta"+ str(beta) +"_gamma" + str(gamma) + "_group" + str(group) + ".pickle")
@@ -361,28 +348,22 @@ class DistillData(object):
                 mask=mask.scatter_(1,b,torch.ones_like(b).float())
                 p=a[mask.bool()]
 
-                # loss_target = beta * F.kl_div(input=F.log_softmax(output, dim=1),
-                #                               target=labels_mask.to(output.device),
-                #                               reduction='batchmean')
+                # loss_target = beta * F.kl_div(input=F.log_softmax(output, dim=1), target=labels_mask.to(output.device), reduction='batchmean')
                 loss_target = beta * ((1-p).pow(gamma) * CE_loss(output, labels)).mean()
 
                 mean_loss = torch.zeros(1).cuda()
                 var_loss = torch.zeros(1).cuda()
                 for num in range(len(self.mean_list)):
-                    mean_loss += MSE_loss(self.mean_list[num].cpu(),
-                                          self.teacher_running_mean[num].detach().cpu())
-                    var_loss += MSE_loss(self.var_list[num].cpu(),
-                                         self.teacher_running_var[num].detach().cpu())
+                    mean_loss += MSE_loss(self.mean_list[num].cpu(), self.teacher_running_mean[num].detach().cpu())
+                    var_loss += MSE_loss(self.var_list[num].cpu(), self.teacher_running_var[num].detach().cpu())
 
                 if self.args.lbns:
                     print(f"Length of mean list: {len(self.mean_list)}")
                     lbns_loss = torch.zeros(1).cuda()
                     for num in range(len(self.mean_list)):
                         if num >= (len(self.mean_list)+2) // 2 - 2 :
-                            lmean_loss = MSE_loss(self.mean_list[num].cuda(),
-                                                  self.calib_running_mean[num].detach().cuda())
-                            lvar_loss = MSE_loss(self.var_list[num].cuda(),
-                                                 self.calib_running_var[num].detach().cuda())
+                            lmean_loss = MSE_loss(self.mean_list[num].cuda(), self.calib_running_mean[num].detach().cuda())
+                            lvar_loss = MSE_loss(self.var_list[num].cuda(), self.calib_running_var[num].detach().cuda())
                             lbns_loss += lmean_loss + lvar_loss
                     lbns_loss = lbns_loss / (len(self.mean_list) * len(labels))
 
@@ -392,7 +373,7 @@ class DistillData(object):
                 if self.args.lbns:
                     total_loss = 0.4 * (mean_loss + var_loss) + loss_target + 0.02 * lbns_loss
                 else:
-                    total_loss = mean_loss + var_loss + loss_target
+                    total_loss = mean_loss + var_loss + loss_target if not self.args.lbns else
 
                 print(i, it, 'lr', optimizer.state_dict()['param_groups'][0]['lr'],
                         'mean_loss', mean_loss.item(), 'var_loss',

@@ -1,20 +1,25 @@
 import os
+os.environ['CUDA_LAUNCH_BLOCKING'] = '1'
 import sys
 import argparse
+
+import numpy as np
 
 import torch
 
 from distill_data import *
 
+module_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'utils'))
+if module_path not in sys.path:
+    sys.path.append(module_path)
+
+from get_resnet34 import resnet34_get_model
+
 from pytorchcv.model_provider import get_model as ptcv_get_model
 
-os.environ['CUDA_LAUNCH_BLOCKING'] = '1'
 
 # model settings
 def arg_parse():
-    """
-    Parses arguments for data generation.
-    """
     parser = argparse.ArgumentParser()
     parser.add_argument('--model',
                         type=str,
@@ -56,12 +61,12 @@ def arg_parse():
     parser.add_argument('--radius', type=float, default=0.05, metavar='radius')
     parser.add_argument('--lbns', type=bool, default=False, metavar='lbns')
     parser.add_argument('--fft', type=bool, default=False, metavar='fft')
-
+    
     args = parser.parse_args()
-
+    
     if args.lbns:
         args.save_path_head = args.save_path_head + "_lbns"
-
+    
     if args.fft:
         args.save_path_head = args.save_path_head + "_fft"
     return args
@@ -74,11 +79,6 @@ if __name__ == '__main__':
     torch.backends.cudnn.benchmark = True
 
     if args.model == 'resnet34_cifar100':
-        module_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'utils'))
-        if module_path not in sys.path:
-            sys.path.append(module_path)
-        from get_resnet34 import resnet34_get_model
-
         model = resnet34_get_model()
         model.load_state_dict(torch.load('../checkpoints/resnet34.pth'))
         print('****** Full precision model loaded ******')
@@ -88,7 +88,7 @@ if __name__ == '__main__':
 
     if args.lbns:
         args.calib_centers = generate_calib_centers(args, model.cuda())
-
+    
     DD = DistillData(args)
     dataloader = DD.getDistilData(
         model_name=args.model,
@@ -101,3 +101,7 @@ if __name__ == '__main__':
     )
 
     print('****** Data Generated ******')
+
+
+
+
