@@ -1,6 +1,7 @@
 """
-TODO: add doc for module
+    # TODO: add description
 """
+
 import torch
 
 __all__ = ["NetOption"]

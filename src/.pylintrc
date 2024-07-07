@@ -442,11 +442,9 @@ disable=raw-checker-failed,
       ;   attribute-defined-outside-init, # TODO ADD: W0201
         not-callable, # ADD: E1102
         ; arguments-differ, # ADD: W0221
-        
-
-
-
-
+        too-many-arguments, # ADD: R0913
+        too-many-locals, # ADD: R0914
+        too-few-public-methods, # ADD: R0903
 
 
 # Enable the message, report, category or checker with the given id(s). You can

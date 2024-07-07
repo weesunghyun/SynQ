@@ -507,7 +507,7 @@ class Trainer(object):
 
             single_error, single_loss, single5_error = utils.compute_singlecrop(
                 outputs=output, labels=labels,
-                loss=loss_S, top5_flag=True, mean_flag=True)
+                loss=loss_S, top5_flag=True)
 
             top1_error.update(single_error, images.size(0))
             top1_loss.update(single_loss, images.size(0))
@@ -571,7 +571,7 @@ class Trainer(object):
 
                 single_error, single_loss, single5_error = utils.compute_singlecrop(
                     outputs=output, loss=loss,
-                    labels=labels, top5_flag=True, mean_flag=True)
+                    labels=labels, top5_flag=True)
 
                 top1_error.update(single_error, images.size(0))
                 top1_loss.update(single_loss, images.size(0))
@@ -644,7 +644,7 @@ class Trainer(object):
 
                     single_error, single_loss, single5_error = utils.compute_singlecrop(
                               outputs=output, loss=loss, labels=labels,
-                              top5_flag=True, mean_flag=True)
+                              top5_flag=True)
 
                 top1_error.update(single_error, images.size(0))
                 top1_loss.update(single_loss, images.size(0))
