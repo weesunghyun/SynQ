@@ -172,25 +172,25 @@ class AsymmetricQuantFunction(Function):
         """
         return grad_output, None, None, None
 
-    @staticmethod
-    def jvp(ctx, *grad_inputs): # do not use
-        """
-        Jacobian-vector product for quantization function.
-        Args:
-            ctx: context for back-propagation
-            grad_inputs: gradient of the input
-        """
-        raise NotImplementedError("jvp is not implemented for quantization function.")
+    # @staticmethod
+    # def jvp(ctx, *grad_inputs): # do not use
+    #     """
+    #     Jacobian-vector product for quantization function.
+    #     Args:
+    #         ctx: context for back-propagation
+    #         grad_inputs: gradient of the input
+    #     """
+    #     raise NotImplementedError("jvp is not implemented for quantization function.")
 
-    @staticmethod
-    def vjp(ctx, *grad_outputs): # do not use
-        """
-        Vector-Jacobian product for quantization function.
-        Args:
-            ctx: context for back-propagation
-            grad_outputs: gradient of the output
-        """
-        raise NotImplementedError("vjp is not implemented for quantization function.")
+    # @staticmethod
+    # def vjp(ctx, *grad_outputs): # do not use
+    #     """
+    #     Vector-Jacobian product for quantization function.
+    #     Args:
+    #         ctx: context for back-propagation
+    #         grad_outputs: gradient of the output
+    #     """
+    #     raise NotImplementedError("vjp is not implemented for quantization function.")
 
 
 
@@ -311,22 +311,22 @@ class SymmetricQuantFunctionDSG(Function):
         """
         return grad_output, None, None, None
 
-    @staticmethod
-    def jvp(ctx, *grad_inputs): # do not use
-        """
-            Jacobian-vector product for quantization function.    
-            Args:
-                ctx: context for back-propagation
-                grad_inputs: gradient of the input
-        """
-        raise NotImplementedError("jvp is not implemented for quantization function.")
+    # @staticmethod
+    # def jvp(ctx, *grad_inputs): # do not use
+    #     """
+    #         Jacobian-vector product for quantization function.
+    #         Args:
+    #             ctx: context for back-propagation
+    #             grad_inputs: gradient of the input
+    #     """
+    #     raise NotImplementedError("jvp is not implemented for quantization function.")
 
-    @staticmethod
-    def vjp(ctx, *grad_outputs): # do not use
-        """
-        Vector-Jacobian product for quantization function.
-        Args:
-            ctx: context for back-propagation
-            grad_outputs: gradient of the output
-        """
-        raise NotImplementedError("vjp is not implemented for quantization function.")
+    # @staticmethod
+    # def vjp(ctx, *grad_outputs): # do not use
+    #     """
+    #     Vector-Jacobian product for quantization function.
+    #     Args:
+    #         ctx: context for back-propagation
+    #         grad_outputs: gradient of the output
+    #     """
+    #     raise NotImplementedError("vjp is not implemented for quantization function.")
