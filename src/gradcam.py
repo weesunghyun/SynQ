@@ -2,7 +2,7 @@ import torch
 from torch import nn
 from torch.nn import functional as F
 
-from quantization_utils.quant_modules import Quant_Conv2d
+from quantization_utils.quant_modules import QuantConv2d
 
 class GradCAM(object):
     """Calculate GradCAM salinecy map."""
@@ -72,7 +72,7 @@ class GradCAM(object):
 
         target_layer = None
         for _, module in self.model_arch.named_modules():
-            if isinstance(module, (nn.Conv2d, Quant_Conv2d)):
+            if isinstance(module, (nn.Conv2d, QuantConv2d)):
                 target_layer = module
 
         if target_layer is None:
@@ -153,7 +153,7 @@ class GradCAM(object):
 
         b, k, _, _ = gradients.size()
 
-        assert not torch.isnan(_input).any(), "Input contains NaN"
+        assert not torch.isnan(input).any(), "Input contains NaN"
 
         alpha = gradients.view(b, k, -1).mean(2).clamp(min=1e-10)
         weights = alpha.view(b, k, 1, 1)

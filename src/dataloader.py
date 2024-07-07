@@ -133,7 +133,7 @@ class DataLoader(object):
             assert False, "invalid data set"
 
         test_loader = torch.utils.data.DataLoader(dataset=test_dataset,
-                                                  batch_size=10000,
+                                                  batch_size=self.batch_size, # 10000
                                                   shuffle=False,
                                                   pin_memory=True,
                                                   num_workers=self.n_threads)

@@ -1,39 +1,48 @@
-import argparse
-import copy
-import datetime
-import logging
-import pickle
+"""
+    # TODO: add description
+"""
 import os
+import copy
 import time
-import traceback
+import pickle
 import shutil
-import torch
+import logging
+import argparse
+import datetime
 import warnings
+import traceback
+
 import numpy as np
 from PIL import Image
 
-import torch.backends.cudnn as cudnn
-import torch.nn as nn
-import torchvision.transforms as transforms
-import torchvision.datasets as datasets
-
+import torch
+from torch import nn
+from torch.backends import cudnn
 from torch.utils.data import Dataset
+from torch import distributed as dist
+from torch.utils.data.distributed import DistributedSampler
+from torch.nn.parallel import DistributedDataParallel as DDP
+
+from torchvision import datasets
+from torchvision import transforms
+
+import utils
 from options import Option
 from dataloader import DataLoader
 from trainer_direct import Trainer
-from quantization_utils.quant_modules import *
+from quantization_utils.quant_modules import * # import waildcard
+from utils.get_resnet34 import resnet34_get_model
 from pytorchcv.model_provider import get_model as ptcv_get_model
 from conditional_batchnorm import CategoricalConditionalBatchNorm2d
 
-import utils as utils
-import torch.distributed as dist
-
-from torch.nn.parallel import DistributedDataParallel as DDP
-from torch.utils.data.distributed import DistributedSampler
-
-from utils.get_resnet34 import resnet34_get_model
 
 class Generator(nn.Module):
+    """
+    Generator for CIFAR-10 and CIFAR-100
+    Args:
+        options: Option class
+        conf_path: Path to the configuration file
+    """
     def __init__(self, options=None, conf_path=None):
         super(Generator, self).__init__()
         self.settings = options or Option(conf_path)
@@ -61,6 +70,12 @@ class Generator(nn.Module):
         )
 
     def forward(self, z, labels):
+        """
+        Forward pass of the generator
+        Args:
+            z: Latent vector
+            labels: Labels
+        """
         gen_input = torch.mul(self.label_emb(labels), z)
         out = self.l1(gen_input)
         out = out.view(out.shape[0], 128, self.init_size, self.init_size)
@@ -71,7 +86,14 @@ class Generator(nn.Module):
         img = self.conv_blocks2(img)
         return img
 
+
 class Generator_imagenet(nn.Module):
+    """
+    Generator for ImageNet
+    Args:
+        options: Option class
+        conf_path: Path to the configuration file
+    """
     def __init__(self, options=None, conf_path=None):
         self.settings = options or Option(conf_path)
 
@@ -94,6 +116,12 @@ class Generator_imagenet(nn.Module):
         self.conv_blocks2_5 = nn.BatchNorm2d(self.settings.channels, affine=False)
 
     def forward(self, z, labels):
+        """
+        Forward pass of the generator
+        Args:
+            z: Latent vector
+            labels: Labels
+        """
         out = self.l1(z)
         out = out.view(out.shape[0], 128, self.init_size, self.init_size)
         img = self.conv_blocks0_0(out, labels)
@@ -110,7 +138,16 @@ class Generator_imagenet(nn.Module):
         img = self.conv_blocks2_5(img)
         return img
 
+
 class direct_dataset(Dataset):
+    """
+    Direct dataset class
+    Args:
+        args: Arguments
+        settings: Option class contains varios configuration
+        logger: Logger
+        dataset: Dataset name
+    """
     def __init__(self, args, settings, logger, dataset):
         self.settings = settings
         self.logger = logger
@@ -205,7 +242,15 @@ class direct_dataset(Dataset):
     def __len__(self):
         return len(self.tmp_label)
 
+
 class ExperimentDesign:
+    """
+    Experiment design class
+    Args:
+        options: Option class contains varios configuration
+        args: Arguments
+        logger: Logger
+    """
     def __init__(self, options=None, args=None, logger=None):
         self.settings = options
         self.args = args
@@ -222,6 +267,9 @@ class ExperimentDesign:
         self.prepare()
 
     def set_logger(self):
+        """
+        Set logger
+        """
         if dist.get_rank()==0:
             file_formatter = logging.Formatter('%(asctime)s %(levelname)s: %(message)s')
             file_handler = logging.FileHandler(os.path.join(self.settings.save_path, "train_test.log"))
@@ -231,6 +279,9 @@ class ExperimentDesign:
         return self.logger
 
     def prepare(self):
+        """
+        Prepare for the experiment
+        """
         torch.cuda.set_device(self.args.local_rank)
         dist.init_process_group(backend='nccl')
         if dist.get_rank() == 0:
@@ -248,11 +299,17 @@ class ExperimentDesign:
         self._set_trainer()
 
     def _set_gpu(self):
+        """
+        Set GPU
+        """
         torch.manual_seed(self.settings.manualSeed)
         torch.cuda.manual_seed(self.settings.manualSeed)
         cudnn.benchmark = True
 
     def _set_dataloader(self):
+        """
+        Set data loader
+        """
         data_loader = DataLoader(dataset=self.settings.dataset,
                                  batch_size=self.settings.batchSize,
                                  data_path=self.settings.dataPath,
@@ -263,6 +320,9 @@ class ExperimentDesign:
         self.train_loader, self.test_loader = data_loader.getloader()
 
     def _set_model(self):
+        """
+        Set model
+        """
         if self.settings.dataset in ["cifar100", "cifar10"]:
             if self.settings.model_name == "resnet34_cifar100":
                 self.model = resnet34_get_model()
@@ -287,6 +347,9 @@ class ExperimentDesign:
         self.generator = DDP(self.generator.to(self.args.local_rank), device_ids=[self.args.local_rank], output_device=self.args.local_rank, broadcast_buffers=False)
 
     def _set_trainer(self):
+        """
+        Set trainer
+        """
         lr_master_S = utils.LRPolicy(self.settings.lr_S,
                                      self.settings.nEpochs,
                                      self.settings.lrPolicy_S)
@@ -322,16 +385,21 @@ class ExperimentDesign:
             optimizer_state=self.optimizer_state,
             run_count=self.start_epoch)
 
-    def quantize_model(self,model):
+    def quantize_model(self, model):
+        """
+        Quantize model
+        Args:
+            model: Original Pretrained Model (Full-Precision)
+        """
         weight_bit = self.settings.qw
         act_bit = self.settings.qa
 
         if type(model) == nn.Conv2d:
-            quant_mod = Quant_Conv2d(weight_bit=weight_bit)
+            quant_mod = QuantConv2d(weight_bit=weight_bit)
             quant_mod.set_param(model)
             return quant_mod
         elif type(model) == nn.Linear:
-            quant_mod = Quant_Linear(weight_bit=weight_bit)
+            quant_mod = QuantLinear(weight_bit=weight_bit)
             quant_mod.set_param(model)
             return quant_mod
         elif type(model) == nn.ReLU or type(model) == nn.ReLU6:
@@ -350,11 +418,19 @@ class ExperimentDesign:
             return q_model
 
     def _replace(self):
+        """
+        Replace model with quantized model
+        """
         self.model = self.quantize_model(self.model)
         self.model = torch.nn.SyncBatchNorm.convert_sync_batchnorm(self.model)
         self.model = DDP(self.model.to(self.args.local_rank), device_ids=[self.args.local_rank], output_device=self.args.local_rank, broadcast_buffers=False)
 
-    def freeze_model(self,model):
+    def freeze_model(self, model):
+        """
+        Freeze model
+        Args:
+            model: Model to freeze
+        """
         if type(model) == QuantAct:
             model.fix()
         elif type(model) == nn.Sequential:
@@ -367,7 +443,12 @@ class ExperimentDesign:
                     self.freeze_model(mod)
             return model
 
-    def unfreeze_model(self,model):
+    def unfreeze_model(self, model):
+        """
+        Unfreeze model
+        Args:
+            model: Model to unfreeze
+        """
         if type(model) == QuantAct:
             model.unfix()
         elif type(model) == nn.Sequential:
@@ -381,6 +462,9 @@ class ExperimentDesign:
             return model
 
     def run(self):
+        """
+        Run the experiment
+        """
         best_top1 = 100
         best_top5 = 100
         start_time = time.time()
@@ -438,6 +522,9 @@ class ExperimentDesign:
 
 
 def main():
+    """
+    Main function
+    """
     logger = logging.getLogger()
     parser = argparse.ArgumentParser(description='Baseline')
     parser.add_argument('--conf_path', type=str, metavar='conf_path',
