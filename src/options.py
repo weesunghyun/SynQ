@@ -14,17 +14,17 @@ class Option(NetOption):
         self.model_name = self.conf['model_name']
         self.generateDataPath = self.conf['generateDataPath']
         self.generateLabelPath = self.conf['generateLabelPath']
-        self.dataPath = self.conf['dataPath']  # path for loading data set
+        self.data_path = self.conf['dataPath']  # path for loading data set
         self.dataset = self.conf['dataset']  # options: imagenet | cifar100
 
         # ------------- Data options -------------------------------------------
-        self.nThreads = self.conf['nThreads']  # number of data loader threads
+        self.num_threads = self.conf['nThreads']  # number of data loader threads
 
         # ---------- Optimization options --------------------------------------
-        self.nEpochs = self.conf['nEpochs']  # number of total epochs to train
-        self.batchSize = self.conf['batchSize']  # mini-batch size
+        self.num_epochs = self.conf['nEpochs']  # number of total epochs to train
+        self.batch_size = self.conf['batchSize']  # mini-batch size
         self.momentum = self.conf['momentum']  # momentum
-        self.weightDecay = float(self.conf['weightDecay'])  # weight decay
+        self.weight_decay = float(self.conf['weightDecay'])  # weight decay
         self.opt_type = self.conf['opt_type']
 
         self.lr_S = self.conf['lr_S']  # initial learning rate
@@ -33,7 +33,7 @@ class Option(NetOption):
         self.decayRate_S = self.conf['decayRate_S']  # lr decay rate
 
         # ---------- Model options ---------------------------------------------
-        self.nClasses = self.conf['nClasses']  # number of classes in the dataset
+        self.num_classes = self.conf['nClasses']  # number of classes in the dataset
 
 # ---------- Quantization options ---------------------------------------------
         self.qw = self.conf['qw']
@@ -83,10 +83,10 @@ class Option(NetOption):
                 self.torch_version))
 
         if self.dataset in ["cifar10", "mnist"]:
-            self.nClasses = 10
+            self.num_classes = 10
         elif self.dataset == "cifar100":
-            self.nClasses = 100
+            self.num_classes = 100
         elif self.dataset == "imagenet" or "thi_imgnet":
-            self.nClasses = 1000
+            self.num_classes = 1000
         elif self.dataset == "imagenet100":
-            self.nClasses = 100
+            self.num_classes = 100

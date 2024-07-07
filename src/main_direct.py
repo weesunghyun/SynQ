@@ -47,7 +47,7 @@ class Generator(nn.Module):
     def __init__(self, options=None, conf_path=None):
         super(Generator, self).__init__()
         self.settings = options or Option(conf_path)
-        self.label_emb = nn.Embedding(self.settings.nClasses, self.settings.latent_dim)
+        self.label_emb = nn.Embedding(self.settings.num_classes, self.settings.latent_dim)
         self.init_size = self.settings.img_size // 4
         self.l1 = nn.Sequential(nn.Linear(self.settings.latent_dim, 128 * self.init_size ** 2))
 
@@ -219,7 +219,7 @@ class direct_dataset(Dataset):
             calib_path = f'../new_generate/data/{self.settings.dataset}{temp}_lbns/{self.settings.model_name}_calib_centers.pickle'
             with open(calib_path, "rb") as fp:
                 gaussian_data = pickle.load(fp)
-            labels_list = range(self.settings.nClasses)
+            labels_list = range(self.settings.num_classes)
             self.tmp_data = np.concatenate((self.tmp_data, np.concatenate(gaussian_data, axis=0)[:len(labels_list)]))
             self.tmp_label = np.concatenate((self.tmp_label, np.array(labels_list)))
 
@@ -303,8 +303,8 @@ class ExperimentDesign:
         """
         Set GPU
         """
-        torch.manual_seed(self.settings.manualSeed)
-        torch.cuda.manual_seed(self.settings.manualSeed)
+        torch.manual_seed(self.settings.manual_seed)
+        torch.cuda.manual_seed(self.settings.manual_seed)
         cudnn.benchmark = True
 
     def _set_dataloader(self):
@@ -312,10 +312,10 @@ class ExperimentDesign:
         Set data loader
         """
         data_loader = DataLoader(dataset=self.settings.dataset,
-                                 batch_size=self.settings.batchSize,
-                                 data_path=self.settings.dataPath,
-                                 n_threads=self.settings.nThreads,
-                                 ten_crop=self.settings.tenCrop,
+                                 batch_size=self.settings.batch_size,
+                                 data_path=self.settings.data_path,
+                                 n_threads=self.settings.num_threads,
+                                 ten_crop=self.settings.ten_crop,
                                  logger=self.logger)
 
         self.train_loader, self.test_loader = data_loader.getloader()
@@ -352,10 +352,10 @@ class ExperimentDesign:
         Set trainer
         """
         lr_master_S = utils.LRPolicy(self.settings.lr_S,
-                                     self.settings.nEpochs,
+                                     self.settings.num_epochs,
                                      self.settings.lrPolicy_S)
         lr_master_G = utils.LRPolicy(self.settings.lr_G,
-                                     self.settings.nEpochs,
+                                     self.settings.num_epochs,
                                      self.settings.lrPolicy_G)
 
         params_dict_S = {
@@ -473,12 +473,12 @@ class ExperimentDesign:
         dataset = direct_dataset(self.args, self.settings, self.logger, self.settings.dataset)
 
         direct_dataload = torch.utils.data.DataLoader(dataset,
-                                                      batch_size=min(self.settings.batchSize, len(dataset)),
+                                                      batch_size=min(self.settings.batch_size, len(dataset)),
                                                       sampler = DistributedSampler(dataset))
         test_error, test_loss, test5_error = self.trainer.test(epoch=-1)
 
         try:
-            for epoch in range(self.start_epoch, self.settings.nEpochs):
+            for epoch in range(self.start_epoch, self.settings.num_epochs):
                 self.epoch = epoch
                 self.start_epoch = 0
 
@@ -490,7 +490,7 @@ class ExperimentDesign:
                 self.freeze_model(self.model)
 
                 if epoch > 4:
-                # if (epoch > self.settings.nEpochs // 5) and (epoch % 5 == 0):
+                # if (epoch > self.settings.num_epochs // 5) and (epoch % 5 == 0):
                         test_error, test_loss, test5_error = self.trainer.test(epoch=epoch)
                 else:
                     print(f"skip eval for epoch {epoch}")
@@ -555,7 +555,7 @@ def main():
         print("Running in non-distributed mode.")
 
     option = Option(args.conf_path)
-    option.manualSeed = 1
+    option.manual_seed = 1
 
     print(args)
     logger.info(args)

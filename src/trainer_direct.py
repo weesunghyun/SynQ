@@ -70,7 +70,7 @@ class Trainer(object):
                 params=self.model.parameters(),
                 lr=self.lr_master_S.lr,
                 momentum=self.settings.momentum,
-                weight_decay=self.settings.weightDecay,
+                weight_decay=self.settings.weight_decay,
                 nesterov=True,
             )
         elif opt_type == "RMSProp":
@@ -78,7 +78,7 @@ class Trainer(object):
                 params=self.model.parameters(),
                 lr=self.lr_master_S.lr,
                 eps=1.0,
-                weight_decay=self.settings.weightDecay,
+                weight_decay=self.settings.weight_decay,
                 momentum=self.settings.momentum,
                 alpha=self.settings.momentum
             )
@@ -87,7 +87,7 @@ class Trainer(object):
                 params=self.model.parameters(),
                 lr=self.lr_master_S.lr,
                 eps=1e-5,
-                weight_decay=self.settings.weightDecay
+                weight_decay=self.settings.weight_decay
             )
         else:
             assert False, "invalid type: %d" % opt_type
@@ -425,7 +425,7 @@ class Trainer(object):
             if epoch < 4:
                 z = Variable(torch.randn(16,
                                          self.settings.latent_dim)).to(self.args.local_rank)
-                labels = Variable(torch.randint(0, self.settings.nClasses,
+                labels = Variable(torch.randint(0, self.settings.num_classes,
                                                 (16,))).to(self.args.local_rank)
                 z = z.contiguous()
                 labels = labels.contiguous()
@@ -521,14 +521,14 @@ class Trainer(object):
 
         if epoch < 4:
             log_message = (
-                f"[Epoch {epoch + 1}/{self.settings.nEpochs}] [Batch {i + 1}/{iters}] "
+                f"[Epoch {epoch + 1}/{self.settings.num_epochs}] [Batch {i + 1}/{iters}] "
                 f"[train acc: {100 * fp_acc.avg:.4f}%] G loss: {loss_G.item():.2f} "
                 f"One-hot loss: {loss_one_hot.item():.2f} BNS_loss: {BNS_loss.item():.2f}"
                 )
 
         else:
             log_message = (
-                f"[Epoch {epoch + 1}/{self.settings.nEpochs}] [Batch {i+1}/{iters}] "
+                f"[Epoch {epoch + 1}/{self.settings.num_epochs}] [Batch {i+1}/{iters}] "
                 f"[train acc: {100 * fp_acc.avg:.4f}%] [loss: {loss_S.item():.2f}] "
                 f"loss KL: {loss_KL.item():.2f} loss CE: {self.args.lambda_ce * loss_CE.item():.2f} "
                 f"loss FA: {loss_FA.item():.2f} loss CAM: {self.args.lambda_cam * loss_cam:.2f} "
@@ -580,12 +580,12 @@ class Trainer(object):
                 end_time = time.time()
         self.logger.info(
             "[Epoch %d/%d] [Batch %d/%d] [acc: %.4f%%]" 
-            % (epoch + 1, self.settings.nEpochs, i + 1, iters, (100.00-top1_error.avg))
+            % (epoch + 1, self.settings.num_epochs, i + 1, iters, (100.00-top1_error.avg))
         )
 
         print(
             "[Epoch %d/%d] [Batch %d/%d] [acc: %.4f%%]"
-            % (epoch + 1, self.settings.nEpochs, i + 1, iters, (100.00-top1_error.avg))
+            % (epoch + 1, self.settings.num_epochs, i + 1, iters, (100.00-top1_error.avg))
         )
 
         self.run_count += 1
@@ -615,14 +615,14 @@ class Trainer(object):
 
                 labels = labels.to(self.args.local_rank)
 
-                if self.settings.tenCrop:
+                if self.settings.ten_crop:
                     image_size = images.size()
                     images = images.view(
                               image_size[0] * 10, image_size[1] / 10, image_size[2], image_size[3])
                     images_tuple = images.split(image_size[0])
                     output = None
                     for img in images_tuple:
-                        if self.settings.nGPU == 1:
+                        if self.settings.num_gpu == 1:
                             img = img.to(self.args.local_rank)
                         img_var = Variable(img, volatile=True)
                         temp_output, _ = self.forward(img_var)
@@ -633,7 +633,7 @@ class Trainer(object):
                     single_error, single_loss, single5_error = utils.compute_tencrop(
                               outputs=output, labels=labels)
                 else:
-                    if self.settings.nGPU == 1:
+                    if self.settings.num_gpu == 1:
                         images = images.to(self.args.local_rank)
                     self.activation_teacher.clear()
                     output = self.model_teacher(images)
@@ -653,7 +653,7 @@ class Trainer(object):
                 end_time = time.time()
                 iter_time = end_time - start_time
 
-        print(f"Teacher network: [Epoch {epoch + 1}/{self.settings.nEpochs}] "
+        print(f"Teacher network: [Epoch {epoch + 1}/{self.settings.num_epochs}] "
               f"[Batch {i + 1}/{iters}] "
               f"[acc: {100.00 - top1_error.avg:.4f}%]")
 
