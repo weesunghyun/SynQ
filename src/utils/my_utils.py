@@ -1,3 +1,24 @@
+"""
+[SW Starlab]
+Zero-shot Quantization with SynQ (Synthesis-aware Fine-tuning for Zero-shot Quantization)
+
+Author: Minjun Kim (minjun.kim@snu.ac.kr), Seoul National University
+        Jongjin Kim (j2kim99@snu.ac.kr), Seoul National University
+        U Kang (ukang@snu.ac.kr), Seoul National University
+
+Version : 1.0
+Date : Sep 6th, 2023
+Main Contact: Minjun Kim
+This software is free of charge under research purposes.
+For commercial purposes, please contact the authors.
+
+my_utils.py
+    - codes for utility functions
+
+This code is mainly based on
+    - ZeroQ: https://github.com/amirgholami/ZeroQ
+    - HAST: https://github.com/lihuantong/HAST
+"""
 import os
 import sys
 import random
@@ -8,7 +29,7 @@ from datetime import datetime
 import numpy as np
 
 import torch
-from torch import nn
+# from torch import nn
 
 def fix_seed(seed):
     """
@@ -48,9 +69,8 @@ def to_device(gpu):
     """
     if gpu is not None and torch.cuda.is_available():
         return torch.device(f'cuda:{gpu}')
-    else:
-        return torch.device('cpu')
 
+    return torch.device('cpu')
 
 def print_tensors_shape(l):
     """
@@ -63,14 +83,11 @@ def print_tensors_shape(l):
     for item in l:
         print(f"  {item.shape}")
 
-
 def filter_warnings():
     """
     Filter warnings
     """
-
     warnings.filterwarnings("ignore")
-
 
 def setup_logging_with_path(log_path):
     """
@@ -78,7 +95,6 @@ def setup_logging_with_path(log_path):
     Args:
         log_path: path of log file
     """
-
     logging.basicConfig(level=logging.DEBUG,
                     format='%(asctime)s - %(levelname)s - %(message)s',
                     datefmt='%Y-%m-%d %H:%M:%S',
@@ -95,7 +111,7 @@ def setup_logging_with_path(log_path):
     logging.getLogger('').addHandler(console)
 
 
-    class StreamToLogger(object):
+    class StreamToLogger:
         """
         Fake file-like stream object that redirects writes to a logger instance.
         """
@@ -120,18 +136,15 @@ def setup_logging_with_path(log_path):
     sys.stdout = StreamToLogger(logging.getLogger('STDOUT'), logging.INFO)
     sys.stderr = StreamToLogger(logging.getLogger('STDERR'), logging.ERROR)
 
-
 def setup_logging(filename):
     """
     Setup the logging
     Args:
         filename: name of log file
     """
-
     log_path = f"logs/{filename}_{datetime.now().strftime('%Y_%m_%d_%H_%M_%S')}.log"
     check_path(log_path)
     setup_logging_with_path(log_path)
-
 
 def basic_setup(filename):
     """
@@ -139,43 +152,38 @@ def basic_setup(filename):
     Args:
         filename: name of log file
     """
-
     fix_seed(0)
     filter_warnings()
     setup_logging(filename)
 
+# def freeze_model(self, model):
+#     """
+#     freeze the activation range
+#     Args:
+#         model: model to freeze
+#     """
+#     if isinstance(model, torch.nn.Sequential):
+#         for _, m in model.named_children():
+#             self.freeze_model(m)
+#     else:
+#         for attr in dir(model):
+#             mod = getattr(model, attr)
+#             if isinstance(mod, nn.Module) and 'norm' not in attr:
+#                 self.freeze_model(mod)
+#         return model
 
-def freeze_model(self,model):
-    """
-    freeze the activation range
-    Args:
-        model: model to freeze
-    """
-
-    if isinstance(model, torch.nn.Sequential):
-        for _, m in model.named_children():
-            self.freeze_model(m)
-    else:
-        for attr in dir(model):
-            mod = getattr(model, attr)
-            if isinstance(mod, nn.Module) and 'norm' not in attr:
-                self.freeze_model(mod)
-        return model
-
-
-def unfreeze_model(self,model):
-    """
-    unfreeze the activation range
-    Args:
-        model: model to unfreeze
-    """
-
-    if isinstance(model, nn.Sequential):
-        for _, m in model.named_children():
-            self.unfreeze_model(m)
-    else:
-        for attr in dir(model):
-            mod = getattr(model, attr)
-            if isinstance(mod, torch.nn.Module) and 'norm' not in attr:
-                self.unfreeze_model(mod)
-        return model
+# def unfreeze_model(self,model):
+#     """
+#     unfreeze the activation range
+#     Args:
+#         model: model to unfreeze
+#     """
+#     if isinstance(model, nn.Sequential):
+#         for _, m in model.named_children():
+#             self.unfreeze_model(m)
+#     else:
+#         for attr in dir(model):
+#             mod = getattr(model, attr)
+#             if isinstance(mod, torch.nn.Module) and 'norm' not in attr:
+#                 self.unfreeze_model(mod)
+#         return model

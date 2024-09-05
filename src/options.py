@@ -1,41 +1,68 @@
+"""
+[SW Starlab]
+Zero-shot Quantization with SynQ (Synthesis-aware Fine-tuning for Zero-shot Quantization)
+
+Author: Minjun Kim (minjun.kim@snu.ac.kr), Seoul National University
+        Jongjin Kim (j2kim99@snu.ac.kr), Seoul National University
+        U Kang (ukang@snu.ac.kr), Seoul National University
+
+Version : 1.0
+Date : Sep 6th, 2023
+Main Contact: Minjun Kim
+This software is free of charge under research purposes.
+For commercial purposes, please contact the authors.
+
+options.py
+    - codes for setting the options (reading the configuration file)
+
+This code is mainly based on
+    - ZeroQ: https://github.com/amirgholami/ZeroQ
+    - HAST: https://github.com/lihuantong/HAST
+"""
 import os
-import pytz
 from datetime import datetime
+
+import pytz
 from pyhocon import ConfigFactory
 
 from utils.opt_static import NetOption
 
 
 class Option(NetOption):
+    """
+    Options class for the few- or zero-shot quantization
+    Args:
+        conf_path: str, the path of the configuration file
+    """
     def __init__(self, conf_path):
-        super(Option, self).__init__()
+        super().__init__()
         self.conf = ConfigFactory.parse_file(conf_path)
         #  ------------ General options ----------------------------------------
         self.model_name = self.conf['model_name']
-        self.generateDataPath = self.conf['generateDataPath']
-        self.generateLabelPath = self.conf['generateLabelPath']
-        self.dataPath = self.conf['dataPath']  # path for loading data set
+        self.generate_data_path = self.conf['generateDataPath']
+        self.genera_label_path = self.conf['generateLabelPath']
+        self.data_path = self.conf['dataPath']  # path for loading data set
         self.dataset = self.conf['dataset']  # options: imagenet | cifar100
 
         # ------------- Data options -------------------------------------------
-        self.nThreads = self.conf['nThreads']  # number of data loader threads
+        self.num_threads = self.conf['nThreads']  # number of data loader threads
 
         # ---------- Optimization options --------------------------------------
-        self.nEpochs = self.conf['nEpochs']  # number of total epochs to train
-        self.batchSize = self.conf['batchSize']  # mini-batch size
+        self.num_epochs = self.conf['nEpochs']  # number of total epochs to train
+        self.batch_size = self.conf['batchSize']  # mini-batch size
         self.momentum = self.conf['momentum']  # momentum
-        self.weightDecay = float(self.conf['weightDecay'])  # weight decay
+        self.weight_decay = float(self.conf['weightDecay'])  # weight decay
         self.opt_type = self.conf['opt_type']
 
-        self.lr_S = self.conf['lr_S']  # initial learning rate
-        self.lrPolicy_S = self.conf['lrPolicy_S']  # options: multi_step | linear | exp | const | step
-        self.step_S = self.conf['step_S']  # step for linear or exp learning rate policy
-        self.decayRate_S = self.conf['decayRate_S']  # lr decay rate
+        self.lr_s = self.conf['lr_S']  # initial learning rate
+        self.lr_policy_s = self.conf['lrPolicy_S']  # [multi_step, linear, exp, const, step]
+        self.step_s = self.conf['step_S']  # step for linear or exp learning rate policy
+        self.decay_rate_s = self.conf['decayRate_S']  # lr decay rate
 
         # ---------- Model options ---------------------------------------------
-        self.nClasses = self.conf['nClasses']  # number of classes in the dataset
+        self.num_classes = self.conf['nClasses']  # number of classes in the dataset
 
-# ---------- Quantization options ---------------------------------------------
+        # ---------- Quantization options ---------------------------------------
         self.qw = self.conf['qw']
         self.qa = self.conf['qa']
 
@@ -48,10 +75,10 @@ class Option(NetOption):
         self.img_size = self.conf['img_size']
         self.channels = self.conf['channels']
 
-        self.lr_G = self.conf['lr_G']
-        self.lrPolicy_G = self.conf['lrPolicy_G']  # options: multi_step | linear | exp | const | step
-        self.step_G = self.conf['step_G']  # step for linear or exp learning rate policy
-        self.decayRate_G = self.conf['decayRate_G']  # lr decay rate
+        self.lr_g = self.conf['lr_G']
+        self.lr_policy_g = self.conf['lrPolicy_G']  # [multi_step, linear, exp, const, step]
+        self.step_g = self.conf['step_G']  # step for linear or exp learning rate policy
+        self.decay_rate_g = self.conf['decayRate_G']  # lr decay rate
 
         self.b1 = self.conf['b1']
         self.b2 = self.conf['b2']
@@ -61,6 +88,9 @@ class Option(NetOption):
         self.eps = 0.01
 
     def set_save_path(self):
+        """
+        Set the save path for the model
+        """
         path='log'
         if not os.path.isdir(path):
             os.mkdir(path)
@@ -79,14 +109,18 @@ class Option(NetOption):
         self.save_path = path
 
     def paramscheck(self, logger):
-        logger.info("|===>The used PyTorch version is {}".format(
-                self.torch_version))
+        """
+        Check the parameters
+        Args:
+            logger: logger
+        """
+        logger.info(f"|===>The used PyTorch version is {self.torch_version}")
 
         if self.dataset in ["cifar10", "mnist"]:
-            self.nClasses = 10
+            self.num_classes = 10
         elif self.dataset == "cifar100":
-            self.nClasses = 100
-        elif self.dataset == "imagenet" or "thi_imgnet":
-            self.nClasses = 1000
+            self.num_classes = 100
+        elif self.dataset in ["imagenet", "thi_imgnet"]:
+            self.num_classes = 1000
         elif self.dataset == "imagenet100":
-            self.nClasses = 100
+            self.num_classes = 100

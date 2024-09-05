@@ -1,3 +1,24 @@
+"""
+[SW Starlab]
+Zero-shot Quantization with SynQ (Synthesis-aware Fine-tuning for Zero-shot Quantization)
+
+Author: Minjun Kim (minjun.kim@snu.ac.kr), Seoul National University
+        Jongjin Kim (j2kim99@snu.ac.kr), Seoul National University
+        U Kang (ukang@snu.ac.kr), Seoul National University
+
+Version : 1.0
+Date : Sep 6th, 2023
+Main Contact: Minjun Kim
+This software is free of charge under research purposes.
+For commercial purposes, please contact the authors.
+
+generate_data.py
+    - codes for generating synthetic data for zero-shot quantization
+
+This code is mainly based on
+    - ZeroQ: https://github.com/amirgholami/ZeroQ
+    - HAST: https://github.com/lihuantong/HAST
+"""
 import os
 import sys
 import argparse
@@ -57,14 +78,14 @@ def arg_parse():
     parser.add_argument('--lbns', type=bool, default=False, metavar='lbns')
     parser.add_argument('--fft', type=bool, default=False, metavar='fft')
 
-    args = parser.parse_args()
+    arguments = parser.parse_args()
 
-    if args.lbns:
-        args.save_path_head = args.save_path_head + "_lbns"
+    if arguments.lbns:
+        arguments.save_path_head = arguments.save_path_head + "_lbns"
 
-    if args.fft:
-        args.save_path_head = args.save_path_head + "_fft"
-    return args
+    if arguments.fft:
+        arguments.save_path_head = arguments.save_path_head + "_fft"
+    return arguments
 
 
 if __name__ == '__main__':
@@ -90,7 +111,7 @@ if __name__ == '__main__':
         args.calib_centers = generate_calib_centers(args, model.cuda())
 
     DD = DistillData(args)
-    dataloader = DD.getDistilData(
+    dataloader = DD.get_distil_data(
         model_name=args.model,
         teacher_model=model.cuda(),
         batch_size=args.batch_size,

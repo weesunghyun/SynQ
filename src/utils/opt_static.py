@@ -1,5 +1,23 @@
 """
-TODO: add doc for module
+[SW Starlab]
+Zero-shot Quantization with SynQ (Synthesis-aware Fine-tuning for Zero-shot Quantization)
+
+Author: Minjun Kim (minjun.kim@snu.ac.kr), Seoul National University
+        Jongjin Kim (j2kim99@snu.ac.kr), Seoul National University
+        U Kang (ukang@snu.ac.kr), Seoul National University
+
+Version : 1.0
+Date : Sep 6th, 2023
+Main Contact: Minjun Kim
+This software is free of charge under research purposes.
+For commercial purposes, please contact the authors.
+
+opt_static.py
+    - codes for setting the options for training and testing
+
+This code is mainly based on
+    - ZeroQ: https://github.com/amirgholami/ZeroQ
+    - HAST: https://github.com/lihuantong/HAST
 """
 import torch
 
@@ -11,7 +29,7 @@ or set the environment variable in the script by os.environ['CUDA_VISIBLE_DEVICE
 to map GPU 5, 6 to device_ids 0, 1, respectively.
 """
 
-class NetOption(object):
+class NetOption:
     """
     Options for training and testing
     """
@@ -19,39 +37,39 @@ class NetOption(object):
     def __init__(self):
         #  ------------ General options ----------------------------------------
         self.save_path = ""  # log path
-        self.dataPath = "/home/dataset/"  # path for loading data set
+        self.data_path = "/home/dataset/"  # path for loading data set
         self.dataset = "cifar10"  # options: imagenet | cifar10 | cifar100 | imagenet100 | mnist
-        self.manualSeed = 1  # manually set RNG seed
-        self.nGPU = 1  # number of GPUs to use by default
-        self.GPU = 0  # default gpu to use, options: range(nGPU)
+        self.manual_seed = 1  # manually set RNG seed
+        self.num_gpu = 1  # number of GPUs to use by default
+        self.gpu = 0  # default gpu to use, options: range(num_gpu)
 
         # ------------- Data options -------------------------------------------
-        self.nThreads = 4  # number of data loader threads
+        self.num_threads = 4  # number of data loader threads
 
         # ------------- Training options ---------------------------------------
-        self.testOnly = False  # run on validation set only
-        self.tenCrop = False  # Ten-crop testing
+        self.test_only = False  # run on validation set only
+        self.ten_crop = False  # Ten-crop testing
 
         # ---------- Optimization options --------------------------------------
-        self.nEpochs = 200  # number of total epochs to train
-        self.batchSize = 128  # mini-batch size
+        self.num_epochs = 200  # number of total epochs to train
+        self.batch_size = 128  # mini-batch size
         self.momentum = 0.9  # momentum
-        self.weightDecay = 1e-4  # weight decay 1e-4
+        self.weight_decay = 1e-4  # weight decay 1e-4
         self.opt_type = "SGD"
 
         self.lr = 0.1  # initial learning rate
-        self.lrPolicy = "multi_step"  # options: multi_step | linear | exp | fixed
+        self.lr_policy = "multi_step"  # options: multi_step | linear | exp | fixed
         self.power = 1  # power for learning rate policy (inv)
         self.step = [0.6, 0.8]  # step for linear or exp learning rate policy
         self.endlr = 0.001  # final learning rate, oly for "linear lrpolicy"
-        self.decayRate = 0.1  # lr decay rate
+        self.decay_rate = 0.1  # lr decay rate
 
         # ---------- Model options ---------------------------------------------
-        self.netType = "PreResNet"  # options: ResNet | PreResNet | GreedyNet | NIN | LeNet5
-        self.experimentID = "refator-test-01"
+        self.net_type = "PreResNet"  # options: ResNet | PreResNet | GreedyNet | NIN | LeNet5
+        self.experiment_id = "refator-test-01"
         self.depth = 20  # resnet depth: (n-2)%6==0
-        self.nClasses = 10  # number of classes in the dataset
-        self.wideFactor = 1  # wide factor for wide-resnet
+        self.num_classes = 10  # number of classes in the dataset
+        self.wide_factor = 1  # wide factor for wide-resnet
 
         # ---------- Resume or Retrain options ---------------------------------------------
         self.retrain = None  # path to model to retrain with, load model state_dict only
@@ -60,8 +78,8 @@ class NetOption(object):
                             # as well as training epoch
 
         # ---------- Visualization options -------------------------------------
-        self.drawNetwork = True
-        self.drawInterval = 30
+        self.draw_network = True
+        self.draw_interval = 30
 
         self.torch_version = torch.__version__
         torch_version_split = self.torch_version.split("_")
@@ -74,33 +92,33 @@ class NetOption(object):
         Check the parameters
         """
         if self.torch_version != "0.2.0":
-            self.drawNetwork = False
+            self.draw_network = False
             print(
-                f"|===>DrawNetwork is supported by PyTorch with version: 0.2.0. "
+                f"|===>draw_network is supported by PyTorch with version: 0.2.0. "
                 f"The used version is {self.torch_version}"
                 )
 
-        if self.netType in ["PreResNet", "ResNet"]:
+        if self.net_type in ["PreResNet", "ResNet"]:
             self.save_path = (
-                f"log {self.netType}{self.depth}_{self.dataset}_"
-                f"bs{self.batchSize}_lr{self.lr:.3f}_{self.experimentID}/"
+                f"log {self.net_type}{self.depth}_{self.dataset}_"
+                f"bs{self.batch_size}_lr{self.lr:.3f}_{self.experiment_id}/"
             )
 
         else:
             self.save_path = (
-                f"log_{self.netType}_{self.dataset}_"
-                f"bs{self.batchSize}_lr{self.lr:.3f}_{self.experimentID}/"
+                f"log_{self.net_type}_{self.dataset}_"
+                f"bs{self.batch_size}_lr{self.lr:.3f}_{self.experiment_id}/"
             )
 
         if self.dataset in ["cifar10", "mnist"]:
-            self.nClasses = 10
+            self.num_classes = 10
         elif self.dataset == "cifar100":
-            self.nClasses = 100
-        elif self.dataset == "imagenet" or "thi_imgnet":
-            self.nClasses = 1000
+            self.num_classes = 100
+        elif self.dataset in ["imagenet", "thi_imgnet"]:
+            self.num_classes = 1000
         elif self.dataset == "imagenet100":
-            self.nClasses = 100
+            self.num_classes = 100
 
         if self.depth >= 100:
-            self.drawNetwork = False
+            self.draw_network = False
             print("|===>draw network with depth over 100 layers, skip this step")
