@@ -1,6 +1,3 @@
-"""
-    # TODO: add description
-"""
 import os
 
 import torch
@@ -10,8 +7,7 @@ from torchvision import transforms
 from torchvision import datasets as dsets
 
 
-# __all__ = ["DataLoader", "PartDataLoader"]
-__all__ = ["DataLoader"]
+__all__ = ["DataLoader", "PartDataLoader"]
 
 
 class ImageLoader(data.Dataset):
@@ -50,7 +46,7 @@ class ImageLoader(data.Dataset):
         return len(self.datasets)
 
 
-class DataLoader:
+class DataLoader(object):
     """Data Loader"""
     def __init__(self, dataset, batch_size, n_threads=4,
 	             ten_crop=False, data_path='/home/dataset/', logger=None):
