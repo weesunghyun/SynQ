@@ -12,7 +12,7 @@ This software is free of charge under research purposes.
 For commercial purposes, please contact the authors.
 
 lr_policy.py
-    - codes for generating distilled data
+    - codes for learning rate policy
 
 This code is mainly based on [ZeroQ](https://github.com/amirgholami/ZeroQ) and [HAST](https://github.com/lihuantong/HAST).
 """
