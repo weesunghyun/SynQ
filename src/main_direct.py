@@ -1,7 +1,6 @@
 """
     # TODO: add description
 """
-
 import os
 import copy
 import time
@@ -31,7 +30,7 @@ import utils
 from options import Option
 from dataloader import DataLoader
 from trainer_direct import Trainer
-from quantization_utils.quant_modules import * # import waildcard
+from quantization_utils.quant_modules import QuantAct, QuantLinear, QuantConv2d
 from utils.get_resnet34 import resnet34_get_model
 from pytorchcv.model_provider import get_model as ptcv_get_model
 from conditional_batchnorm import CategoricalConditionalBatchNorm2d
@@ -45,7 +44,7 @@ class Generator(nn.Module):
         conf_path: Path to the configuration file
     """
     def __init__(self, options=None, conf_path=None):
-        super(Generator, self).__init__()
+        super().__init__()
         self.settings = options or Option(conf_path)
         self.label_emb = nn.Embedding(self.settings.num_classes, self.settings.latent_dim)
         self.init_size = self.settings.img_size // 4
@@ -88,7 +87,7 @@ class Generator(nn.Module):
         return img
 
 
-class Generator_imagenet(nn.Module):
+class GeneratorImagenet(nn.Module):
     """
     Generator for ImageNet
     Args:
@@ -98,7 +97,7 @@ class Generator_imagenet(nn.Module):
     def __init__(self, options=None, conf_path=None):
         self.settings = options or Option(conf_path)
 
-        super(Generator_imagenet, self).__init__()
+        super().__init__()
 
         self.init_size = self.settings.img_size // 4
         self.l1 = nn.Sequential(nn.Linear(self.settings.latent_dim, 128 * self.init_size ** 2))
@@ -140,7 +139,7 @@ class Generator_imagenet(nn.Module):
         return img
 
 
-class direct_dataset(Dataset):
+class DirectDataset(Dataset):
     """
     Direct dataset class
     Args:
@@ -170,10 +169,17 @@ class direct_dataset(Dataset):
                 transforms.RandomResizedCrop(size=32, scale=(0.5, 1.0)),
                 transforms.RandomHorizontalFlip(),
                 transforms.ToTensor(),
-                transforms.Normalize([0.50705882, 0.48666667, 0.44078431], [0.26745098, 0.25568627, 0.27607843])
+                transforms.Normalize(
+                    [0.50705882, 0.48666667, 0.44078431],
+                    [0.26745098, 0.25568627, 0.27607843])
             ])
 
-            cifar100_train = datasets.CIFAR100(root='./data/cifar100', train=True, download=True, transform=self.fewshot_transform)
+            cifar100_train = datasets.CIFAR100(
+                root='./data/cifar100',
+                train=True,
+                download=True,
+                transform=self.fewshot_transform
+                )
             real_data, real_label = np.array(cifar100_train.data), np.array(cifar100_train.targets)
 
             # Sample few-shot data
@@ -196,31 +202,41 @@ class direct_dataset(Dataset):
             self.tmp_label = None
 
             for i in range(1,5):
-                path = self.settings.generateDataPath +str(i)+".pickle"
+                path = self.settings.generate_data_path +str(i)+".pickle"
                 self.logger.info(path)
                 with open(path, "rb") as fp:
                     gaussian_data = pickle.load(fp)
                 if self.tmp_data is None:
                     self.tmp_data = np.concatenate(gaussian_data, axis=0)
                 else:
-                    self.tmp_data = np.concatenate((self.tmp_data, np.concatenate(gaussian_data, axis=0)))
+                    self.tmp_data = np.concatenate(
+                        (self.tmp_data, np.concatenate(gaussian_data, axis=0))
+                        )
 
-                path = self.settings.generateLabelPath + str(i) + ".pickle"
+                path = self.settings.genera_label_path + str(i) + ".pickle"
                 self.logger.info(path)
                 with open(path, "rb") as fp:
                     labels_list = pickle.load(fp)
                 if self.tmp_label is None:
                     self.tmp_label = np.concatenate(labels_list, axis=0)
                 else:
-                    self.tmp_label = np.concatenate((self.tmp_label, np.concatenate(labels_list, axis=0)))
+                    self.tmp_label = np.concatenate(
+                        (self.tmp_label, np.concatenate(labels_list, axis=0))
+                        )
 
         if self.args.calib_centers:
-            temp = "_" + self.settings.model_name if not self.settings.model_name == 'resnet18' else ""
-            calib_path = f'../new_generate/data/{self.settings.dataset}{temp}_lbns/{self.settings.model_name}_calib_centers.pickle'
+            if not self.settings.model_name == 'resnet18':
+                temp = "_" + self.settings.model_name
+            else:
+                temp = ""
+            calib_path = f"../new_generate/data/{self.settings.dataset}{temp}_lbns" + \
+                         f"/{self.settings.model_name}_calib_centers.pickle"
             with open(calib_path, "rb") as fp:
                 gaussian_data = pickle.load(fp)
             labels_list = range(self.settings.num_classes)
-            self.tmp_data = np.concatenate((self.tmp_data, np.concatenate(gaussian_data, axis=0)[:len(labels_list)]))
+            self.tmp_data = np.concatenate(
+                (self.tmp_data, np.concatenate(gaussian_data, axis=0)[:len(labels_list)])
+                )
             self.tmp_label = np.concatenate((self.tmp_label, np.array(labels_list)))
 
         print(self.tmp_data.shape, self.tmp_label.shape)
@@ -273,7 +289,9 @@ class ExperimentDesign:
         """
         if dist.get_rank()==0:
             file_formatter = logging.Formatter('%(asctime)s %(levelname)s: %(message)s')
-            file_handler = logging.FileHandler(os.path.join(self.settings.save_path, "train_test.log"))
+            file_handler = logging.FileHandler(
+                os.path.join(self.settings.save_path, "train_test.log")
+                )
             file_handler.setFormatter(file_formatter)
             self.logger.addHandler(file_handler)
         self.logger.setLevel(logging.INFO if self.args.local_rank in [-1, 0] else logging.WARN)
@@ -288,9 +306,18 @@ class ExperimentDesign:
         if dist.get_rank() == 0:
             self.settings.set_save_path()
             print(self.settings.save_path)
-            shutil.copyfile(self.args.conf_path, os.path.join(self.settings.save_path, os.path.basename(self.args.conf_path)))
-            shutil.copyfile('./main_direct.py', os.path.join(self.settings.save_path, 'main_direct.py'))
-            shutil.copyfile('./trainer_direct.py', os.path.join(self.settings.save_path, 'trainer_direct.py'))
+            shutil.copyfile(
+                self.args.conf_path,
+                os.path.join(self.settings.save_path, os.path.basename(self.args.conf_path))
+                )
+            shutil.copyfile(
+                './main_direct.py',
+                os.path.join(self.settings.save_path, 'main_direct.py')
+                )
+            shutil.copyfile(
+                './trainer_direct.py',
+                os.path.join(self.settings.save_path, 'trainer_direct.py')
+                )
         self.logger = self.set_logger()
         self.settings.paramscheck(self.logger)
         self._set_gpu()
@@ -337,39 +364,49 @@ class ExperimentDesign:
         elif self.settings.dataset in ["imagenet"]:
             self.model = ptcv_get_model(self.settings.model_name, pretrained=True)
             self.model_teacher = ptcv_get_model(self.settings.model_name, pretrained=True)
-            self.generator = Generator_imagenet(self.settings)
+            self.generator = GeneratorImagenet(self.settings)
             self.model_teacher.eval()
 
         else:
             assert False, "unsupport data set: " + self.settings.dataset
 
         self.model_teacher = torch.nn.SyncBatchNorm.convert_sync_batchnorm(self.model_teacher)
-        self.model_teacher = DDP(self.model_teacher.to(self.args.local_rank), device_ids=[self.args.local_rank], output_device=self.args.local_rank, broadcast_buffers=False)
-        self.generator = DDP(self.generator.to(self.args.local_rank), device_ids=[self.args.local_rank], output_device=self.args.local_rank, broadcast_buffers=False)
+        self.model_teacher = DDP(
+            self.model_teacher.to(self.args.local_rank),
+            device_ids=[self.args.local_rank],
+            output_device=self.args.local_rank,
+            broadcast_buffers=False
+            )
+        self.generator = DDP(
+            self.generator.to(self.args.local_rank),
+            device_ids=[self.args.local_rank],
+            output_device=self.args.local_rank,
+            broadcast_buffers=False
+            )
 
     def _set_trainer(self):
         """
         Set trainer
         """
-        lr_master_S = utils.LRPolicy(self.settings.lr_S,
+        lr_master_s = utils.LRPolicy(self.settings.lr_s,
                                      self.settings.num_epochs,
-                                     self.settings.lrPolicy_S)
-        lr_master_G = utils.LRPolicy(self.settings.lr_G,
+                                     self.settings.lr_policy_s)
+        lr_master_g = utils.LRPolicy(self.settings.lr_g,
                                      self.settings.num_epochs,
-                                     self.settings.lrPolicy_G)
+                                     self.settings.lr_policy_g)
 
-        params_dict_S = {
-            'step': self.settings.step_S,
-            'decay_rate': self.settings.decayRate_S
+        params_dict_s = {
+            'step': self.settings.step_s,
+            'decay_rate': self.settings.decay_rate_s
         }
 
-        params_dict_G = {
-            'step': self.settings.step_G,
-            'decay_rate': self.settings.decayRate_G
+        params_dict_g = {
+            'step': self.settings.step_g,
+            'decay_rate': self.settings.decay_rate_g
         }
 
-        lr_master_S.set_params(params_dict=params_dict_S)
-        lr_master_G.set_params(params_dict=params_dict_G)
+        lr_master_s.set_params(params_dict=params_dict_s)
+        lr_master_g.set_params(params_dict=params_dict_g)
 
         self.trainer = Trainer(
             model=self.model,
@@ -377,8 +414,8 @@ class ExperimentDesign:
             generator = self.generator,
             train_loader=self.train_loader,
             test_loader=self.test_loader,
-            lr_master_S=lr_master_S,
-            lr_master_G=lr_master_G,
+            lr_master_s=lr_master_s,
+            lr_master_g=lr_master_g,
             settings=self.settings,
             args = self.args,
             logger=self.logger,
@@ -395,28 +432,28 @@ class ExperimentDesign:
         weight_bit = self.settings.qw
         act_bit = self.settings.qa
 
-        if type(model) == nn.Conv2d:
+        if isinstance(model, nn.Conv2d):
             quant_mod = QuantConv2d(weight_bit=weight_bit)
             quant_mod.set_param(model)
             return quant_mod
-        elif type(model) == nn.Linear:
+        if isinstance(model, nn.Linear):
             quant_mod = QuantLinear(weight_bit=weight_bit)
             quant_mod.set_param(model)
             return quant_mod
-        elif type(model) == nn.ReLU or type(model) == nn.ReLU6:
+        if isinstance(model, (nn.ReLU, nn.ReLU6)):
             return nn.Sequential(*[model, QuantAct(activation_bit=act_bit)])
-        elif type(model) == nn.Sequential:
+        if isinstance(model, nn.Sequential):
             mods = []
-            for n, m in model.named_children():
+            for _, m in model.named_children():
                 mods.append(self.quantize_model(m))
             return nn.Sequential(*mods)
-        else:
-            q_model = copy.deepcopy(model)
-            for attr in dir(model):
-                mod = getattr(model, attr)
-                if isinstance(mod, nn.Module) and 'norm' not in attr:
-                    setattr(q_model, attr, self.quantize_model(mod))
-            return q_model
+
+        q_model = copy.deepcopy(model)
+        for attr in dir(model):
+            mod = getattr(model, attr)
+            if isinstance(mod, nn.Module) and 'norm' not in attr:
+                setattr(q_model, attr, self.quantize_model(mod))
+        return q_model
 
     def _replace(self):
         """
@@ -424,7 +461,12 @@ class ExperimentDesign:
         """
         self.model = self.quantize_model(self.model)
         self.model = torch.nn.SyncBatchNorm.convert_sync_batchnorm(self.model)
-        self.model = DDP(self.model.to(self.args.local_rank), device_ids=[self.args.local_rank], output_device=self.args.local_rank, broadcast_buffers=False)
+        self.model = DDP(
+            self.model.to(self.args.local_rank),
+            device_ids=[self.args.local_rank],
+            output_device=self.args.local_rank,
+            broadcast_buffers=False
+            )
 
     def freeze_model(self, model):
         """
@@ -432,17 +474,17 @@ class ExperimentDesign:
         Args:
             model: Model to freeze
         """
-        if type(model) == QuantAct:
+        if isinstance(model, QuantAct):
             model.fix()
-        elif type(model) == nn.Sequential:
-            for n, m in model.named_children():
+        elif isinstance(model, nn.Sequential):
+            for _, m in model.named_children():
                 self.freeze_model(m)
         else:
             for attr in dir(model):
                 mod = getattr(model, attr)
                 if isinstance(mod, nn.Module) and 'norm' not in attr:
                     self.freeze_model(mod)
-            return model
+            # return model
 
     def unfreeze_model(self, model):
         """
@@ -450,17 +492,17 @@ class ExperimentDesign:
         Args:
             model: Model to unfreeze
         """
-        if type(model) == QuantAct:
+        if isinstance(model, QuantAct):
             model.unfix()
-        elif type(model) == nn.Sequential:
-            for n, m in model.named_children():
+        elif isinstance(model, nn.Sequential):
+            for _, m in model.named_children():
                 self.unfreeze_model(m)
         else:
             for attr in dir(model):
                 mod = getattr(model, attr)
                 if isinstance(mod, nn.Module) and 'norm' not in attr:
                     self.unfreeze_model(mod)
-            return model
+            # return model
 
     def run(self):
         """
@@ -470,12 +512,13 @@ class ExperimentDesign:
         best_top5 = 100
         start_time = time.time()
 
-        dataset = direct_dataset(self.args, self.settings, self.logger, self.settings.dataset)
+        dataset = DirectDataset(self.args, self.settings, self.logger, self.settings.dataset)
 
+        bs = min(self.settings.batch_size, len(dataset))
         direct_dataload = torch.utils.data.DataLoader(dataset,
-                                                      batch_size=min(self.settings.batch_size, len(dataset)),
+                                                      batch_size= bs,
                                                       sampler = DistributedSampler(dataset))
-        test_error, test_loss, test5_error = self.trainer.test(epoch=-1)
+        test_error, _, test5_error = self.trainer.test(epoch=-1)
 
         try:
             for epoch in range(self.start_epoch, self.settings.num_epochs):
@@ -485,13 +528,14 @@ class ExperimentDesign:
                 if epoch < 4:
                     self.unfreeze_model(self.model)
 
-                train_error, train_loss, train5_error = self.trainer.train(epoch=epoch, direct_dataload=direct_dataload)
+                # train_error, train_loss, train5_error =
+                self.trainer.train(epoch=epoch, direct_dataload=direct_dataload)
 
                 self.freeze_model(self.model)
 
                 if epoch > 4:
                 # if (epoch > self.settings.num_epochs // 5) and (epoch % 5 == 0):
-                        test_error, test_loss, test5_error = self.trainer.test(epoch=epoch)
+                    test_error, _, test5_error = self.trainer.test(epoch=epoch)
                 else:
                     print(f"skip eval for epoch {epoch}")
                     self.logger.info(f"skip eval for epoch {epoch}")
@@ -502,16 +546,33 @@ class ExperimentDesign:
                     best_top5 = test5_error
 
                     if self.args.save_model:
-                        self.logger.info('Save model! The path is ' + os.path.join(self.settings.save_path, "model.pth"))
-                        print('Save model! The path is ' + os.path.join(self.settings.save_path, "model.pth"))
-                        torch.save(self.model.state_dict(), os.path.join(self.settings.save_path, "model.pth"))
+                        self.logger.info(
+                            f"Save model! The path is "
+                            f"{os.path.join(self.settings.save_path, 'model.pth')}"
+                            )
+                        print(
+                            f"Save model! The path is "
+                            f"{os.path.join(self.settings.save_path, 'model.pth')}"
+                            )
+                        torch.save(
+                            self.model.state_dict(),
+                            os.path.join(self.settings.save_path, "model.pth")
+                            )
 
-                self.logger.info("#==>Best Result is: Top1 Error: {:f}, Top5 Error: {:f}".format(best_top1, best_top5))
-                self.logger.info("#==>Best Result is: Top1 Accuracy: {:f}, Top5 Accuracy: {:f}".format(100 - best_top1, 100 - best_top5))
-                print("#==>Best Result is: Top1 Accuracy: {:f}, Top5 Accuracy: {:f}".format(100 - best_top1, 100 - best_top5))
+                self.logger.info(
+                    f"#==>Best Result is: Top1 Error: {best_top1}, Top5 Error: {best_top5}"
+                    )
+                self.logger.info(
+                    f"#==>Best Result is: Top1 Accuracy: {100 - best_top1}, "
+                    f"Top5 Accuracy: {100 - best_top5}"
+                    )
+                print(
+                    f"#==>Best Result is: Top1 Accuracy: {100 - best_top1}, "
+                    f"Top5 Accuracy: {100 - best_top5}"
+                    )
 
         except BaseException as e:
-            self.logger.error("Training is terminating due to exception: {}".format(str(e)))
+            self.logger.error(f"Training is terminating due to exception: {str(e)}")
             traceback.print_exc()
 
         end_time = time.time()
@@ -537,7 +598,7 @@ def main():
     parser.add_argument('--tau_selce', type=float, default=0.5, metavar='tau_selce')
     parser.add_argument('--lambda_ce', type=float, default=5, metavar='lambda_ce')
     parser.add_argument('--d_zero', type=int, default=80, metavar='d_zero')
-    parser.add_argument('--calib_centers', type=bool, default=False, metavar='calib_centers') # False로 바꿈.
+    parser.add_argument('--calib_centers', type=bool, default=False, metavar='calib_centers')
     parser.add_argument('--save_model', type=bool, default=False, metavar='save_model')
     parser.add_argument("--local_rank", default=-1, type=int)
     parser.add_argument("--few_shot", default=False, type=bool)

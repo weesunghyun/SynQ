@@ -99,8 +99,6 @@ class QuantActMSE(Module):
         self.full_precision_flag = full_precision_flag
         self.running_stat = running_stat
 
-        
-
         self.register_buffer('x_min', torch.zeros(1))
         self.register_buffer('x_max', torch.zeros(1))
         self.register_buffer('beta', torch.Tensor([beta]))

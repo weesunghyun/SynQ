@@ -1,10 +1,13 @@
+"""
+    # TODO: add description
+"""
 import torch
 from torch import nn
 from torch.nn import functional as F
 
 from quantization_utils.quant_modules import QuantConv2d
 
-class GradCAM(object):
+class GradCAM:
     """Calculate GradCAM salinecy map."""
     def __init__(self, model_dict, verbose=False):
         """
@@ -18,8 +21,8 @@ class GradCAM(object):
         self.layer_name = model_dict.get('layer_name', None)
         self.verbose = verbose
 
-        self.gradients = dict()
-        self.activations = dict()
+        self.gradients = {}
+        self.activations = {}
 
         self.set_target_layer()
 
@@ -48,22 +51,18 @@ class GradCAM(object):
                 if torch.isnan(grad).any():
                     print(f"grad_input[{idx}] contains NaN")
 
-        return None
-
-    def forward_hook(self, module, input, output):
+    def forward_hook(self, module, _input, output):
         """
         Hook to store activations of the target layer
         Args:
             module: Target layer
-            input: Input of the target layer
+            _input: Input of the target layer
             output: Output of the target layer
         """
 
         self.activations['value'] = output
         if torch.isnan(output).any():
             print("NaN detected in forward activations")
-
-        return None
 
     def set_target_layer(self):
         """
@@ -90,18 +89,18 @@ class GradCAM(object):
         device = 'cuda' if next(self.model_arch.parameters()).is_cuda else 'cpu'
         self.model_arch(torch.zeros(1, 3, *input_size, device=device))
 
-    def forward(self, input, class_idx=None, retain_graph=False):
+    def forward(self, _input, class_idx=None, retain_graph=False):
         """
         Forward pass of the input image
         Args:
-            input: Input image
+            _input: Input image
             class_idx: Index of the class
         """
-        b, _, h, w = input.size()
+        b, _, h, w = _input.size()
         eps = 1e-10
 
-        if torch.isnan(input).any():
-            print(f"NaN detected in input before logits: {input.shape}")
+        if torch.isnan(_input).any():
+            print(f"NaN detected in input before logits: {_input.shape}")
             raise ValueError("NaN detected in input before backward")
 
         for name, param in self.model_arch.named_parameters():
@@ -119,7 +118,7 @@ class GradCAM(object):
                       mean={param.mean().item()}")
                 raise ValueError(f"Inf detected in parameter: {name}")
 
-        logit = self.model_arch(input)
+        logit = self.model_arch(_input)
 
         if torch.isnan(logit).any():
             raise ValueError("NaN detected in logits before backward")
@@ -153,7 +152,7 @@ class GradCAM(object):
 
         b, k, _, _ = gradients.size()
 
-        assert not torch.isnan(input).any(), "Input contains NaN"
+        assert not torch.isnan(_input).any(), "Input contains NaN"
 
         alpha = gradients.view(b, k, -1).mean(2).clamp(min=1e-10)
         weights = alpha.view(b, k, 1, 1)
@@ -173,40 +172,40 @@ class GradCAM(object):
 
         return saliency_map, logit
 
-    def __call__(self, input, class_idx=None, retain_graph=False):
+    def __call__(self, _input, class_idx=None, retain_graph=False):
         """
         Call method
         Args:
-            input: Input image
+            _input: Input image
             class_idx: Index of the class
         """
 
-        return self.forward(input, class_idx, retain_graph)
+        return self.forward(_input, class_idx, retain_graph)
 
 
 class GradCAMpp(GradCAM):
     """
     Calculate GradCAM++ saliency map.
     """
-    def __init__(self, model_dict, verbose=False):
-        """
-        GradCAM++ constructor
-        Args:
-            model_dict: Dictionary containing model architecture, input_size, and layer_name
-            verbose: Print saliency map size
-        """
-        super(GradCAMpp, self).__init__(model_dict, verbose)
+    # def __init__(self, model_dict, verbose=False):
+    #     """
+    #     GradCAM++ constructor
+    #     Args:
+    #         model_dict: Dictionary containing model architecture, input_size, and layer_name
+    #         verbose: Print saliency map size
+    #     """
+    #     super().__init__(model_dict, verbose)
 
-    def forward(self, input, class_idx=None, retain_graph=False):
+    def forward(self, _input, class_idx=None, retain_graph=False):
         """
         Forward pass of the input image
         Args:
-            input: Input image
+            _input: Input image
             class_idx: Index of the class
         """
-        b, _, h, w = input.size()
+        b, _, h, w = _input.size()
 
-        logit = self.model_arch(input)
+        logit = self.model_arch(_input)
         if class_idx is None:
             score = logit.gather(1, logit.max(1)[1].view(-1, 1)).squeeze()
         else:
