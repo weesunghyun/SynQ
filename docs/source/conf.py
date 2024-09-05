@@ -1,3 +1,9 @@
+import os
+import sys
+
+sys.path.insert(0, os.path.abspath('../../src'))
+print(sys.path)
+
 # Configuration file for the Sphinx documentation builder.
 #
 # For the full list of built-in configuration values, see the documentation:
@@ -14,17 +20,20 @@ author = 'Minjun Kim'
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
 
 extensions = [
-    'sphinx.ext.autodoc',  # 코드에서 자동으로 문서를 생성
-    'sphinx.ext.napoleon'  # Google style docstring 및 Numpy style docstring을 지원
+    'sphinx.ext.autodoc',  # 반드시 포함되어야 함
+    'sphinx.ext.napoleon'  # Google/Numpy 스타일의 docstring 지원
 ]
 
 templates_path = ['_templates']
-exclude_patterns = []
-
-
+exclude_patterns = [
+    '../../src/pytorchcv/**',
+    '../../src/data_generate/pytorchcv/**'
+]
 
 # -- Options for HTML output -------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-html-output
+import sphinx_rtd_theme
 
-html_theme = 'alabaster'
+html_theme = 'sphinx_rtd_theme'
+html_theme_path = [sphinx_rtd_theme.get_html_theme_path()]
 html_static_path = ['_static']

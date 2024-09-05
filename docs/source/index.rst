@@ -15,5 +15,11 @@ documentation for details.
    :maxdepth: 2
    :caption: Contents:
 
-.. automodule:: my_module
-   :members:
+   modules
+   
+
+Indices and tables
+==================
+* :ref:`genindex`
+* :ref:`modindex`
+* :ref:`search`

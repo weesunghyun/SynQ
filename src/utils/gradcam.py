@@ -27,22 +27,24 @@ def visualize_cam(mask, img):
 
 
 def find_resnet_layer(arch, target_layer_name):
-    """Find resnet layer to calculate GradCAM and GradCAM++
-    
+    """
+    Find resnet layer to calculate GradCAM and GradCAM++
+
     Args:
         arch: default torchvision densenet models
         target_layer_name: the name of layer with its hierarchical information.
-                           please refer to usages below.
-            target_layer_name = 'conv1'
-            target_layer_name = 'layer1'
-            target_layer_name = 'layer1_basicblock0'
-            target_layer_name = 'layer1_basicblock0_relu'
-            target_layer_name = 'layer1_bottleneck0'
-            target_layer_name = 'layer1_bottleneck0_conv1'
-            target_layer_name = 'layer1_bottleneck0_downsample'
-            target_layer_name = 'layer1_bottleneck0_downsample_0'
-            target_layer_name = 'avgpool'
-            target_layer_name = 'fc'
+            please refer to usages below.
+
+            - 'conv1'
+            - 'layer1'
+            - 'layer1_basicblock0'
+            - 'layer1_basicblock0_relu'
+            - 'layer1_bottleneck0'
+            - 'layer1_bottleneck0_conv1'
+            - 'layer1_bottleneck0_downsample'
+            - 'layer1_bottleneck0_downsample_0'
+            - 'avgpool'
+            - 'fc'
 
     Return:
         target_layer: found layer which will be hooked to get forward/backward pass information.
@@ -82,19 +84,21 @@ def find_resnet_layer(arch, target_layer_name):
 
 
 def find_densenet_layer(arch, target_layer_name):
-    """Find densenet layer to calculate GradCAM and GradCAM++
+    """
+    Find densenet layer to calculate GradCAM and GradCAM++
 
     Args:
         arch: default torchvision densenet models
         target_layer_name: the name of layer with its hierarchical information.
-                           please refer to usages below.
-            target_layer_name = 'features'
-            target_layer_name = 'features_transition1'
-            target_layer_name = 'features_transition1_norm'
-            target_layer_name = 'features_denseblock2_denselayer12'
-            target_layer_name = 'features_denseblock2_denselayer12_norm1'
-            target_layer_name = 'features_denseblock2_denselayer12_norm1'
-            target_layer_name = 'classifier'
+            please refer to usages below.
+
+            - 'features'
+            - 'features_transition1'
+            - 'features_transition1_norm'
+            - 'features_denseblock2_denselayer12'
+            - 'features_denseblock2_denselayer12_norm1'
+            - 'features_denseblock2_denselayer12_norm1'
+            - 'classifier'
 
     Return:
         target_layer: found layer which will be hooked to get forward/backward pass information.
@@ -116,16 +120,18 @@ def find_densenet_layer(arch, target_layer_name):
 
 
 def find_vgg_layer(arch, target_layer_name):
-    """Find vgg layer to calculate GradCAM and GradCAM++
+    """
+    Find vgg layer to calculate GradCAM and GradCAM++
 
     Args:
         arch: default torchvision densenet models
         target_layer_name: the name of layer with its hierarchical information.
-                           please refer to usages below.
-            target_layer_name = 'features'
-            target_layer_name = 'features_42'
-            target_layer_name = 'classifier'
-            target_layer_name = 'classifier_0'
+            please refer to usages below.
+
+            - 'features'
+            - 'features_42'
+            - 'classifier'
+            - 'classifier_0'
 
     Return:
         target_layer: found layer which will be hooked to get forward/backward pass information.
@@ -142,19 +148,21 @@ def find_vgg_layer(arch, target_layer_name):
 
 
 def find_alexnet_layer(arch, target_layer_name):
-    """Find alexnet layer to calculate GradCAM and GradCAM++
+    """
+    Find alexnet layer to calculate GradCAM and GradCAM++.
 
     Args:
-        arch: default torchvision densenet models
-        target_layer_name : the name of layer with its hierarchical information.
-                            please refer to usages below.
-            target_layer_name = 'features'
-            target_layer_name = 'features_0'
-            target_layer_name = 'classifier'
-            target_layer_name = 'classifier_0'
+        arch: default torchvision densenet models.
+        target_layer_name: The name of the layer with its hierarchical information.
+            Please refer to usages below:
 
-    Return:
-        target_layer: found layer which will be hooked to get forward/backward pass information.
+            - 'features'
+            - 'features_0'
+            - 'classifier'
+            - 'classifier_0'
+
+    Returns:
+        target_layer: The found layer which will be hooked to get forward/backward pass information.
     """
     hierarchy = target_layer_name.split('_')
 
@@ -168,18 +176,20 @@ def find_alexnet_layer(arch, target_layer_name):
 
 
 def find_squeezenet_layer(arch, target_layer_name):
-    """Find squeezenet layer to calculate GradCAM and GradCAM++
-    
-    Args:
-        arch: default torchvision densenet models
-        target_layer_name: the name of layer with its hierarchical information.
-                           please refer to usages below.
-            target_layer_name = 'features_12'
-            target_layer_name = 'features_12_expand3x3'
-            target_layer_name = 'features_12_expand3x3_activation'
+    """
+    Find squeezenet layer to calculate GradCAM and GradCAM++.
 
-    Return:
-        target_layer: found layer which will be hooked to get forward/backward pass information.
+    Args:
+        arch: Default torchvision densenet models.
+        target_layer_name: The name of the layer with its hierarchical information.
+            Please refer to usages below:
+
+            - 'features_12'
+            - 'features_12_expand3x3'
+            - 'features_12_expand3x3_activation'
+
+    Returns:
+        target_layer: The found layer which will be hooked to get forward/backward pass information.
     """
     hierarchy = target_layer_name.split('_')
     target_layer = arch._modules[hierarchy[0]]
@@ -198,13 +208,15 @@ def find_squeezenet_layer(arch, target_layer_name):
 
 def denormalize(tensor, mean, std):
     """
-        Denormalize a tensor image with mean and standard deviation.
-        Args:
-            tensor (Tensor): Tensor image of size (C, H, W) to be denormalized.
-            mean (sequence): Sequence of means for each channel.
-            std (sequence): Sequence of standard deviations for each channel.
-        Returns:
-            Tensor: Denormalized Tensor image.
+    Denormalize a tensor image with mean and standard deviation.
+
+    Args:
+        tensor (Tensor): Tensor image of size (C, H, W) to be denormalized.
+        mean (sequence): Sequence of means for each channel.
+        std (sequence): Sequence of standard deviations for each channel.
+
+    Returns:
+        Tensor: Denormalized Tensor image.
     """
     if not tensor.ndimension() == 4:
         raise TypeError('tensor should be 4D')
@@ -217,13 +229,15 @@ def denormalize(tensor, mean, std):
 
 def normalize(tensor, mean, std):
     """
-        Normalize a tensor image with mean and standard deviation.
-        Args:
-            tensor: Tensor image of size (C, H, W) to be normalized.
-            mean: Sequence of means for each channel.
-            std: Sequence of standard deviations for each channel.
-        Returns:
-            Tensor: Normalized Tensor image.
+    Normalize a tensor image with mean and standard deviation.
+
+    Args:
+        tensor: Tensor image of size (C, H, W) to be normalized.
+        mean: Sequence of means for each channel.
+        std: Sequence of standard deviations for each channel.
+
+    Returns:
+        Tensor: Normalized Tensor image.
     """
     if not tensor.ndimension() == 4:
         raise TypeError('tensor should be 4D')
@@ -235,7 +249,9 @@ def normalize(tensor, mean, std):
 
 
 class Normalize(object):
-    """Normalize a tensor image with mean and standard deviation."""
+    """
+    Normalize a tensor image with mean and standard deviation.
+    """
     def __init__(self, mean, std):
         """
             Initialize Normalize transform.
@@ -251,17 +267,25 @@ class Normalize(object):
 
     def do(self, tensor):
         """
-            Normalize a tensor image with mean and standard deviation.
-            Args:
-                tensor: Tensor image of size (C, H, W) to be normalized.
+        Normalize a tensor image with mean and standard deviation.
+
+        Args:
+            tensor: Tensor image of size (C, H, W) to be normalized.
+
+        Returns:
+            Tensor: Normalized Tensor image.
         """
         return normalize(tensor, self.mean, self.std)
 
     def undo(self, tensor):
         """
-            Denormalize a tensor image with mean and standard deviation.
-            Args:
-                tensor: Tensor image of size (C, H, W) to be denormalized.
+        Denormalize a tensor image with mean and standard deviation.
+
+        Args:
+            tensor: Tensor image of size (C, H, W) to be denormalized.
+
+        Returns:
+            Tensor: Denormalized Tensor image.
         """
         return denormalize(tensor, self.mean, self.std)
 
