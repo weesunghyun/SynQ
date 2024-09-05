@@ -1,3 +1,21 @@
+"""
+Zero-shot Quantization with SynQ (Synthesis-aware Fine-tuning for Zero-shot Quantization) // Starlab SW
+
+Author: Minjun Kim (minjun.kim@snu.ac.kr), Seoul National University
+        Jongjin Kim (j2kim99@snu.ac.kr), Seoul National University
+        U Kang (ukang@snu.ac.kr), Seoul National University
+
+Version : 1.0
+Date : Sep 6th, 2023
+Main Contact: Minjun Kim
+This software is free of charge under research purposes.
+For commercial purposes, please contact the authors.
+
+dataloader.py
+    - codes for loading the dataset
+
+This code is mainly based on [ZeroQ](https://github.com/amirgholami/ZeroQ) and [HAST](https://github.com/lihuantong/HAST).
+"""
 import os
 
 import torch
@@ -7,7 +25,8 @@ from torchvision import transforms
 from torchvision import datasets as dsets
 
 
-__all__ = ["DataLoader", "PartDataLoader"]
+# __all__ = ["DataLoader", "PartDataLoader"]
+__all__ = ["DataLoader"]
 
 
 class ImageLoader(data.Dataset):
@@ -46,7 +65,7 @@ class ImageLoader(data.Dataset):
         return len(self.datasets)
 
 
-class DataLoader(object):
+class DataLoader:
     """Data Loader"""
     def __init__(self, dataset, batch_size, n_threads=4,
 	             ten_crop=False, data_path='/home/dataset/', logger=None):
@@ -133,7 +152,7 @@ class DataLoader(object):
             assert False, "invalid data set"
 
         test_loader = torch.utils.data.DataLoader(dataset=test_dataset,
-                                                  batch_size=10000,
+                                                  batch_size=self.batch_size, # 10000
                                                   shuffle=False,
                                                   pin_memory=True,
                                                   num_workers=self.n_threads)

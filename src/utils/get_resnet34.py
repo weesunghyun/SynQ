@@ -1,3 +1,22 @@
+"""
+Zero-shot Quantization with SynQ (Synthesis-aware Fine-tuning for Zero-shot Quantization) // Starlab SW
+
+Author: Minjun Kim (minjun.kim@snu.ac.kr), Seoul National University
+        Jongjin Kim (j2kim99@snu.ac.kr), Seoul National University
+        U Kang (ukang@snu.ac.kr), Seoul National University
+
+Version : 1.0
+Date : Sep 6th, 2023
+Main Contact: Minjun Kim
+This software is free of charge under research purposes.
+For commercial purposes, please contact the authors.
+
+get_resnet34.py
+    - codes for getting the ResNet-34 model for CIFAR-100 dataset
+
+This code is mainly based on [ZeroQ](https://github.com/amirgholami/ZeroQ) and [HAST](https://github.com/lihuantong/HAST).
+"""
+
 import torch
 from torch import nn
 from torch.nn import init
@@ -27,7 +46,7 @@ class CIFARResNet(nn.Module):
                 in_size: spatial size of the expected input image.
                 num_classes: number of classification classes.
         """
-        super(CIFARResNet, self).__init__()
+        super().__init__()
         self.in_size = in_size
         self.num_classes = num_classes
 
@@ -99,9 +118,9 @@ def resnet34_get_model():
     return net
 
 if __name__ == '__main__':
-    net = resnet34_get_model()
+    model = resnet34_get_model()
 
     dummy = torch.randn(1, 3, 32, 32).cuda()
 
-    out = net(dummy)
+    out = model(dummy)
     print(f"Inference OK! {out.shape}")

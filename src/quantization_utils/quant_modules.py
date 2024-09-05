@@ -1,15 +1,33 @@
+"""
+Zero-shot Quantization with SynQ (Synthesis-aware Fine-tuning for Zero-shot Quantization) // Starlab SW
+
+Author: Minjun Kim (minjun.kim@snu.ac.kr), Seoul National University
+        Jongjin Kim (j2kim99@snu.ac.kr), Seoul National University
+        U Kang (ukang@snu.ac.kr), Seoul National University
+
+Version : 1.0
+Date : Sep 6th, 2023
+Main Contact: Minjun Kim
+This software is free of charge under research purposes.
+For commercial purposes, please contact the authors.
+
+quant_modules.py
+    - codes for quantization modules
+
+This code is mainly based on [ZeroQ](https://github.com/amirgholami/ZeroQ) and [HAST](https://github.com/lihuantong/HAST).
+"""
 import torch
 from torch.nn import functional as F
 from torch.nn import Module, Parameter
 
-from .quant_utils import *
+from quantization_utils.quant_utils import find_mse_smallest, lp_loss, \
+    AsymmetricQuantFunction, SymmetricQuantFunctionDSG
 
 
 class QuantAct(Module):
     """
         Class to quantize given activations
     """
-
     def __init__(self,
                  activation_bit,
                  full_precision_flag=False,
@@ -22,10 +40,11 @@ class QuantAct(Module):
             full_precision_flag: full precision or not
             running_stat: determines whether the activation range is updated or froze
         """
-        super(QuantAct, self).__init__()
+        super().__init__()
         self.activation_bit = activation_bit
         self.full_precision_flag = full_precision_flag
         self.running_stat = running_stat
+
         self.register_buffer('x_min', torch.zeros(1))
         self.register_buffer('x_max', torch.zeros(1))
         self.register_buffer('beta', torch.Tensor([beta]))
@@ -70,30 +89,31 @@ class QuantAct(Module):
         if not self.full_precision_flag:
             quant_act = self.act_function(x, self.activation_bit, self.x_min, self.x_max)
             return quant_act
-        else:
-            return x
 
-class QuantAct_MSE(Module):
+        return x
+
+
+class QuantActMSE(Module):
     """
         Class to quantize given activations
     """
-
     def __init__(self,
                  activation_bit,
                  full_precision_flag=False,
                  running_stat=True,
                  beta=0.9):
         """
-          Initialize the quantized activation layer
-          Args:
-            activation_bit: bit-setting for activation
-            full_precision_flag: full precision or not
-            running_stat: determines whether the activation range is updated or froze
+            Initialize the quantized activation layer
+            Args:
+                activation_bit: bit-setting for activation
+                full_precision_flag: full precision or not
+                running_stat: determines whether the activation range is updated or froze
         """
-        super(QuantAct_MSE, self).__init__()
+        super().__init__()
         self.activation_bit = activation_bit
         self.full_precision_flag = full_precision_flag
         self.running_stat = running_stat
+
         self.register_buffer('x_min', torch.zeros(1))
         self.register_buffer('x_max', torch.zeros(1))
         self.register_buffer('beta', torch.Tensor([beta]))
@@ -101,6 +121,7 @@ class QuantAct_MSE(Module):
 
         self.register_buffer('cur_x_min', torch.zeros(1))
         self.register_buffer('cur_x_max', torch.zeros(1))
+
         self.act_function = AsymmetricQuantFunction.apply
 
     def __repr__(self):
@@ -140,6 +161,9 @@ class QuantAct_MSE(Module):
             self.cur_x_min = x_min
             self.cur_x_max = x_max
 
+            save_min = None
+            save_max = None
+
             x_clone = x.clone().detach()
             # in-place operation used on multi-gpus
             # self.x_min += -self.x_min + min(self.x_min, x_min)
@@ -150,7 +174,7 @@ class QuantAct_MSE(Module):
                 new_min = x_min * (1.0 - (i * 0.01))
                 new_max = x_max * (1.0 - (i * 0.01))
 
-                quant_act = find_MSESmallest(x_clone, self.activation_bit, new_min, new_max)
+                quant_act = find_mse_smallest(x_clone, self.activation_bit, new_min, new_max)
                 # L_p norm minimization as described in LAPQ
                 # https://arxiv.org/abs/1911.07190
                 score = lp_loss(x_clone, quant_act, p=2.4, reduction='all')
@@ -167,14 +191,14 @@ class QuantAct_MSE(Module):
         if not self.full_precision_flag:
             quant_act = self.act_function(x, self.activation_bit, self.x_min, self.x_max)
             return quant_act
-        else:
-            return x
 
-class Quant_Linear(Module):
+        return x
+
+
+class QuantLinear(Module):
     """
         Class to quantize given linear layer weights
     """
-
     def __init__(self, weight_bit, full_precision_flag=False):
         """
           Initialize the quantized linear layer
@@ -183,7 +207,7 @@ class Quant_Linear(Module):
             full_precision_flag: full precision or not
             running_stat: determines whether the activation range is updated or froze
         """
-        super(Quant_Linear, self).__init__()
+        super().__init__()
         self.full_precision_flag = full_precision_flag
         self.weight_bit = weight_bit
         self.weight_function = AsymmetricQuantFunction.apply
@@ -192,7 +216,7 @@ class Quant_Linear(Module):
         """
             Return the string representation of the class
         """
-        s = super(Quant_Linear, self).__repr__()
+        s = super().__repr__()
         s = f"({s} weight_bit={self.weight_bit}, full_precision_flag={self.full_precision_flag})"
         return s
 
@@ -223,11 +247,10 @@ class Quant_Linear(Module):
         return F.linear(x, weight=w, bias=self.bias)
 
 
-class Quant_Conv2d(Module):
+class QuantConv2d(Module):
     """
         Class to quantize given convolutional layer weights
     """
-
     def __init__(self, weight_bit, full_precision_flag=False):
         """
             Initialize the quantized convolutional layer
@@ -235,7 +258,7 @@ class Quant_Conv2d(Module):
                 weight_bit: bit-setting for weight
                 full_precision_flag: full precision or not
         """
-        super(Quant_Conv2d, self).__init__()
+        super().__init__()
         self.full_precision_flag = full_precision_flag
         self.weight_bit = weight_bit
         self.weight_function = AsymmetricQuantFunction.apply
@@ -244,7 +267,7 @@ class Quant_Conv2d(Module):
         """
             Return the string representation of the class
         """
-        s = super(Quant_Conv2d, self).__repr__()
+        s = super().__repr__()
         s = f"({s} weight_bit={self.weight_bit}, full_precision_flag={self.full_precision_flag})"
         return s
 
@@ -284,11 +307,10 @@ class Quant_Conv2d(Module):
                         self.dilation, self.groups)
 
 
-class QuantAct_DSG(Module):
+class QuantActDSG(Module):
     """
     Class to quantize given activations
     """
-
     def __init__(self,
                  activation_bit,
                  full_precision_flag=False,
@@ -299,15 +321,17 @@ class QuantAct_DSG(Module):
         full_precision_flag: full precision or not
         running_stat: determines whether the activation range is updated or froze
         """
-        super(QuantAct_DSG, self).__init__()
+        super().__init__()
         self.activation_bit = activation_bit
         self.full_precision_flag = full_precision_flag
         self.running_stat = running_stat
+
         self.register_buffer('x_min', torch.zeros(1))
         self.register_buffer('x_max', torch.zeros(1))
         self.register_buffer('beta', torch.Tensor([beta]))
         self.register_buffer('beta_t', torch.ones(1))
-        self.act_function = SymmetricQuantFunction_DSG.apply
+
+        self.act_function = SymmetricQuantFunctionDSG.apply
 
     def __repr__(self):
         """
@@ -338,7 +362,6 @@ class QuantAct_DSG(Module):
         """
         quantize given activation x
         """
-
         if self.running_stat:
             x_min = x.data.min()
             x_max = x.data.max()
@@ -361,11 +384,11 @@ class QuantAct_DSG(Module):
             quant_act = self.act_function(x, self.activation_bit, self.x_min,
                                           self.x_max)
             return quant_act
-        else:
-            return x
+
+        return x
 
 
-class QuantLinear_DSG(Module):
+class QuantLinearDSG(Module):
     """
     Class to quantize given linear layer weights
     """
@@ -376,13 +399,13 @@ class QuantLinear_DSG(Module):
         full_precision_flag: full precision or not
         running_stat: determines whether the activation range is updated or froze
         """
-        super(QuantLinear_DSG, self).__init__()
+        super().__init__()
         self.full_precision_flag = full_precision_flag
         self.weight_bit = weight_bit
-        self.weight_function = SymmetricQuantFunction_DSG.apply
+        self.weight_function = SymmetricQuantFunctionDSG.apply
 
     def __repr__(self):
-        s = super(QuantLinear_DSG, self).__repr__()
+        s = super().__repr__()
         s = f"({s} weight_bit={self.weight_bit}, full_precision_flag={self.full_precision_flag})"
         return s
 
@@ -416,19 +439,19 @@ class QuantLinear_DSG(Module):
         return F.linear(x, weight=w, bias=self.bias)
 
 
-class QuantConv2d_DSG(Module):
+class QuantConv2dDSG(Module):
     """
         Class to quantize given convolutional layer weights
     """
 
     def __init__(self, weight_bit, full_precision_flag=False):
-        super(QuantConv2d_DSG, self).__init__()
+        super().__init__()
         self.full_precision_flag = full_precision_flag
         self.weight_bit = weight_bit
-        self.weight_function = SymmetricQuantFunction_DSG.apply
+        self.weight_function = SymmetricQuantFunctionDSG.apply
 
     def __repr__(self):
-        s = super(QuantConv2d_DSG, self).__repr__()
+        s = super().__repr__()
         s = f"({s} weight_bit={self.weight_bit}, full_precision_flag={self.full_precision_flag})"
         return s
 
@@ -467,3 +490,7 @@ class QuantConv2d_DSG(Module):
 
         return F.conv2d(x, w, self.bias, self.stride, self.padding,
                         self.dilation, self.groups)
+
+if __name__ == "__main__":
+    m = QuantAct(8)
+    print(m)

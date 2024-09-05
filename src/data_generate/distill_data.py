@@ -1,3 +1,21 @@
+"""
+Zero-shot Quantization with SynQ (Synthesis-aware Fine-tuning for Zero-shot Quantization) // Starlab SW
+
+Author: Minjun Kim (minjun.kim@snu.ac.kr), Seoul National University
+        Jongjin Kim (j2kim99@snu.ac.kr), Seoul National University
+        U Kang (ukang@snu.ac.kr), Seoul National University
+
+Version : 1.0
+Date : Sep 6th, 2023
+Main Contact: Minjun Kim
+This software is free of charge under research purposes.
+For commercial purposes, please contact the authors.
+
+distill_data.py
+    - codes for generating distilled data
+
+This code is mainly based on [ZeroQ](https://github.com/amirgholami/ZeroQ) and [HAST](https://github.com/lihuantong/HAST).
+"""
 import gc
 import os
 import sys
@@ -16,12 +34,25 @@ from torchvision import transforms
 
 
 def check_path(model_path):
+    """
+    Check if the directory exists, if not create it.
+    Args:
+        model_path: path to the model
+    """
     directory = os.path.dirname(model_path)
     if not os.path.exists(directory):
         os.makedirs(directory)
 
 def generate_calib_centers(args, teacher_model, beta_ce = 5):
-
+    """
+    Generate calibration centers for the teacher model.
+    Args:
+        args: arguments
+        teacher_model: teacher model
+        beta_ce: beta for cross entropy loss
+    Returns:
+        refined_gaussian: refined gaussian data
+    """
     calib_path = os.path.join(args.save_path_head, args.model + "_calib_centers" + ".pickle")
     if not os.path.exists(calib_path):
         model_name = args.model
@@ -45,25 +76,25 @@ def generate_calib_centers(args, teacher_model, beta_ce = 5):
 
         refined_gaussian = []
 
-        CE_loss = nn.CrossEntropyLoss(reduction='none').cuda()
-        MSE_loss = nn.MSELoss().cuda()
+        ce_loss = nn.CrossEntropyLoss(reduction='none').cuda()
+        mse_loss = nn.MSELoss().cuda()
 
         mean_list = []
         var_list = []
         teacher_running_mean = []
         teacher_running_var = []
 
-        def hook_fn_forward(module, input, output):
-            input = input[0]
-            mean = input.mean([0, 2, 3])
-            var = input.var([0, 2, 3], unbiased=False)
+        def hook_fn_forward(module, _input, output):
+            _input = _input[0]
+            mean = _input.mean([0, 2, 3])
+            var = _input.var([0, 2, 3], unbiased=False)
 
             mean_list.append(mean)
             var_list.append(var)
             teacher_running_mean.append(module.running_mean)
             teacher_running_var.append(module.running_var)
 
-        for n, m in teacher_model.named_modules():
+        for _, m in teacher_model.named_modules():
             if isinstance(m, nn.BatchNorm2d):
                 m.register_forward_hook(hook_fn_forward)
 
@@ -92,8 +123,8 @@ def generate_calib_centers(args, teacher_model, beta_ce = 5):
             batch_time = time.time()
             for it in range(1500):
                 new_gaussian_data = []
-                for j in range(len(gaussian_data)):
-                    new_gaussian_data.append(gaussian_data[j])
+                for j, jth_data in enumerate(gaussian_data):
+                    new_gaussian_data.append(jth_data)
                 new_gaussian_data = torch.stack(new_gaussian_data).cuda()
 
                 mean_list.clear()
@@ -102,21 +133,21 @@ def generate_calib_centers(args, teacher_model, beta_ce = 5):
                 teacher_running_var.clear()
 
                 output = teacher_model(new_gaussian_data)
-                loss_target = beta_ce * (CE_loss(output, labels)).mean()
+                loss_target = beta_ce * (ce_loss(output, labels)).mean()
 
                 mean_loss = torch.zeros(1).cuda()
                 var_loss = torch.zeros(1).cuda()
-                for num in range(len(mean_list)):
-                    if num < (len(mean_list)+2) // 2 - 2 :
-                        mean_loss += 0.2 * MSE_loss(mean_list[num],
-                                                    teacher_running_mean[num].detach())
-                        var_loss += 0.2 * MSE_loss(var_list[num],
-                                                   teacher_running_var[num].detach())
+                for n, nth_mean in enumerate(mean_list):
+                    if n < (len(mean_list)+2) // 2 - 2:
+                        mean_loss += 0.2 * mse_loss(nth_mean,
+                                                    teacher_running_mean[n].detach())
+                        var_loss += 0.2 * mse_loss(var_list[n],
+                                                   teacher_running_var[n].detach())
                     else:
-                        mean_loss += 1.1 * MSE_loss(mean_list[num],
-                                                    teacher_running_mean[num].detach())
-                        var_loss += 1.1 * MSE_loss(var_list[num],
-                                                   teacher_running_var[num].detach())
+                        mean_loss += 1.1 * mse_loss(nth_mean,
+                                                    teacher_running_mean[n].detach())
+                        var_loss += 1.1 * mse_loss(var_list[n],
+                                                    teacher_running_var[n].detach())
 
                 mean_loss = mean_loss / len(mean_list)
                 var_loss = var_loss / len(mean_list)
@@ -166,11 +197,19 @@ class LabelSmoothing(nn.Module):
         """Constructor for the LabelSmoothing module.
         :param smoothing: label smoothing factor
         """
-        super(LabelSmoothing, self).__init__()
+        super().__init__()
         self.confidence = 1.0 - smoothing
         self.smoothing = smoothing
 
     def forward(self, x, target):
+        """
+        Forward pass for the LabelSmoothing module.
+        Args:
+            x: input tensor
+            target: target tensor
+        Returns:
+            loss: loss value
+        """
         logprobs = torch.nn.functional.log_softmax(x, dim=-1)
         nll_loss = -logprobs.gather(dim=-1, index=target.unsqueeze(1))
         nll_loss = nll_loss.squeeze(1)
@@ -178,22 +217,36 @@ class LabelSmoothing(nn.Module):
         loss = self.confidence * nll_loss + self.smoothing * smooth_loss
         return loss.mean()
 
-class output_hook(object):
+class OutputHook:
     """
         Forward_hook used to get the output of the intermediate layer. 
     """
     def __init__(self):
-        super(output_hook, self).__init__()
         self.outputs = None
 
-    def hook(self, module, input, output):
+    def hook(self, m, i, output):
+        """
+        Output hook function.
+        Args:
+            m: module
+            i: input
+            output: output
+        """
         self.outputs = output
 
     def clear(self):
+        """
+        Clear the output.
+        """
         self.outputs = None
 
 
-class DistillData(object):
+class DistillData:
+    """
+    Construct the distilled data.
+    Args:
+        args: arguments
+    """
     def __init__(self, args):
         self.mean_list = []
         self.var_list = []
@@ -207,18 +260,38 @@ class DistillData(object):
             self.calib_data_means = []
             self.calib_data_vars = []
 
-    def hook_fn_forward(self, module, input, output):
-        input = input[0]
-        mean = input.mean([0, 2, 3])
-        var = input.var([0, 2, 3], unbiased=False)
+    def hook_fn_forward(self, module, _input, _):
+        """
+        Forward hook function for the batch normalization layer.
+        Args:
+            module: module
+            _input: input
+            output: output
+        """
+        _input = _input[0]
+        mean = _input.mean([0, 2, 3])
+        var = _input.var([0, 2, 3], unbiased=False)
 
         self.mean_list.append(mean)
         self.var_list.append(var)
         self.teacher_running_mean.append(module.running_mean)
         self.teacher_running_var.append(module.running_var)
 
-    def getDistilData(self, model_name="resnet18", teacher_model=None, batch_size=256,
-                      num_batch=1, group=1, augMargin=0.4, beta=1.0, gamma=0, save_path_head=""):
+    def get_distil_data(self, model_name="resnet18", teacher_model=None, batch_size=256,
+                      num_batch=1, group=1, aug_margin=0.4, beta=1.0, gamma=0, save_path_head=""):
+        """
+        Generate the distilled data.
+        Args:
+            model_name: model name
+            teacher_model: teacher model
+            batch_size: batch size
+            num_batch: number of batches
+            group: group
+            aug_margin: augmentation margin
+            beta: beta
+            gamma: gamma
+            save_path_head: save path head
+        """
 
         data_path = os.path.join(save_path_head, model_name+"_refined_gaussian_hardsample_" \
                     + "beta"+ str(beta) +"_gamma" + str(gamma) + "_group" + str(group) + ".pickle")
@@ -250,10 +323,10 @@ class DistillData(object):
         refined_gaussian = []
         labels_list = []
 
-        CE_loss = nn.CrossEntropyLoss(reduction='none').cuda()
-        MSE_loss = nn.MSELoss().cuda()
+        ce_loss = nn.CrossEntropyLoss(reduction='none').cuda()
+        mse_loss = nn.MSELoss().cuda()
 
-        for n, m in teacher_model.named_modules():
+        for _, m in teacher_model.named_modules():
             if isinstance(m, nn.BatchNorm2d):
                 m.register_forward_hook(self.hook_fn_forward)
 
@@ -263,7 +336,7 @@ class DistillData(object):
         num_centers = self.num_classes // batch_size + (self.num_classes % batch_size != 0)
         total_samples = 0
 
-        if self.args.lbns and self.calib_data_means == []:
+        if self.args.lbns and not self.calib_data_means:
             for j in range(num_centers):
                 self.mean_list.clear()
                 self.var_list.clear()
@@ -312,10 +385,10 @@ class DistillData(object):
         for i in range(self.args.num_data//batch_size):
 
             if model_name in ['resnet20_cifar10', 'resnet20_cifar100', 'resnet34_cifar100']:
-                RRC = transforms.RandomResizedCrop(size=32,scale=(augMargin, 1.0))
+                rrc = transforms.RandomResizedCrop(size=32,scale=(aug_margin, 1.0))
             else:
-                RRC = transforms.RandomResizedCrop(size=224,scale=(augMargin, 1.0))
-            RHF = transforms.RandomHorizontalFlip()
+                rrc = transforms.RandomResizedCrop(size=224,scale=(aug_margin, 1.0))
+            rhf = transforms.RandomHorizontalFlip()
 
             gaussian_data = torch.randn(shape).cuda()
             gaussian_data.requires_grad = True
@@ -326,26 +399,26 @@ class DistillData(object):
                                                              patience=50)
 
             labels = torch.randint(0, self.num_classes, (len(gaussian_data),)).cuda()
-            labels_mask = F.one_hot(labels, num_classes=self.num_classes).float()
+            # labels_mask = F.one_hot(labels, num_classes=self.num_classes).float()
             gt = labels.data.cpu().numpy()
 
             batch_time = time.time()
             for it in range(500*2):
                 if model_name in ['resnet20_cifar10', 'resnet20_cifar100', 'resnet34_cifar100']:
                     new_gaussian_data = []
-                    for j in range(len(gaussian_data)):
-                        new_gaussian_data.append(gaussian_data[j])
+                    for j, jth_data in enumerate(gaussian_data):
+                        new_gaussian_data.append(jth_data)
                     new_gaussian_data = torch.stack(new_gaussian_data).cuda()
                 else:
                     if random.random() < 0.5:
                         new_gaussian_data = []
-                        for j in range(len(gaussian_data)):
-                            new_gaussian_data.append(RHF(RRC(gaussian_data[j])))
+                        for j, jth_data in enumerate(gaussian_data):
+                            new_gaussian_data.append(rhf(rrc(jth_data)))
                         new_gaussian_data = torch.stack(new_gaussian_data).cuda()
                     else:
                         new_gaussian_data = []
-                        for j in range(len(gaussian_data)):
-                            new_gaussian_data.append(gaussian_data[j])
+                        for j, jth_data in enumerate(gaussian_data):
+                            new_gaussian_data.append(jth_data)
                         new_gaussian_data = torch.stack(new_gaussian_data).cuda()
 
                 self.mean_list.clear()
@@ -364,25 +437,25 @@ class DistillData(object):
                 # loss_target = beta * F.kl_div(input=F.log_softmax(output, dim=1),
                 #                               target=labels_mask.to(output.device),
                 #                               reduction='batchmean')
-                loss_target = beta * ((1-p).pow(gamma) * CE_loss(output, labels)).mean()
+                loss_target = beta * ((1-p).pow(gamma) * ce_loss(output, labels)).mean()
 
                 mean_loss = torch.zeros(1).cuda()
                 var_loss = torch.zeros(1).cuda()
-                for num in range(len(self.mean_list)):
-                    mean_loss += MSE_loss(self.mean_list[num].cpu(),
-                                          self.teacher_running_mean[num].detach().cpu())
-                    var_loss += MSE_loss(self.var_list[num].cpu(),
-                                         self.teacher_running_var[num].detach().cpu())
+                for n, nth_mean in enumerate(self.mean_list):
+                    mean_loss += mse_loss(nth_mean.cpu(),
+                                          self.teacher_running_mean[n].detach().cpu())
+                    var_loss += mse_loss(self.var_list[n].cpu(),
+                                        self.teacher_running_var[n].detach().cpu())
 
                 if self.args.lbns:
                     print(f"Length of mean list: {len(self.mean_list)}")
                     lbns_loss = torch.zeros(1).cuda()
-                    for num in range(len(self.mean_list)):
-                        if num >= (len(self.mean_list)+2) // 2 - 2 :
-                            lmean_loss = MSE_loss(self.mean_list[num].cuda(),
-                                                  self.calib_running_mean[num].detach().cuda())
-                            lvar_loss = MSE_loss(self.var_list[num].cuda(),
-                                                 self.calib_running_var[num].detach().cuda())
+                    for n, nth_mean in enumerate(self.mean_list):
+                        if n >= (len(self.mean_list)+2) // 2 - 2 :
+                            lmean_loss = mse_loss(nth_mean.cuda(),
+                                                  self.calib_running_mean[n].detach().cuda())
+                            lvar_loss = mse_loss(self.var_list[n].cuda(),
+                                                 self.calib_running_var[n].detach().cuda())
                             lbns_loss += lmean_loss + lvar_loss
                     lbns_loss = lbns_loss / (len(self.mean_list) * len(labels))
 
