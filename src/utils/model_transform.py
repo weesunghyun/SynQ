@@ -1,5 +1,6 @@
 """
-Zero-shot Quantization with SynQ (Synthesis-aware Fine-tuning for Zero-shot Quantization) // Starlab SW
+[SW Starlab]
+Zero-shot Quantization with SynQ (Synthesis-aware Fine-tuning for Zero-shot Quantization)
 
 Author: Minjun Kim (minjun.kim@snu.ac.kr), Seoul National University
         Jongjin Kim (j2kim99@snu.ac.kr), Seoul National University
@@ -12,11 +13,13 @@ This software is free of charge under research purposes.
 For commercial purposes, please contact the authors.
 
 model_transform.py
-    - codes for model transformation (e.g., data parallel, model to list, list to sequential, model to state_dict)
+    - codes for model transformation
+        e.g., data parallel, model to list, list to sequential, model to state_dict
 
-This code is mainly based on [ZeroQ](https://github.com/amirgholami/ZeroQ) and [HAST](https://github.com/lihuantong/HAST).
+This code is mainly based on
+    - ZeroQ: https://github.com/amirgholami/ZeroQ
+    - HAST: https://github.com/lihuantong/HAST
 """
-
 import torch
 from torch import nn
 

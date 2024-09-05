@@ -453,6 +453,7 @@ disable=raw-checker-failed,
         broad-exception-caught, # ADD W0718
         bare-except, # ADD W0703
         possibly-used-before-assignment, # ADD E0606
+        protected-access, # ADD W0212
         
 
 

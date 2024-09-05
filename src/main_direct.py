@@ -1,5 +1,6 @@
 """
-Zero-shot Quantization with SynQ (Synthesis-aware Fine-tuning for Zero-shot Quantization) // Starlab SW
+[SW Starlab]
+Zero-shot Quantization with SynQ (Synthesis-aware Fine-tuning for Zero-shot Quantization)
 
 Author: Minjun Kim (minjun.kim@snu.ac.kr), Seoul National University
         Jongjin Kim (j2kim99@snu.ac.kr), Seoul National University
@@ -14,7 +15,9 @@ For commercial purposes, please contact the authors.
 main_direct.py
     - codes for main function for zero-shot quantization (SynQ)
 
-This code is mainly based on [ZeroQ](https://github.com/amirgholami/ZeroQ) and [HAST](https://github.com/lihuantong/HAST).
+This code is mainly based on
+    - ZeroQ: https://github.com/amirgholami/ZeroQ
+    - HAST: https://github.com/lihuantong/HAST
 """
 import os
 import copy

@@ -1,5 +1,6 @@
 """
-Zero-shot Quantization with SynQ (Synthesis-aware Fine-tuning for Zero-shot Quantization) // Starlab SW
+[SW Starlab]
+Zero-shot Quantization with SynQ (Synthesis-aware Fine-tuning for Zero-shot Quantization)
 
 Author: Minjun Kim (minjun.kim@snu.ac.kr), Seoul National University
         Jongjin Kim (j2kim99@snu.ac.kr), Seoul National University
@@ -14,7 +15,9 @@ For commercial purposes, please contact the authors.
 trainer_direct.py
     - codes for training the quantized model directly 
 
-This code is mainly based on [ZeroQ](https://github.com/amirgholami/ZeroQ) and [HAST](https://github.com/lihuantong/HAST).
+This code is mainly based on
+    - ZeroQ: https://github.com/amirgholami/ZeroQ
+    - HAST: https://github.com/lihuantong/HAST
 """
 from builtins import isinstance
 
@@ -556,7 +559,8 @@ class Trainer:
                     f"[train acc: {100 * fp_acc.avg:.4f}%] [loss: {loss_s.item():.2f}] "
                     f"loss KL: {loss_kl.item():.2f} "
                     f"loss CE: {self.args.lambda_ce * loss_ce.item():.2f} "
-                    f"loss FA: {loss_fa.item():.2f} loss CAM: {self.args.lambda_cam * loss_cam:.2f} "
+                    f"loss FA: {loss_fa.item():.2f} "
+                    f"loss CAM: {self.args.lambda_cam * loss_cam:.2f} "
                     f"loss KLp: {loss_kl_perturbed.item():.2f} "
                     f"loss CEp: {self.args.lambda_ce * loss_ce_perturbed.item():.2f} "
                     f"loss FAp: {loss_fa_perturbed.item():.2f}"

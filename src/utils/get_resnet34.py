@@ -1,5 +1,6 @@
 """
-Zero-shot Quantization with SynQ (Synthesis-aware Fine-tuning for Zero-shot Quantization) // Starlab SW
+[SW Starlab]
+Zero-shot Quantization with SynQ (Synthesis-aware Fine-tuning for Zero-shot Quantization)
 
 Author: Minjun Kim (minjun.kim@snu.ac.kr), Seoul National University
         Jongjin Kim (j2kim99@snu.ac.kr), Seoul National University
@@ -14,9 +15,10 @@ For commercial purposes, please contact the authors.
 get_resnet34.py
     - codes for getting the ResNet-34 model for CIFAR-100 dataset
 
-This code is mainly based on [ZeroQ](https://github.com/amirgholami/ZeroQ) and [HAST](https://github.com/lihuantong/HAST).
+This code is mainly based on
+    - ZeroQ: https://github.com/amirgholami/ZeroQ
+    - HAST: https://github.com/lihuantong/HAST
 """
-
 import torch
 from torch import nn
 from torch.nn import init
