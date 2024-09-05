@@ -11,8 +11,8 @@ Subpackages
    src.quantization_utils
    src.utils
 
-Submodules
-----------
+.. Submodules
+.. ----------
 
 src.conditional\_batchnorm module
 ---------------------------------

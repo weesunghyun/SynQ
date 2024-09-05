@@ -1,8 +1,8 @@
 src.quantization\_utils package
 ===============================
 
-Submodules
-----------
+.. Submodules
+.. ----------
 
 src.quantization\_utils.quant\_modules module
 ---------------------------------------------
@@ -20,10 +20,10 @@ src.quantization\_utils.quant\_utils module
    :undoc-members:
    :show-inheritance:
 
-Module contents
----------------
+.. Module contents
+.. ---------------
 
-.. automodule:: quantization_utils
-   :members:
-   :undoc-members:
-   :show-inheritance:
+.. .. automodule:: quantization_utils
+..    :members:
+..    :undoc-members:
+..    :show-inheritance:

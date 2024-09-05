@@ -1,15 +1,15 @@
 src.data\_generate package
 ==========================
 
-Subpackages
------------
+.. Subpackages
+.. -----------
 
 .. toctree::
    :maxdepth: 4
 
 
-Submodules
-----------
+.. Submodules
+.. ----------
 
 src.data\_generate.distill\_data module
 ---------------------------------------
@@ -27,10 +27,10 @@ src.data\_generate.generate\_data module
    :undoc-members:
    :show-inheritance:
 
-Module contents
----------------
+.. Module contents
+.. ---------------
 
-.. automodule:: data_generate
-   :members:
-   :undoc-members:
-   :show-inheritance:
+.. .. automodule:: data_generate
+..    :members:
+..    :undoc-members:
+..    :show-inheritance:

@@ -1,8 +1,8 @@
 src.utils package
 =================
 
-Submodules
-----------
+.. Submodules
+.. ----------
 
 src.utils.compute module
 ------------------------
@@ -76,10 +76,10 @@ src.utils.warmup module
    :undoc-members:
    :show-inheritance:
 
-Module contents
----------------
+.. Module contents
+.. ---------------
 
-.. automodule:: utils
-   :members:
-   :undoc-members:
-   :show-inheritance:
+.. .. automodule:: utils
+..    :members:
+..    :undoc-members:
+..    :show-inheritance:
