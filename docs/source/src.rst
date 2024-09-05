@@ -62,10 +62,10 @@ src.trainer\_direct module
    :undoc-members:
    :show-inheritance:
 
-Module contents
----------------
+.. Module contents
+.. ---------------
 
-.. automodule:: src
-   :members:
-   :undoc-members:
-   :show-inheritance:
+.. .. automodule:: src
+..    :members:
+..    :undoc-members:
+..    :show-inheritance:
