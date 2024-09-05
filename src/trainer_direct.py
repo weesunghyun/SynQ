@@ -96,7 +96,7 @@ class Trainer:
         if optimizer_state is not None:
             self.optimizer_s.load_state_dict(optimizer_state)\
 
-        self.optimizer_g = torch.optim.Adam(self.generator.parameters(), lr=self.settings.lr_G,
+        self.optimizer_g = torch.optim.Adam(self.generator.parameters(), lr=self.settings.lr_g,
                                             betas=(self.settings.b1, self.settings.b2))
 
         self.logger = logger
@@ -528,27 +528,27 @@ class Trainer:
             d_acc = np.mean(np.argmax(output_teacher_batch.data.cpu().numpy(), axis=1) == gt)
             fp_acc.update(d_acc)
 
-        if epoch < 4:
-            log_message = (
-                f"[Epoch {epoch + 1}/{self.settings.num_epochs}] [Batch {i + 1}/{iters}] "
-                f"[train acc: {100 * fp_acc.avg:.4f}%] G loss: {loss_g.item():.2f} "
-                f"One-hot loss: {loss_one_hot.item():.2f} BNS_loss: {bns_loss.item():.2f}"
+            if epoch < 4:
+                log_message = (
+                    f"[Epoch {epoch + 1}/{self.settings.num_epochs}] [Batch {i + 1}/{iters}] "
+                    f"[train acc: {100 * fp_acc.avg:.4f}%] G loss: {loss_g.item():.2f} "
+                    f"One-hot loss: {loss_one_hot.item():.2f} BNS_loss: {bns_loss.item():.2f}"
+                    )
+
+            else:
+                log_message = (
+                    f"[Epoch {epoch + 1}/{self.settings.num_epochs}] [Batch {i+1}/{iters}] "
+                    f"[train acc: {100 * fp_acc.avg:.4f}%] [loss: {loss_s.item():.2f}] "
+                    f"loss KL: {loss_kl.item():.2f} "
+                    f"loss CE: {self.args.lambda_ce * loss_ce.item():.2f} "
+                    f"loss FA: {loss_fa.item():.2f} loss CAM: {self.args.lambda_cam * loss_cam:.2f} "
+                    f"loss KLp: {loss_kl_perturbed.item():.2f} "
+                    f"loss CEp: {self.args.lambda_ce * loss_ce_perturbed.item():.2f} "
+                    f"loss FAp: {loss_fa_perturbed.item():.2f}"
                 )
 
-        else:
-            log_message = (
-                f"[Epoch {epoch + 1}/{self.settings.num_epochs}] [Batch {i+1}/{iters}] "
-                f"[train acc: {100 * fp_acc.avg:.4f}%] [loss: {loss_s.item():.2f}] "
-                f"loss KL: {loss_kl.item():.2f} "
-                f"loss CE: {self.args.lambda_ce * loss_ce.item():.2f} "
-                f"loss FA: {loss_fa.item():.2f} loss CAM: {self.args.lambda_cam * loss_cam:.2f} "
-                f"loss KLp: {loss_kl_perturbed.item():.2f} "
-                f"loss CEp: {self.args.lambda_ce * loss_ce_perturbed.item():.2f} "
-                f"loss FAp: {loss_fa_perturbed.item():.2f}"
-            )
-
-        self.logger.info(log_message)
-        print(log_message)
+            self.logger.info(log_message)
+            print(log_message)
 
         return top1_error.avg, top1_loss.avg, top5_error.avg
 
