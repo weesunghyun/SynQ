@@ -1,28 +1,22 @@
-src package
+Sub Modules
 ===========
 
-Subpackages
------------
-
 .. toctree::
-   :maxdepth: 4
+   :maxdepth: 2
 
-   src.data_generate
-   src.quantization_utils
-   src.utils
 
 .. Submodules
 .. ----------
 
-src.conditional\_batchnorm module
----------------------------------
+contitional\_batchnorm.py
+---------------------------------------------------------------
 
 .. automodule:: conditional_batchnorm
    :members:
    :undoc-members:
    :show-inheritance:
 
-src.dataloader module
+data_loader.py
 ---------------------
 
 .. automodule:: dataloader
@@ -30,42 +24,34 @@ src.dataloader module
    :undoc-members:
    :show-inheritance:
 
-src.gradcam module
-------------------
+gradcam.py
+-----------
 
 .. automodule:: gradcam
    :members:
    :undoc-members:
    :show-inheritance:
 
-src.main\_direct module
------------------------
+main\_direct.py
+----------------
 
 .. automodule:: main_direct
    :members:
    :undoc-members:
    :show-inheritance:
 
-src.options module
-------------------
+options.py
+-----------
 
 .. automodule:: options
    :members:
    :undoc-members:
    :show-inheritance:
 
-src.trainer\_direct module
---------------------------
+trainer\_direct.py
+-------------------
 
 .. automodule:: trainer_direct
    :members:
    :undoc-members:
    :show-inheritance:
-
-.. Module contents
-.. ---------------
-
-.. .. automodule:: src
-..    :members:
-..    :undoc-members:
-..    :show-inheritance:
