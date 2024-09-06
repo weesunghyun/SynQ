@@ -4,10 +4,6 @@ Sub Modules
 .. toctree::
    :maxdepth: 2
 
-
-.. Submodules
-.. ----------
-
 contitional\_batchnorm.py
 ---------------------------------------------------------------
 

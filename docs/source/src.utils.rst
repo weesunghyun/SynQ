@@ -1,85 +1,74 @@
-src.utils package
+utils module
 =================
 
-.. Submodules
-.. ----------
-
-src.utils.compute module
-------------------------
+compute.py
+-----------
 
 .. automodule:: utils.compute
    :members:
    :undoc-members:
    :show-inheritance:
 
-src.utils.get\_resnet34 module
-------------------------------
+get\_resnet34.py
+-----------------
 
 .. automodule:: utils.get_resnet34
    :members:
    :undoc-members:
    :show-inheritance:
 
-src.utils.gradcam module
-------------------------
+gradcam.py
+-----------
 
 .. automodule:: utils.gradcam
    :members:
    :undoc-members:
    :show-inheritance:
 
-src.utils.log\_print module
----------------------------
+log\_print.py
+--------------
 
 .. automodule:: utils.log_print
    :members:
    :undoc-members:
    :show-inheritance:
 
-src.utils.lr\_policy module
----------------------------
+lr\_policy.py
+--------------
 
 .. automodule:: utils.lr_policy
    :members:
    :undoc-members:
    :show-inheritance:
 
-src.utils.model\_transform module
----------------------------------
+model\_transform.py
+--------------------
 
 .. automodule:: utils.model_transform
    :members:
    :undoc-members:
    :show-inheritance:
 
-src.utils.my\_utils module
---------------------------
+my\_utils.py
+-------------
 
 .. automodule:: utils.my_utils
    :members:
    :undoc-members:
    :show-inheritance:
 
-src.utils.opt\_static module
-----------------------------
+opt\_static.py
+---------------
 
 .. automodule:: utils.opt_static
    :members:
    :undoc-members:
    :show-inheritance:
 
-src.utils.warmup module
------------------------
+warmup.py
+----------
 
 .. automodule:: utils.warmup
    :members:
    :undoc-members:
    :show-inheritance:
-
-.. Module contents
-.. ---------------
-
-.. .. automodule:: utils
-..    :members:
-..    :undoc-members:
-..    :show-inheritance:
