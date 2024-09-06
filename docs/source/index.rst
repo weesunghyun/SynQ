@@ -84,11 +84,10 @@ Here is an overview of our codes:
    :maxdepth: 4
    :caption: Contents:
 
-   src.data_generate
-   src.quantization_utils
-   src.utils
-   src
-
+   Data Generation <src.data_generate>
+   Quantization Utils <src.quantization_utils>
+   Utils <src.utils>
+   Sub-Modules <src>
 
 Indices and tables
 ==================
