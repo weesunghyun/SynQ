@@ -72,7 +72,8 @@ Here is an overview of our codes:
    │   ├── gradcam.py                   # gradcam and gradcam++ code
    │   ├── main_direct.py               # fine-tuning code
    │   ├── options.py                   # storing code for configurations
-   │   └── trainer_direct.py            # trainer code
+   │   ├── trainer_direct.py            # trainer code
+   │   └── unit_test.py                 # unit-test code
    ├── .gitignore                       # gitignore file
    ├── LICENSE                          # license for the use of the code
    ├── README.md                        # readme file
