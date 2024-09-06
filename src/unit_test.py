@@ -19,18 +19,22 @@ This code is mainly based on
     - ZeroQ: https://github.com/amirgholami/ZeroQ
     - HAST: https://github.com/lihuantong/HAST
 """
-import unittest
 import os
-import torch
-import torch.nn as nn
 import sys
+import unittest
+
+import torch
+from torch import nn
+
 from main_direct import Generator
 
 sys.path.append(os.path.join(os.path.dirname(__file__), 'data_generate'))
 from distill_data import check_path, LabelSmoothing, OutputHook, DistillData
 
-
 class DummyOption:
+    """
+    Dummy class for testing Generator object.
+    """
     def __init__(self):
         self.num_classes = 10
         self.latent_dim = 100
@@ -39,9 +43,14 @@ class DummyOption:
 
 
 class TestDistillData(unittest.TestCase):
-
+    """
+    Test cases for unit testing the distill_data.py module.
+    """
     def setUp(self):
         class Args:
+            """
+            Arguments for unit-testing.
+            """
             model = 'resnet18'
             save_path_head = './test_dir'
             batch_size = 4
@@ -96,7 +105,7 @@ class TestDistillData(unittest.TestCase):
 
     def test_hook_fn_forward(self):
         """Test DistillData's hook_fn_forward function for BatchNorm2d."""
-        DD = DistillData(self.args)
+        distill_data = DistillData(self.args)
         model = nn.Sequential(
             nn.Conv2d(3, 64, kernel_size=3, stride=1, padding=1),
             nn.BatchNorm2d(64),
@@ -106,18 +115,21 @@ class TestDistillData(unittest.TestCase):
         input_tensor = torch.randn(1, 3, 32, 32).cuda()
         for _, m in model.named_modules():
             if isinstance(m, nn.BatchNorm2d):
-                m.register_forward_hook(DD.hook_fn_forward)
+                m.register_forward_hook(distill_data.hook_fn_forward)
 
         # Forward pass to trigger the hook
         model(input_tensor)
 
         # Check that mean and var have been captured
-        self.assertTrue(len(DD.mean_list) > 0)
-        self.assertTrue(len(DD.var_list) > 0)
-        self.assertEqual(DD.mean_list[0].shape, torch.Size([64]))
-        self.assertEqual(DD.var_list[0].shape, torch.Size([64]))
+        self.assertTrue(len(distill_data.mean_list) > 0)
+        self.assertTrue(len(distill_data.var_list) > 0)
+        self.assertEqual(distill_data.mean_list[0].shape, torch.Size([64]))
+        self.assertEqual(distill_data.var_list[0].shape, torch.Size([64]))
 
     def test_output_hook_clear(self):
+        """
+        Tests if the 'clear' method of 'OutputHook' correctly sets' outputs' to None.
+        """
         hook = OutputHook()
         hook.outputs = torch.tensor([1, 2, 3])
         hook.clear()
@@ -154,7 +166,10 @@ class TestDistillData(unittest.TestCase):
         z = torch.randn(1, options.latent_dim)
         labels = torch.randint(0, options.num_classes, (1,))
         out = generator.l1(torch.mul(generator.label_emb(labels), z))
-        self.assertEqual(out.view(1, 128, options.img_size // 4, options.img_size // 4).shape, (1, 128, 8, 8))
+        self.assertEqual(
+            out.view(1, 128, options.img_size // 4, options.img_size // 4).shape,
+            (1, 128, 8, 8)
+            )
 
     def test_generator_no_nan_in_output(self):
         """Test that the Generator output does not contain NaN values."""

@@ -454,8 +454,9 @@ disable=raw-checker-failed,
         bare-except, # ADD W0703
         possibly-used-before-assignment, # ADD E0606
         protected-access, # ADD W0212
-        
-
+        import-outside-toplevel, # ADD C0415
+        wrong-import-position, # C0413
+        wrong-import-order, # C0411
 
 # Enable the message, report, category or checker with the given id(s). You can
 # either give multiple identifier separated by comma (,) or put this option
