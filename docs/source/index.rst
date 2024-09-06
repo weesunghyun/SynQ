@@ -81,7 +81,7 @@ Here is an overview of our codes:
 
 
 .. toctree::
-   :maxdepth: 4
+   :maxdepth: 2
    :caption: Contents:
 
    Data Generation <src.data_generate>
@@ -89,8 +89,6 @@ Here is an overview of our codes:
    Utils <src.utils>
    Sub-Modules <src>
 
-Indices and tables
-==================
-* :ref:`genindex`
+Module Index
+=============
 * :ref:`modindex`
-* :ref:`search`

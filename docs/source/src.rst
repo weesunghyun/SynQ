@@ -5,7 +5,7 @@ Sub Modules
    :maxdepth: 2
 
 contitional\_batchnorm.py
----------------------------------------------------------------
+--------------------------
 
 .. automodule:: conditional_batchnorm
    :members:
@@ -13,7 +13,7 @@ contitional\_batchnorm.py
    :show-inheritance:
 
 data_loader.py
----------------------
+---------------
 
 .. automodule:: dataloader
    :members:
