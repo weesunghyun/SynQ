@@ -8,9 +8,13 @@ Author
     - U Kang (ukang@snu.ac.kr), Seoul National University
 
 Version : 1.0
+
 Date : Sep 6th, 2023
+
 Main Contact: Minjun Kim
+
 This software is free of charge under research purposes.
+
 For commercial purposes, please contact the authors.
 
 generate_data.py
