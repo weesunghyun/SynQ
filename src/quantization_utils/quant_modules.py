@@ -2,9 +2,10 @@
 [SW Starlab]
 Zero-shot Quantization with SynQ (Synthesis-aware Fine-tuning for Zero-shot Quantization)
 
-Author: Minjun Kim (minjun.kim@snu.ac.kr), Seoul National University
-        Jongjin Kim (j2kim99@snu.ac.kr), Seoul National University
-        U Kang (ukang@snu.ac.kr), Seoul National University
+Author
+    - Minjun Kim (minjun.kim@snu.ac.kr), Seoul National University
+    - Jongjin Kim (j2kim99@snu.ac.kr), Seoul National University
+    - U Kang (ukang@snu.ac.kr), Seoul National University
 
 Version : 1.0
 Date : Sep 6th, 2023
