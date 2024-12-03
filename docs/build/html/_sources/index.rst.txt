@@ -1,19 +1,20 @@
-.. SynQ documentation master file, created by
+.. SaFT documentation master file, created by
    sphinx-quickstart on Thu Sep  5 17:02:26 2024.
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-SynQ documentation
+SaFT documentation
 ==================
 
-Accurate Zero-shot Quantization by Synthesis-aware Fine-tuning
+Accurate Few-shot Quantization by Synthesis-aware Fine-tuning
 ==============================================================
 
-This project is a PyTorch implementation of **"Accurate Zero-shot Quantization by Synthesis-aware Fine-tuning"**.
-The paper proposes SynQ, an accurate Zero-shot Quantization (ZSQ) method.
+This project is a PyTorch implementation of **"Accurate Few-shot Quantization by Synthesis-aware Fine-tuning"**.
+The paper proposes SaFT 
+(Synthesis-aware Fine-tuning), an accurate Few-shot Quantization (FSQ) method.
 
-.. image:: ../../images/synq.jpg
-   :alt: Overall Architecture of SynQ
+.. image:: ../../images/saft.jpg
+   :alt: Overall Architecture of SaFT
    :align: center
 
 Prerequisites
@@ -22,7 +23,7 @@ Prerequisites
 Our implementation is based on PyTorch, TorchVision, and PyTorchCV libraries.
 
 - Python 3.9.12
-- PyTorch 2.1.0
+- PyTorch 1.13.0
 - PyTorchCV 0.0.67
 
 We include ``requirements.txt``, which contains all the packages used for the experiment.
@@ -37,16 +38,13 @@ Install the required packages with the following code:
 Usage
 -----
 
-For usage, first generate the synthetic dataset with the code under ``src/data_generate/``.
-We include ``run_generate_imagenet.sh``, which generates the synthetic dataset using a ResNet-18 model pre-trained on the ImageNet dataset.
+Fine-tune the quantized model by executing ``src/main_direct.py``.
+We include ``run_cifar100_6bit.sh``, for the 6bit Fero-shot Quantization (FSQ) for ResNet-34 model pre-trained on the CIFAR-100 dataset.
 
 .. code-block:: shell
 
-   cd src/data_generate
-   bash run_generate_imagenet.sh
-
-Second, fine-tune the quantized model by executing ``src/main_direct.py``.
-We include ``run_imagenet.sh``, for the 3bit Zero-shot Quantization (ZSQ) for ResNet-18 model pre-trained on the ImageNet dataset.
+   cd src/
+   bash run_cifar100_6bit.sh 0
 
 To run with different settings, modify the config files under ``src/config/`` or the arguments passed into ``src/data_generate/generate_data.py`` and ``src/main_direct.py``.
 
@@ -58,9 +56,9 @@ Here is an overview of our codes:
 
 .. code-block:: text
 
-   SynQ/
+   SaFT/
    ├── images/
-   │   └── synq.jpg                     # the overall architecture
+   │   └── saft.jpg                     # the overall architecture
    ├── src/
    │   ├── config/                      # configurations for fine-tuning      
    │   ├── data_generate/               # synthetic dataset generation

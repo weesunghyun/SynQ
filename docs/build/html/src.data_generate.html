@@ -4,7 +4,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Data Generate &mdash; SynQ  documentation</title>
+  <title>Data Generate &mdash; SaFT  documentation</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=80d5e7a1" />
       <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=19f00094" />
 
@@ -20,7 +20,7 @@
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="Quantization Utils" href="src.quantization_utils.html" />
-    <link rel="prev" title="SynQ documentation" href="index.html" /> 
+    <link rel="prev" title="SaFT documentation" href="index.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -32,7 +32,7 @@
           
           
           <a href="index.html" class="icon icon-home">
-            SynQ
+            SaFT
           </a>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
@@ -81,7 +81,7 @@
 
     <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
           <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
-          <a href="index.html">SynQ</a>
+          <a href="index.html">SaFT</a>
       </nav>
 
       <div class="wy-nav-content">
@@ -104,17 +104,16 @@
 <section id="module-data_generate.distill_data">
 <span id="distill-data-py"></span><h2>distill_data.py<a class="headerlink" href="#module-data_generate.distill_data" title="Link to this heading">¶</a></h2>
 <p>[SW Starlab]</p>
-<p>Zero-shot Quantization with SynQ (Synthesis-aware Fine-tuning for Zero-shot Quantization)</p>
+<p>Few-shot quantization with SaFT (Synthesis-aware Fine Tuning)</p>
 <dl class="simple">
 <dt>Author</dt><dd><ul class="simple">
 <li><p>Minjun Kim (<a class="reference external" href="mailto:minjun&#46;kim&#37;&#52;&#48;snu&#46;ac&#46;kr">minjun<span>&#46;</span>kim<span>&#64;</span>snu<span>&#46;</span>ac<span>&#46;</span>kr</a>), Seoul National University</p></li>
-<li><p>Jongjin Kim (<a class="reference external" href="mailto:j2kim99&#37;&#52;&#48;snu&#46;ac&#46;kr">j2kim99<span>&#64;</span>snu<span>&#46;</span>ac<span>&#46;</span>kr</a>), Seoul National University</p></li>
 <li><p>U Kang (<a class="reference external" href="mailto:ukang&#37;&#52;&#48;snu&#46;ac&#46;kr">ukang<span>&#64;</span>snu<span>&#46;</span>ac<span>&#46;</span>kr</a>), Seoul National University</p></li>
 </ul>
 </dd>
 </dl>
 <p>Version : 1.0</p>
-<p>Date : Sep 6th, 2023</p>
+<p>Date : Dec 3rd, 2023</p>
 <p>Main Contact: Minjun Kim</p>
 <p>This software is free of charge under research purposes.</p>
 <p>For commercial purposes, please contact the authors.</p>
@@ -134,7 +133,7 @@
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">data_generate.distill_data.</span></span><span class="sig-name descname"><span class="pre">DistillData</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">args</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#data_generate.distill_data.DistillData" title="Link to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
 <p>Construct the distilled data.
-:param args: arguments
+:param args: arguments</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="data_generate.distill_data.DistillData.get_distil_data">
 <span class="sig-name descname"><span class="pre">get_distil_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'resnet18'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">teacher_model</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">256</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_batch</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">group</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">aug_margin</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.4</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">beta</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gamma</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save_path_head</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#data_generate.distill_data.DistillData.get_distil_data" title="Link to this definition">¶</a></dt>
@@ -234,20 +233,19 @@
 <section id="module-data_generate.generate_data">
 <span id="generate-data-py"></span><h2>generate_data.py<a class="headerlink" href="#module-data_generate.generate_data" title="Link to this heading">¶</a></h2>
 <p>[SW Starlab]
-Zero-shot Quantization with SynQ (Synthesis-aware Fine-tuning for Zero-shot Quantization)</p>
+Few-shot quantization with SaFT (Synthesis-aware Fine Tuning)</p>
 <dl class="simple">
 <dt>Author</dt><dd><ul class="simple">
-  <li><p>Minjun Kim (<a class="reference external" href="mailto:minjun&#46;kim&#37;&#52;&#48;snu&#46;ac&#46;kr">minjun<span>&#46;</span>kim<span>&#64;</span>snu<span>&#46;</span>ac<span>&#46;</span>kr</a>), Seoul National University</p></li>
-  <li><p>Jongjin Kim (<a class="reference external" href="mailto:j2kim99&#37;&#52;&#48;snu&#46;ac&#46;kr">j2kim99<span>&#64;</span>snu<span>&#46;</span>ac<span>&#46;</span>kr</a>), Seoul National University</p></li>
-  <li><p>U Kang (<a class="reference external" href="mailto:ukang&#37;&#52;&#48;snu&#46;ac&#46;kr">ukang<span>&#64;</span>snu<span>&#46;</span>ac<span>&#46;</span>kr</a>), Seoul National University</p></li>
-  </ul>
-  </dd>
-  </dl>
-<p>Version : 1.0
-Date : Sep 6th, 2023
-Main Contact: Minjun Kim
-This software is free of charge under research purposes.
-For commercial purposes, please contact the authors.</p>
+<li><p>Minjun Kim (<a class="reference external" href="mailto:minjun&#46;kim&#37;&#52;&#48;snu&#46;ac&#46;kr">minjun<span>&#46;</span>kim<span>&#64;</span>snu<span>&#46;</span>ac<span>&#46;</span>kr</a>), Seoul National University</p></li>
+<li><p>U Kang (<a class="reference external" href="mailto:ukang&#37;&#52;&#48;snu&#46;ac&#46;kr">ukang<span>&#64;</span>snu<span>&#46;</span>ac<span>&#46;</span>kr</a>), Seoul National University</p></li>
+</ul>
+</dd>
+</dl>
+<p>Version : 1.0</p>
+<p>Date : Dec 3rd, 2023</p>
+<p>Main Contact: Minjun Kim</p>
+<p>This software is free of charge under research purposes.</p>
+<p>For commercial purposes, please contact the authors.</p>
 <dl class="simple">
 <dt>generate_data.py</dt><dd><ul class="simple">
 <li><p>codes for generating synthetic data for zero-shot quantization</p></li>
@@ -272,7 +270,7 @@ For commercial purposes, please contact the authors.</p>
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="index.html" class="btn btn-neutral float-left" title="SynQ documentation" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="index.html" class="btn btn-neutral float-left" title="SaFT documentation" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
         <a href="src.quantization_utils.html" class="btn btn-neutral float-right" title="Quantization Utils" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 

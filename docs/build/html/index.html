@@ -4,7 +4,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>SynQ documentation &mdash; SynQ  documentation</title>
+  <title>SaFT documentation &mdash; SaFT  documentation</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=80d5e7a1" />
       <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=19f00094" />
 
@@ -31,7 +31,7 @@
           
           
           <a href="#" class="icon icon-home">
-            SynQ
+            SaFT
           </a>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
@@ -55,7 +55,7 @@
 
     <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
           <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
-          <a href="#">SynQ</a>
+          <a href="#">SaFT</a>
       </nav>
 
       <div class="wy-nav-content">
@@ -63,7 +63,7 @@
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
       <li><a href="#" class="icon icon-home" aria-label="Home"></a></li>
-      <li class="breadcrumb-item active">SynQ documentation</li>
+      <li class="breadcrumb-item active">SaFT documentation</li>
       <li class="wy-breadcrumbs-aside">
             <a href="_sources/index.rst.txt" rel="nofollow"> View page source</a>
       </li>
@@ -73,20 +73,21 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section id="synq-documentation">
-<h1>SynQ documentation<a class="headerlink" href="#synq-documentation" title="Link to this heading">¶</a></h1>
+  <section id="saft-documentation">
+<h1>SaFT documentation<a class="headerlink" href="#saft-documentation" title="Link to this heading">¶</a></h1>
 </section>
-<section id="accurate-zero-shot-quantization-by-synthesis-aware-fine-tuning">
-<h1>Accurate Zero-shot Quantization by Synthesis-aware Fine-tuning<a class="headerlink" href="#accurate-zero-shot-quantization-by-synthesis-aware-fine-tuning" title="Link to this heading">¶</a></h1>
-<p>This project is a PyTorch implementation of <strong>“Accurate Zero-shot Quantization by Synthesis-aware Fine-tuning”</strong>.
-The paper proposes SynQ, an accurate Zero-shot Quantization (ZSQ) method.</p>
-<img alt="Overall Architecture of SynQ" class="align-center" src="_images/synq.jpg" />
+<section id="accurate-few-shot-quantization-by-synthesis-aware-fine-tuning">
+<h1>Accurate Few-shot Quantization by Synthesis-aware Fine-tuning<a class="headerlink" href="#accurate-few-shot-quantization-by-synthesis-aware-fine-tuning" title="Link to this heading">¶</a></h1>
+<p>This project is a PyTorch implementation of <strong>“Accurate Few-shot Quantization by Synthesis-aware Fine-tuning”</strong>.
+The paper proposes SaFT
+(Synthesis-aware Fine-tuning), an accurate Few-shot Quantization (FSQ) method.</p>
+<img alt="Overall Architecture of SaFT" class="align-center" src="_images/saft.jpg" />
 <section id="prerequisites">
 <h2>Prerequisites<a class="headerlink" href="#prerequisites" title="Link to this heading">¶</a></h2>
 <p>Our implementation is based on PyTorch, TorchVision, and PyTorchCV libraries.</p>
 <ul class="simple">
 <li><p>Python 3.9.12</p></li>
-<li><p>PyTorch 2.1.0</p></li>
+<li><p>PyTorch 1.13.0</p></li>
 <li><p>PyTorchCV 0.0.67</p></li>
 </ul>
 <p>We include <code class="docutils literal notranslate"><span class="pre">requirements.txt</span></code>, which contains all the packages used for the experiment.
@@ -99,23 +100,21 @@ Install the required packages with the following code:</p>
 </section>
 <section id="usage">
 <h2>Usage<a class="headerlink" href="#usage" title="Link to this heading">¶</a></h2>
-<p>For usage, first generate the synthetic dataset with the code under <code class="docutils literal notranslate"><span class="pre">src/data_generate/</span></code>.
-We include <code class="docutils literal notranslate"><span class="pre">run_generate_imagenet.sh</span></code>, which generates the synthetic dataset using a ResNet-18 model pre-trained on the ImageNet dataset.</p>
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="nb">cd</span><span class="w"> </span>src/data_generate
-bash<span class="w"> </span>run_generate_imagenet.sh
+<p>Fine-tune the quantized model by executing <code class="docutils literal notranslate"><span class="pre">src/main_direct.py</span></code>.
+We include <code class="docutils literal notranslate"><span class="pre">run_cifar100_6bit.sh</span></code>, for the 6bit Fero-shot Quantization (FSQ) for ResNet-34 model pre-trained on the CIFAR-100 dataset.</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="nb">cd</span><span class="w"> </span>src/
+bash<span class="w"> </span>run_cifar100_6bit.sh<span class="w"> </span><span class="m">0</span>
 </pre></div>
 </div>
-<p>Second, fine-tune the quantized model by executing <code class="docutils literal notranslate"><span class="pre">src/main_direct.py</span></code>.
-We include <code class="docutils literal notranslate"><span class="pre">run_imagenet.sh</span></code>, for the 3bit Zero-shot Quantization (ZSQ) for ResNet-18 model pre-trained on the ImageNet dataset.</p>
 <p>To run with different settings, modify the config files under <code class="docutils literal notranslate"><span class="pre">src/config/</span></code> or the arguments passed into <code class="docutils literal notranslate"><span class="pre">src/data_generate/generate_data.py</span></code> and <code class="docutils literal notranslate"><span class="pre">src/main_direct.py</span></code>.</p>
 </section>
 <section id="code-description">
 <h2>Code Description<a class="headerlink" href="#code-description" title="Link to this heading">¶</a></h2>
 <p>This repository is written based on the codes from <strong>ZeroQ</strong> (CVPR ‘20) `_Github &lt;<a class="reference external" href="https://github.com/amirgholami/ZeroQ">https://github.com/amirgholami/ZeroQ</a>&gt;`_, <strong>IntraQ</strong> (CVPR ‘22) `_Github &lt;<a class="reference external" href="https://github.com/zysxmu/IntraQ">https://github.com/zysxmu/IntraQ</a>&gt;`_, <strong>HAST</strong> (CVPR ‘23) `_Github &lt;<a class="reference external" href="https://github.com/lihuantong/HAST">https://github.com/lihuantong/HAST</a>&gt;`_, and a PyTorch implementation of Grad-CAM and Grad-CAM++ `_Github &lt;<a class="reference external" href="https://github.com/1Konny/gradcam_plus_plus-pytorch">https://github.com/1Konny/gradcam_plus_plus-pytorch</a>&gt;`_.
 Here is an overview of our codes:</p>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>SynQ/
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>SaFT/
 ├── images/
-│   └── synq.jpg                     # the overall architecture
+│   └── saft.jpg                     # the overall architecture
 ├── src/
 │   ├── config/                      # configurations for fine-tuning
 │   ├── data_generate/               # synthetic dataset generation

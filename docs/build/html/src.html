@@ -4,7 +4,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Sub Modules &mdash; SynQ  documentation</title>
+  <title>Sub Modules &mdash; SaFT  documentation</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=80d5e7a1" />
       <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=19f00094" />
 
@@ -31,7 +31,7 @@
           
           
           <a href="index.html" class="icon icon-home">
-            SynQ
+            SaFT
           </a>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
@@ -47,7 +47,7 @@
 <li class="toctree-l1"><a class="reference internal" href="src.quantization_utils.html">Quantization Utils</a></li>
 <li class="toctree-l1"><a class="reference internal" href="src.utils.html">Utils</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Sub-Modules</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#module-conditional_batchnorm">conditional_batchnorm.py</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#module-conditional_batchnorm">contitional_batchnorm.py</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#conditional_batchnorm.CategoricalConditionalBatchNorm2d"><code class="docutils literal notranslate"><span class="pre">CategoricalConditionalBatchNorm2d</span></code></a><ul>
 <li class="toctree-l4"><a class="reference internal" href="#conditional_batchnorm.CategoricalConditionalBatchNorm2d.forward"><code class="docutils literal notranslate"><span class="pre">CategoricalConditionalBatchNorm2d.forward()</span></code></a></li>
 </ul>
@@ -150,7 +150,7 @@
 
     <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
           <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
-          <a href="index.html">SynQ</a>
+          <a href="index.html">SaFT</a>
       </nav>
 
       <div class="wy-nav-content">
@@ -173,22 +173,21 @@
 <div class="toctree-wrapper compound">
 </div>
 <section id="module-conditional_batchnorm">
-<span id="conditional-batchnorm-py"></span><h2>conditional_batchnorm.py<a class="headerlink" href="#module-conditional_batchnorm" title="Link to this heading">¶</a></h2>
+<span id="contitional-batchnorm-py"></span><h2>contitional_batchnorm.py<a class="headerlink" href="#module-conditional_batchnorm" title="Link to this heading">¶</a></h2>
 <p>[SW Starlab]
-Zero-shot Quantization with SynQ (Synthesis-aware Fine-tuning for Zero-shot Quantization)</p>
+Few-shot quantization with SaFT (Synthesis-aware Fine Tuning)</p>
 <dl class="simple">
 <dt>Author</dt><dd><ul class="simple">
-  <li><p>Minjun Kim (<a class="reference external" href="mailto:minjun&#46;kim&#37;&#52;&#48;snu&#46;ac&#46;kr">minjun<span>&#46;</span>kim<span>&#64;</span>snu<span>&#46;</span>ac<span>&#46;</span>kr</a>), Seoul National University</p></li>
-  <li><p>Jongjin Kim (<a class="reference external" href="mailto:j2kim99&#37;&#52;&#48;snu&#46;ac&#46;kr">j2kim99<span>&#64;</span>snu<span>&#46;</span>ac<span>&#46;</span>kr</a>), Seoul National University</p></li>
-  <li><p>U Kang (<a class="reference external" href="mailto:ukang&#37;&#52;&#48;snu&#46;ac&#46;kr">ukang<span>&#64;</span>snu<span>&#46;</span>ac<span>&#46;</span>kr</a>), Seoul National University</p></li>
-  </ul>
-  </dd>
-  </dl>
-  <p>Version : 1.0</p>
-  <p>Date : Sep 6th, 2023</p>
-  <p>Main Contact: Minjun Kim</p>
-  <p>This software is free of charge under research purposes.</p>
-  <p>For commercial purposes, please contact the authors.</p>
+<li><p>Minjun Kim (<a class="reference external" href="mailto:minjun&#46;kim&#37;&#52;&#48;snu&#46;ac&#46;kr">minjun<span>&#46;</span>kim<span>&#64;</span>snu<span>&#46;</span>ac<span>&#46;</span>kr</a>), Seoul National University</p></li>
+<li><p>U Kang (<a class="reference external" href="mailto:ukang&#37;&#52;&#48;snu&#46;ac&#46;kr">ukang<span>&#64;</span>snu<span>&#46;</span>ac<span>&#46;</span>kr</a>), Seoul National University</p></li>
+</ul>
+</dd>
+</dl>
+<p>Version : 1.0</p>
+<p>Date : Dec 3rd, 2023</p>
+<p>Main Contact: Minjun Kim</p>
+<p>This software is free of charge under research purposes.</p>
+<p>For commercial purposes, please contact the authors.</p>
 <dl class="simple">
 <dt>conditional_batchnorm.py</dt><dd><ul class="simple">
 <li><p>codes for conditional batch normalization</p></li>
@@ -247,20 +246,19 @@ Zero-shot Quantization with SynQ (Synthesis-aware Fine-tuning for Zero-shot Quan
 <section id="module-dataloader">
 <span id="data-loader-py"></span><h2>data_loader.py<a class="headerlink" href="#module-dataloader" title="Link to this heading">¶</a></h2>
 <p>[SW Starlab]
-Zero-shot Quantization with SynQ (Synthesis-aware Fine-tuning for Zero-shot Quantization)</p>
+Few-shot quantization with SaFT (Synthesis-aware Fine Tuning)</p>
 <dl class="simple">
 <dt>Author</dt><dd><ul class="simple">
-  <li><p>Minjun Kim (<a class="reference external" href="mailto:minjun&#46;kim&#37;&#52;&#48;snu&#46;ac&#46;kr">minjun<span>&#46;</span>kim<span>&#64;</span>snu<span>&#46;</span>ac<span>&#46;</span>kr</a>), Seoul National University</p></li>
-  <li><p>Jongjin Kim (<a class="reference external" href="mailto:j2kim99&#37;&#52;&#48;snu&#46;ac&#46;kr">j2kim99<span>&#64;</span>snu<span>&#46;</span>ac<span>&#46;</span>kr</a>), Seoul National University</p></li>
-  <li><p>U Kang (<a class="reference external" href="mailto:ukang&#37;&#52;&#48;snu&#46;ac&#46;kr">ukang<span>&#64;</span>snu<span>&#46;</span>ac<span>&#46;</span>kr</a>), Seoul National University</p></li>
-  </ul>
-  </dd>
-  </dl>
-  <p>Version : 1.0</p>
-  <p>Date : Sep 6th, 2023</p>
-  <p>Main Contact: Minjun Kim</p>
-  <p>This software is free of charge under research purposes.</p>
-  <p>For commercial purposes, please contact the authors.</p>
+<li><p>Minjun Kim (<a class="reference external" href="mailto:minjun&#46;kim&#37;&#52;&#48;snu&#46;ac&#46;kr">minjun<span>&#46;</span>kim<span>&#64;</span>snu<span>&#46;</span>ac<span>&#46;</span>kr</a>), Seoul National University</p></li>
+<li><p>U Kang (<a class="reference external" href="mailto:ukang&#37;&#52;&#48;snu&#46;ac&#46;kr">ukang<span>&#64;</span>snu<span>&#46;</span>ac<span>&#46;</span>kr</a>), Seoul National University</p></li>
+</ul>
+</dd>
+</dl>
+<p>Version : 1.0</p>
+<p>Date : Dec 3rd, 2023</p>
+<p>Main Contact: Minjun Kim</p>
+<p>This software is free of charge under research purposes.</p>
+<p>For commercial purposes, please contact the authors.</p>
 <dl class="simple">
 <dt>dataloader.py</dt><dd><ul class="simple">
 <li><p>codes for loading the dataset</p></li>
@@ -301,20 +299,19 @@ Zero-shot Quantization with SynQ (Synthesis-aware Fine-tuning for Zero-shot Quan
 <section id="module-gradcam">
 <span id="gradcam-py"></span><h2>gradcam.py<a class="headerlink" href="#module-gradcam" title="Link to this heading">¶</a></h2>
 <p>[SW Starlab]
-Zero-shot Quantization with SynQ (Synthesis-aware Fine-tuning for Zero-shot Quantization)</p>
+Few-shot quantization with SaFT (Synthesis-aware Fine Tuning)</p>
 <dl class="simple">
 <dt>Author</dt><dd><ul class="simple">
-  <li><p>Minjun Kim (<a class="reference external" href="mailto:minjun&#46;kim&#37;&#52;&#48;snu&#46;ac&#46;kr">minjun<span>&#46;</span>kim<span>&#64;</span>snu<span>&#46;</span>ac<span>&#46;</span>kr</a>), Seoul National University</p></li>
-  <li><p>Jongjin Kim (<a class="reference external" href="mailto:j2kim99&#37;&#52;&#48;snu&#46;ac&#46;kr">j2kim99<span>&#64;</span>snu<span>&#46;</span>ac<span>&#46;</span>kr</a>), Seoul National University</p></li>
-  <li><p>U Kang (<a class="reference external" href="mailto:ukang&#37;&#52;&#48;snu&#46;ac&#46;kr">ukang<span>&#64;</span>snu<span>&#46;</span>ac<span>&#46;</span>kr</a>), Seoul National University</p></li>
-  </ul>
-  </dd>
-  </dl>
-  <p>Version : 1.0</p>
-  <p>Date : Sep 6th, 2023</p>
-  <p>Main Contact: Minjun Kim</p>
-  <p>This software is free of charge under research purposes.</p>
-  <p>For commercial purposes, please contact the authors.</p>
+<li><p>Minjun Kim (<a class="reference external" href="mailto:minjun&#46;kim&#37;&#52;&#48;snu&#46;ac&#46;kr">minjun<span>&#46;</span>kim<span>&#64;</span>snu<span>&#46;</span>ac<span>&#46;</span>kr</a>), Seoul National University</p></li>
+<li><p>U Kang (<a class="reference external" href="mailto:ukang&#37;&#52;&#48;snu&#46;ac&#46;kr">ukang<span>&#64;</span>snu<span>&#46;</span>ac<span>&#46;</span>kr</a>), Seoul National University</p></li>
+</ul>
+</dd>
+</dl>
+<p>Version : 1.0</p>
+<p>Date : Dec 3rd, 2023</p>
+<p>Main Contact: Minjun Kim</p>
+<p>This software is free of charge under research purposes.</p>
+<p>For commercial purposes, please contact the authors.</p>
 <dl class="simple">
 <dt>gradcam.py</dt><dd><ul class="simple">
 <li><p>codes for GradCAM and GradCAM++ (for activation map alignment)</p></li>
@@ -391,23 +388,22 @@ Zero-shot Quantization with SynQ (Synthesis-aware Fine-tuning for Zero-shot Quan
 <section id="module-main_direct">
 <span id="main-direct-py"></span><h2>main_direct.py<a class="headerlink" href="#module-main_direct" title="Link to this heading">¶</a></h2>
 <p>[SW Starlab]
-Zero-shot Quantization with SynQ (Synthesis-aware Fine-tuning for Zero-shot Quantization)</p>
+Few-shot quantization with SaFT (Synthesis-aware Fine Tuning)</p>
 <dl class="simple">
 <dt>Author</dt><dd><ul class="simple">
-  <li><p>Minjun Kim (<a class="reference external" href="mailto:minjun&#46;kim&#37;&#52;&#48;snu&#46;ac&#46;kr">minjun<span>&#46;</span>kim<span>&#64;</span>snu<span>&#46;</span>ac<span>&#46;</span>kr</a>), Seoul National University</p></li>
-  <li><p>Jongjin Kim (<a class="reference external" href="mailto:j2kim99&#37;&#52;&#48;snu&#46;ac&#46;kr">j2kim99<span>&#64;</span>snu<span>&#46;</span>ac<span>&#46;</span>kr</a>), Seoul National University</p></li>
-  <li><p>U Kang (<a class="reference external" href="mailto:ukang&#37;&#52;&#48;snu&#46;ac&#46;kr">ukang<span>&#64;</span>snu<span>&#46;</span>ac<span>&#46;</span>kr</a>), Seoul National University</p></li>
-  </ul>
-  </dd>
-  </dl>
-  <p>Version : 1.0</p>
-  <p>Date : Sep 6th, 2023</p>
-  <p>Main Contact: Minjun Kim</p>
-  <p>This software is free of charge under research purposes.</p>
-  <p>For commercial purposes, please contact the authors.</p>
+<li><p>Minjun Kim (<a class="reference external" href="mailto:minjun&#46;kim&#37;&#52;&#48;snu&#46;ac&#46;kr">minjun<span>&#46;</span>kim<span>&#64;</span>snu<span>&#46;</span>ac<span>&#46;</span>kr</a>), Seoul National University</p></li>
+<li><p>U Kang (<a class="reference external" href="mailto:ukang&#37;&#52;&#48;snu&#46;ac&#46;kr">ukang<span>&#64;</span>snu<span>&#46;</span>ac<span>&#46;</span>kr</a>), Seoul National University</p></li>
+</ul>
+</dd>
+</dl>
+<p>Version : 1.0</p>
+<p>Date : Dec 3rd, 2023</p>
+<p>Main Contact: Minjun Kim</p>
+<p>This software is free of charge under research purposes.</p>
+<p>For commercial purposes, please contact the authors.</p>
 <dl class="simple">
 <dt>main_direct.py</dt><dd><ul class="simple">
-<li><p>codes for main function for zero-shot quantization (SynQ)</p></li>
+<li><p>codes for main function for zero-shot quantization (SaFT)</p></li>
 </ul>
 </dd>
 <dt>This code is mainly based on</dt><dd><ul class="simple">
@@ -520,20 +516,19 @@ Zero-shot Quantization with SynQ (Synthesis-aware Fine-tuning for Zero-shot Quan
 <section id="module-options">
 <span id="options-py"></span><h2>options.py<a class="headerlink" href="#module-options" title="Link to this heading">¶</a></h2>
 <p>[SW Starlab]
-Zero-shot Quantization with SynQ (Synthesis-aware Fine-tuning for Zero-shot Quantization)</p>
+Few-shot quantization with SaFT (Synthesis-aware Fine Tuning)</p>
 <dl class="simple">
 <dt>Author</dt><dd><ul class="simple">
-  <li><p>Minjun Kim (<a class="reference external" href="mailto:minjun&#46;kim&#37;&#52;&#48;snu&#46;ac&#46;kr">minjun<span>&#46;</span>kim<span>&#64;</span>snu<span>&#46;</span>ac<span>&#46;</span>kr</a>), Seoul National University</p></li>
-  <li><p>Jongjin Kim (<a class="reference external" href="mailto:j2kim99&#37;&#52;&#48;snu&#46;ac&#46;kr">j2kim99<span>&#64;</span>snu<span>&#46;</span>ac<span>&#46;</span>kr</a>), Seoul National University</p></li>
-  <li><p>U Kang (<a class="reference external" href="mailto:ukang&#37;&#52;&#48;snu&#46;ac&#46;kr">ukang<span>&#64;</span>snu<span>&#46;</span>ac<span>&#46;</span>kr</a>), Seoul National University</p></li>
-  </ul>
-  </dd>
-  </dl>
-  <p>Version : 1.0</p>
-  <p>Date : Sep 6th, 2023</p>
-  <p>Main Contact: Minjun Kim</p>
-  <p>This software is free of charge under research purposes.</p>
-  <p>For commercial purposes, please contact the authors.</p>
+<li><p>Minjun Kim (<a class="reference external" href="mailto:minjun&#46;kim&#37;&#52;&#48;snu&#46;ac&#46;kr">minjun<span>&#46;</span>kim<span>&#64;</span>snu<span>&#46;</span>ac<span>&#46;</span>kr</a>), Seoul National University</p></li>
+<li><p>U Kang (<a class="reference external" href="mailto:ukang&#37;&#52;&#48;snu&#46;ac&#46;kr">ukang<span>&#64;</span>snu<span>&#46;</span>ac<span>&#46;</span>kr</a>), Seoul National University</p></li>
+</ul>
+</dd>
+</dl>
+<p>Version : 1.0</p>
+<p>Date : Dec 3rd, 2023</p>
+<p>Main Contact: Minjun Kim</p>
+<p>This software is free of charge under research purposes.</p>
+<p>For commercial purposes, please contact the authors.</p>
 <dl class="simple">
 <dt>options.py</dt><dd><ul class="simple">
 <li><p>codes for setting the options (reading the configuration file)</p></li>
@@ -570,20 +565,19 @@ Zero-shot Quantization with SynQ (Synthesis-aware Fine-tuning for Zero-shot Quan
 <section id="module-trainer_direct">
 <span id="trainer-direct-py"></span><h2>trainer_direct.py<a class="headerlink" href="#module-trainer_direct" title="Link to this heading">¶</a></h2>
 <p>[SW Starlab]
-Zero-shot Quantization with SynQ (Synthesis-aware Fine-tuning for Zero-shot Quantization)</p>
+Few-shot quantization with SaFT (Synthesis-aware Fine Tuning)</p>
 <dl class="simple">
 <dt>Author</dt><dd><ul class="simple">
-  <li><p>Minjun Kim (<a class="reference external" href="mailto:minjun&#46;kim&#37;&#52;&#48;snu&#46;ac&#46;kr">minjun<span>&#46;</span>kim<span>&#64;</span>snu<span>&#46;</span>ac<span>&#46;</span>kr</a>), Seoul National University</p></li>
-  <li><p>Jongjin Kim (<a class="reference external" href="mailto:j2kim99&#37;&#52;&#48;snu&#46;ac&#46;kr">j2kim99<span>&#64;</span>snu<span>&#46;</span>ac<span>&#46;</span>kr</a>), Seoul National University</p></li>
-  <li><p>U Kang (<a class="reference external" href="mailto:ukang&#37;&#52;&#48;snu&#46;ac&#46;kr">ukang<span>&#64;</span>snu<span>&#46;</span>ac<span>&#46;</span>kr</a>), Seoul National University</p></li>
-  </ul>
-  </dd>
-  </dl>
-  <p>Version : 1.0</p>
-  <p>Date : Sep 6th, 2023</p>
-  <p>Main Contact: Minjun Kim</p>
-  <p>This software is free of charge under research purposes.</p>
-  <p>For commercial purposes, please contact the authors.</p>
+<li><p>Minjun Kim (<a class="reference external" href="mailto:minjun&#46;kim&#37;&#52;&#48;snu&#46;ac&#46;kr">minjun<span>&#46;</span>kim<span>&#64;</span>snu<span>&#46;</span>ac<span>&#46;</span>kr</a>), Seoul National University</p></li>
+<li><p>U Kang (<a class="reference external" href="mailto:ukang&#37;&#52;&#48;snu&#46;ac&#46;kr">ukang<span>&#64;</span>snu<span>&#46;</span>ac<span>&#46;</span>kr</a>), Seoul National University</p></li>
+</ul>
+</dd>
+</dl>
+<p>Version : 1.0</p>
+<p>Date : Dec 3rd, 2023</p>
+<p>Main Contact: Minjun Kim</p>
+<p>This software is free of charge under research purposes.</p>
+<p>For commercial purposes, please contact the authors.</p>
 <dl class="simple">
 <dt>trainer_direct.py</dt><dd><ul class="simple">
 <li><p>codes for training the quantized model directly</p></li>
