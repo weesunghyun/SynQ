@@ -1,15 +1,14 @@
 """
 [SW Starlab]
-Zero-shot Quantization with SynQ (Synthesis-aware Fine-tuning for Zero-shot Quantization)
+Few-shot quantization with SaFT (Synthesis-aware Fine-Tuning)
 
 Author
     - Minjun Kim (minjun.kim@snu.ac.kr), Seoul National University
-    - Jongjin Kim (j2kim99@snu.ac.kr), Seoul National University
     - U Kang (ukang@snu.ac.kr), Seoul National University
 
 Version : 1.0
 
-Date : Sep 6th, 2023
+Date : Dec 3rd, 2023
 
 Main Contact: Minjun Kim
 
