@@ -11,7 +11,7 @@ The paper proposes SaFT (Synthesis-aware Fine-tuning), an Few-shot Quantization 
 Our implementation is based on PyTorch, TorchVision, and PyTorchCV libraries.
 
 - Python 3.9.12
-- PyTorch 2.1.0
+- PyTorch 1.13.1
 - PyTorchCV 0.0.67
 
 We include `requirements.txt`, which contains all the packages used for the experiment. 
