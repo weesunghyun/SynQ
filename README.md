@@ -1,9 +1,9 @@
-# Accurate Zero-shot Quantization by Synthesis-aware Fine-tuning
+# Accurate Few-shot Quantization by Synthesis-aware Fine-tuning
 
-This project is a PyTorch implementation of **"Accurate Zero-shot Quantization by Synthesis-aware Fine-tuning"**.
-The paper proposes SynQ, an accurate Zero-shot Quantization (ZSQ) method.
+This project is a PyTorch implementation of **"Accurate Few-shot Quantization by Synthesis-aware Fine-tuning"**.
+The paper proposes SaFT (Synthesis-aware Fine-tuning), an Few-shot Quantization (FSQ) method.
 
-![Overall Architecture of SynQ](./images/synq.jpg)
+![Overall Architecture of SaFT](./images/saft.jpg)
 
 
 ## Prerequisites
@@ -24,16 +24,16 @@ pip install -r requirements.txt
 ```
 
 ### Usage
-For usage, first generate the synthetic dataset with the code under `src/data_generate/`.
+<!-- For usage, first generate the synthetic dataset with the code under `src/data_generate/`.
 We include `run_generate_imagenet.sh`, which generates the synthetic dataset using a ResNet-18 model pre-trained on the ImageNet dataset.
 
 ```shell
 cd src/data_generate
 bash run_generate_imagenet.sh
-```
+``` -->
 
-Second, fine-tune the quantized model by executing `src/main_direct.py`.
-We include `run_imagenet.sh`, for the 3bit Zero-shot Quantization (ZSQ) for ResNet-18 model pre-trained on the ImageNet dataset.
+Fine-tune the quantized model by executing `src/main_direct.py`.
+We include `run_cifar100_6bit.sh`, for the 6bit Few-shot Quantization (FSQ) for ResNet-34 model pre-trained on the CIFAR100 dataset.
 
 To run with different settings, modify the config files under `src/config/` or the arguments passed into `src/data_generate/generate_data.py` and `src/main_direct.py`.
 
@@ -43,9 +43,9 @@ This repository is written based on the codes from **ZeroQ** (CVPR '20) \[[Githu
 Here is an overview of our codes.
 
 ``` Unicode
-SynQ/
+SaFT/
 ├── images/
-│   └── synq.jpg                     # the overall architecture
+│   └── saft.jpg                     # the overall architecture
 ├── src/
 │   ├── config/                      # configurations for fine-tuning      
 │   ├── data_generate/               # synthetic dataset generation

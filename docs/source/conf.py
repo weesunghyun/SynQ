@@ -12,7 +12,7 @@ print(sys.path)
 # -- Project information -----------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
-project = 'SynQ'
+project = 'SaFT'
 copyright = '2024, Minjun Kim'
 author = 'Minjun Kim'
 

@@ -17,7 +17,7 @@ This software is free of charge under research purposes.
 For commercial purposes, please contact the authors.
 
 main_direct.py
-    - codes for main function for zero-shot quantization (SynQ)
+    - codes for main function for zero-shot quantization (SaFT)
 
 This code is mainly based on
     - ZeroQ: https://github.com/amirgholami/ZeroQ
