@@ -35,6 +35,11 @@ bash run_generate_imagenet.sh
 Fine-tune the quantized model by executing `src/main_direct.py`.
 We include `run_cifar100_6bit.sh`, for the 6bit Few-shot Quantization (FSQ) for ResNet-34 model pre-trained on the CIFAR100 dataset.
 
+```
+cd src/
+bash run_cifar100_6bit.sh 0
+```
+
 To run with different settings, modify the config files under `src/config/` or the arguments passed into `src/data_generate/generate_data.py` and `src/main_direct.py`.
 
 ### Code Description
