@@ -1,7 +1,7 @@
 # Accurate Few-shot Quantization by Synthesis-aware Fine-tuning
 
 This project is a PyTorch implementation of **"Accurate Few-shot Quantization by Synthesis-aware Fine-tuning"**.
-The paper proposes SaFT (Synthesis-aware Fine-tuning), an accurate Few-shot Quantization (FSQ) method.
+The paper proposes **SaFT** (Synthesis-aware Fine-tuning), an accurate Few-shot Quantization (FSQ) method.
 
 ![Overall Architecture of SaFT](./images/saft.jpg)
 
