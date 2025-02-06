@@ -1,20 +1,20 @@
-.. SaFT documentation master file, created by
+.. SynQ documentation master file, created by
    sphinx-quickstart on Thu Sep  5 17:02:26 2024.
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-SaFT documentation
+SynQ documentation
 ==================
 
 Accurate Few-shot Quantization by Synthesis-aware Fine-tuning
 ==============================================================
 
 This project is a PyTorch implementation of **"Accurate Few-shot Quantization by Synthesis-aware Fine-tuning"**.
-The paper proposes SaFT 
+The paper proposes SynQ 
 (Synthesis-aware Fine-tuning), an accurate Few-shot Quantization (FSQ) method.
 
-.. image:: ../../images/saft.jpg
-   :alt: Overall Architecture of SaFT
+.. image:: ../../images/synq.jpg
+   :alt: Overall Architecture of SynQ
    :align: center
 
 Prerequisites
@@ -56,9 +56,9 @@ Here is an overview of our codes:
 
 .. code-block:: text
 
-   SaFT/
+   SynQ/
    ├── images/
-   │   └── saft.jpg                     # the overall architecture
+   │   └── synq.jpg                     # the overall architecture
    ├── src/
    │   ├── config/                      # configurations for fine-tuning      
    │   ├── data_generate/               # synthetic dataset generation
