@@ -1,10 +1,9 @@
-# Accurate Zero-shot Quantization by Synthesis-aware Fine-tuning
+# SynQ
 
-This project is a PyTorch implementation of [**"Accurate Zero-shot Quantization by Synthesis-aware Fine-tuning"**](https://openreview.net/forum?id=2rnOgyFQgb) (ICLR 2025).
+This project is a PyTorch implementation of [**"SynQ: Accurate Zero-shot Quantization by Synthesis-aware Fine-tuning"**](https://openreview.net/forum?id=2rnOgyFQgb) (ICLR 2025).
 This paper proposes SynQ, an accurate Zero-shot Quantization (ZSQ) method.
 
-![Overall Architecture of SynQ](./images/synq.jpg)
-
+![Overall Architecture of SynQ](./docs/synq.jpg)
 
 ## Prerequisites
 
@@ -49,7 +48,8 @@ This repository is written based on the codes from **ZeroQ** (CVPR '20) \[[Githu
 <!-- Here is an overview of our codes. -->
 <!-- ``` Unicode
 SynQ/
-├── images/
+├── docs/
+│   ├── KimKK25.bib                  # bibtex file   
 │   └── synq.jpg                     # the overall architecture
 ├── src/
 │   ├── config/                      # configurations for fine-tuning      
@@ -72,7 +72,7 @@ SynQ/
 ``` -->
 
 ## Citation
-You can download [this bib file](./images/KimKK25.bib) or copy the following information:
+You can download [this bib file](./docs/KimKK25.bib) or copy the following information:
 
 ```bibtex
 @inproceedings{KimKK25,
