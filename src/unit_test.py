@@ -1,20 +1,20 @@
 """
-[SW Starlab]
-Few-shot quantization with SaFT (Synthesis-aware Fine Tuning)
+SynQ: Accurate Zero-shot Quantization by Synthesis-aware Fine-tuning (ICLR 2025)
 
-Author
-    - Minjun Kim (minjun.kim@snu.ac.kr), Seoul National University
-    - U Kang (ukang@snu.ac.kr), Seoul National University
+Authors:
+- Minjun Kim (minjun.kim@snu.ac.kr), Seoul National University
+- Jongjin Kim (j2kim99@snu.ac.kr), Seoul National University
+- U Kang (ukang@snu.ac.kr), Seoul National University
 
-Version : 1.0
+Version : 1.1
 
-Date : Dec 3rd, 2023
+Date : Feb. 7th, 2025
 
 Main Contact: Minjun Kim
 
 This software is free of charge under research purposes.
 
-For commercial purposes, please contact the authors.
+For other purposes (e.g. commercial), please contact the authors.
 
 distill_data.py
     - codes for generating distilled data

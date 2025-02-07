@@ -1,10 +1,9 @@
-# Accurate Few-shot Quantization by Synthesis-aware Fine-tuning
+# SynQ
 
-This project is a PyTorch implementation of **"Accurate Few-shot Quantization by Synthesis-aware Fine-tuning"**.
-The paper proposes **SaFT** (Synthesis-aware Fine-tuning), an accurate Few-shot Quantization (FSQ) method.
+This project is a PyTorch implementation of [**"SynQ: Accurate Zero-shot Quantization by Synthesis-aware Fine-tuning"**](https://openreview.net/forum?id=2rnOgyFQgb) (ICLR 2025).
+This paper proposes SynQ, an accurate Zero-shot Quantization (ZSQ) method.
 
-![Overall Architecture of SaFT](./images/saft.jpg)
-
+![Overall Architecture of SynQ](./docs/synq.jpg)
 
 ## Prerequisites
 
@@ -23,21 +22,21 @@ Install the required packages with the following code:
 pip install -r requirements.txt
 ```
 
-### Usage
+## Usage
 For usage, first generate the synthetic dataset with the code under `src/data_generate/`.
-We include `run_generate_cifar100.sh`, which generates the synthetic dataset using a ResNet-34 model pre-trained on the CIFAR-100 dataset.
+We include `run_generate_cifar100.sh` and `run_generate_imagenet.sh`, which generates the synthetic dataset using a ResNet-34 model pre-trained on CIFAR-100 and ImageNet datasets, respectively.
 
 ```shell
 cd src/data_generate
-bash run_generate_cifar100.sh
+# bash run_generate_cifar100.sh
+bash run_generate_imagenet.sh
 ```
 
-Fine-tune the quantized model by executing `src/main_direct.py`.
-We include `run_cifar100_6bit.sh`, for the 6bit Few-shot Quantization (FSQ) for ResNet-34 model pre-trained on the CIFAR-100 dataset.
+Second, fine-tune the quantized model by executing src/main_direct.py. We include `run_imagenet.sh`, for the 3bit Zero-shot Quantization (ZSQ) for ResNet-18 model pre-trained on the ImageNet dataset.
 
-```
+```shell
 cd src/
-bash run_cifar100_6bit.sh 0
+bash run_imagenet.sh
 ```
 
 To run with different settings, modify the config files under `src/config/` or the arguments passed into `src/data_generate/generate_data.py` and `src/main_direct.py`.
@@ -45,12 +44,13 @@ To run with different settings, modify the config files under `src/config/` or t
 ### Code Description
 
 This repository is written based on the codes from **ZeroQ** (CVPR '20) \[[Github](https://github.com/amirgholami/ZeroQ)\], **HAST** (CVPR '23) \[[Github](https://github.com/lihuantong/HAST)\], and a PyTorch implementation of Grad-CAM and Grad-CAM++ \[[Github](https://github.com/1Konny/gradcam_plus_plus-pytorch)\].
-Here is an overview of our codes.
 
-``` Unicode
-SaFT/
-├── images/
-│   └── saft.jpg                     # the overall architecture
+<!-- Here is an overview of our codes. -->
+<!-- ``` Unicode
+SynQ/
+├── docs/
+│   ├── KimKK25.bib                  # bibtex file   
+│   └── synq.jpg                     # the overall architecture
 ├── src/
 │   ├── config/                      # configurations for fine-tuning      
 │   ├── data_generate/               # synthetic dataset generation
@@ -62,11 +62,23 @@ SaFT/
 │   ├── gradcam.py                   # gradcam and gradcam++ code
 │   ├── main_direct.py               # fine-tuning code
 │   ├── options.py                   # storing code for configurations
-│   ├── run_cifar_100_6bit.sh        # codes for running SaFT 
+│   ├── run_cifar_100_6bit.sh        # codes for running SynQ 
 │   ├── trainer_direct.py            # trainer code
 │   └── unit_test.py                 # unit-test code
 ├── .gitignore                       # gitignore file
 ├── LICENSE                          # license for the use of the code
 ├── README.md                        # readme file
 └── requirements.txt                 # required packages
+``` -->
+
+## Citation
+You can download [this bib file](./docs/KimKK25.bib) or copy the following information:
+
+```bibtex
+@inproceedings{KimKK25,
+    title={SynQ: Accurate Zero-shot Quantization by Synthesis-aware Fine-tuning},
+    author={Kim, Minjun and Kim, Jongjin and Kang, U},
+    booktitle={The Thirteenth International Conference on Learning Representations},
+    year={2025}
+}
 ```

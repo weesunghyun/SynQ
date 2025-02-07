@@ -1,0 +1,925 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Utils &mdash; SynQ  documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=e59714d7" />
+
+  
+      <script src="_static/documentation_options.js?v=5929fcd5"></script>
+      <script src="_static/doctools.js?v=9a2dae69"></script>
+      <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Sub Modules" href="src.html" />
+    <link rel="prev" title="Quantization Utils" href="src.quantization_utils.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            SynQ
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="src.data_generate.html">Data Generation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="src.quantization_utils.html">Quantization Utils</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Utils</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#module-utils.compute">compute.py</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#utils.compute.AverageMeter"><code class="docutils literal notranslate"><span class="pre">AverageMeter</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#utils.compute.AverageMeter.reset"><code class="docutils literal notranslate"><span class="pre">AverageMeter.reset()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#utils.compute.AverageMeter.update"><code class="docutils literal notranslate"><span class="pre">AverageMeter.update()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#utils.compute.compute_singlecrop"><code class="docutils literal notranslate"><span class="pre">compute_singlecrop()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#utils.compute.compute_tencrop"><code class="docutils literal notranslate"><span class="pre">compute_tencrop()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#module-utils.get_resnet34">get_resnet34.py</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#utils.get_resnet34.CIFARResNet"><code class="docutils literal notranslate"><span class="pre">CIFARResNet</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#utils.get_resnet34.CIFARResNet.forward"><code class="docutils literal notranslate"><span class="pre">CIFARResNet.forward()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#utils.get_resnet34.resnet34_get_model"><code class="docutils literal notranslate"><span class="pre">resnet34_get_model()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#module-utils.gradcam">gradcam.py</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#utils.gradcam.Normalize"><code class="docutils literal notranslate"><span class="pre">Normalize</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#utils.gradcam.Normalize.do"><code class="docutils literal notranslate"><span class="pre">Normalize.do()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#utils.gradcam.Normalize.undo"><code class="docutils literal notranslate"><span class="pre">Normalize.undo()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#utils.gradcam.denormalize"><code class="docutils literal notranslate"><span class="pre">denormalize()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#utils.gradcam.find_alexnet_layer"><code class="docutils literal notranslate"><span class="pre">find_alexnet_layer()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#utils.gradcam.find_densenet_layer"><code class="docutils literal notranslate"><span class="pre">find_densenet_layer()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#utils.gradcam.find_resnet_layer"><code class="docutils literal notranslate"><span class="pre">find_resnet_layer()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#utils.gradcam.find_squeezenet_layer"><code class="docutils literal notranslate"><span class="pre">find_squeezenet_layer()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#utils.gradcam.find_vgg_layer"><code class="docutils literal notranslate"><span class="pre">find_vgg_layer()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#utils.gradcam.normalize"><code class="docutils literal notranslate"><span class="pre">normalize()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#utils.gradcam.visualize_cam"><code class="docutils literal notranslate"><span class="pre">visualize_cam()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#module-utils.log_print">log_print.py</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#utils.log_print.compute_remain_time"><code class="docutils literal notranslate"><span class="pre">compute_remain_time()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#utils.log_print.print_result"><code class="docutils literal notranslate"><span class="pre">print_result()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#module-utils.lr_policy">lr_policy.py</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#utils.lr_policy.LRPolicy"><code class="docutils literal notranslate"><span class="pre">LRPolicy</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#utils.lr_policy.LRPolicy.get_lr"><code class="docutils literal notranslate"><span class="pre">LRPolicy.get_lr()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#utils.lr_policy.LRPolicy.set_params"><code class="docutils literal notranslate"><span class="pre">LRPolicy.set_params()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#module-utils.model_transform">model_transform.py</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#utils.model_transform.data_parallel"><code class="docutils literal notranslate"><span class="pre">data_parallel()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#utils.model_transform.list2sequential"><code class="docutils literal notranslate"><span class="pre">list2sequential()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#utils.model_transform.model2list"><code class="docutils literal notranslate"><span class="pre">model2list()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#utils.model_transform.model2state_dict"><code class="docutils literal notranslate"><span class="pre">model2state_dict()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#module-utils.my_utils">my_utils.py</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#utils.my_utils.basic_setup"><code class="docutils literal notranslate"><span class="pre">basic_setup()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#utils.my_utils.check_path"><code class="docutils literal notranslate"><span class="pre">check_path()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#utils.my_utils.filter_warnings"><code class="docutils literal notranslate"><span class="pre">filter_warnings()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#utils.my_utils.fix_seed"><code class="docutils literal notranslate"><span class="pre">fix_seed()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#utils.my_utils.print_tensors_shape"><code class="docutils literal notranslate"><span class="pre">print_tensors_shape()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#utils.my_utils.setup_logging"><code class="docutils literal notranslate"><span class="pre">setup_logging()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#utils.my_utils.setup_logging_with_path"><code class="docutils literal notranslate"><span class="pre">setup_logging_with_path()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#utils.my_utils.to_device"><code class="docutils literal notranslate"><span class="pre">to_device()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#module-utils.opt_static">opt_static.py</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#utils.opt_static.NetOption"><code class="docutils literal notranslate"><span class="pre">NetOption</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#utils.opt_static.NetOption.paramscheck"><code class="docutils literal notranslate"><span class="pre">NetOption.paramscheck()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#module-utils.warmup">warmup.py</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="src.html">Sub-Modules</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">SynQ</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Utils</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/src.utils.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="utils">
+<h1>Utils<a class="headerlink" href="#utils" title="Link to this heading">¶</a></h1>
+<section id="module-utils.compute">
+<span id="compute-py"></span><h2>compute.py<a class="headerlink" href="#module-utils.compute" title="Link to this heading">¶</a></h2>
+<p>SynQ: Accurate Zero-shot Quantization by Synthesis-aware Fine-tuning (ICLR 2025)</p>
+<p>Authors:
+- Minjun Kim (<a class="reference external" href="mailto:minjun&#46;kim&#37;&#52;&#48;snu&#46;ac&#46;kr">minjun<span>&#46;</span>kim<span>&#64;</span>snu<span>&#46;</span>ac<span>&#46;</span>kr</a>), Seoul National University
+- Jongjin Kim (<a class="reference external" href="mailto:j2kim99&#37;&#52;&#48;snu&#46;ac&#46;kr">j2kim99<span>&#64;</span>snu<span>&#46;</span>ac<span>&#46;</span>kr</a>), Seoul National University
+- U Kang (<a class="reference external" href="mailto:ukang&#37;&#52;&#48;snu&#46;ac&#46;kr">ukang<span>&#64;</span>snu<span>&#46;</span>ac<span>&#46;</span>kr</a>), Seoul National University</p>
+<p>Version : 1.1</p>
+<p>Date : Feb. 7th, 2025</p>
+<p>Main Contact: Minjun Kim</p>
+<p>This software is free of charge under research purposes.</p>
+<p>For other purposes (e.g. commercial), please contact the authors.</p>
+<dl class="simple">
+<dt>compute.py</dt><dd><ul class="simple">
+<li><p>codes for computing the top1/top5 error and accuracy</p></li>
+</ul>
+</dd>
+<dt>This code is mainly based on</dt><dd><ul class="simple">
+<li><p>ZeroQ: <a class="reference external" href="https://github.com/amirgholami/ZeroQ">https://github.com/amirgholami/ZeroQ</a></p></li>
+<li><p>HAST: <a class="reference external" href="https://github.com/lihuantong/HAST">https://github.com/lihuantong/HAST</a></p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py class">
+<dt class="sig sig-object py" id="utils.compute.AverageMeter">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">utils.compute.</span></span><span class="sig-name descname"><span class="pre">AverageMeter</span></span><a class="headerlink" href="#utils.compute.AverageMeter" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Computes and stores the average and current value</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="utils.compute.AverageMeter.reset">
+<span class="sig-name descname"><span class="pre">reset</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#utils.compute.AverageMeter.reset" title="Link to this definition">¶</a></dt>
+<dd><p>reset all parameters</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="utils.compute.AverageMeter.update">
+<span class="sig-name descname"><span class="pre">update</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">val</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#utils.compute.AverageMeter.update" title="Link to this definition">¶</a></dt>
+<dd><p>update parameters</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="utils.compute.compute_singlecrop">
+<span class="sig-prename descclassname"><span class="pre">utils.compute.</span></span><span class="sig-name descname"><span class="pre">compute_singlecrop</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">outputs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">labels</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">loss</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">top5_flag</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#utils.compute.compute_singlecrop" title="Link to this definition">¶</a></dt>
+<dd><p>Compute the top1 and top5 error
+:param outputs: the output of the model
+:param labels: the ground truth label
+:param loss: the loss of the model
+:param top5_flag: whether to compute top5 error</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>the top1 error
+top1_loss: the loss of the model
+top5_error: the top5 error</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>top1_error</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="utils.compute.compute_tencrop">
+<span class="sig-prename descclassname"><span class="pre">utils.compute.</span></span><span class="sig-name descname"><span class="pre">compute_tencrop</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">outputs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">labels</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#utils.compute.compute_tencrop" title="Link to this definition">¶</a></dt>
+<dd><p>Compute the top1 and top5 error
+:param outputs: the output of the model
+:param labels: the ground truth label</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>the top1 error
+top5_error: the top5 error</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>top1_error</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<section id="module-utils.get_resnet34">
+<span id="get-resnet34-py"></span><h2>get_resnet34.py<a class="headerlink" href="#module-utils.get_resnet34" title="Link to this heading">¶</a></h2>
+<p>SynQ: Accurate Zero-shot Quantization by Synthesis-aware Fine-tuning (ICLR 2025)</p>
+<p>Authors:
+- Minjun Kim (<a class="reference external" href="mailto:minjun&#46;kim&#37;&#52;&#48;snu&#46;ac&#46;kr">minjun<span>&#46;</span>kim<span>&#64;</span>snu<span>&#46;</span>ac<span>&#46;</span>kr</a>), Seoul National University
+- Jongjin Kim (<a class="reference external" href="mailto:j2kim99&#37;&#52;&#48;snu&#46;ac&#46;kr">j2kim99<span>&#64;</span>snu<span>&#46;</span>ac<span>&#46;</span>kr</a>), Seoul National University
+- U Kang (<a class="reference external" href="mailto:ukang&#37;&#52;&#48;snu&#46;ac&#46;kr">ukang<span>&#64;</span>snu<span>&#46;</span>ac<span>&#46;</span>kr</a>), Seoul National University</p>
+<p>Version : 1.1</p>
+<p>Date : Feb. 7th, 2025</p>
+<p>Main Contact: Minjun Kim</p>
+<p>This software is free of charge under research purposes.</p>
+<p>For other purposes (e.g. commercial), please contact the authors.</p>
+<dl class="simple">
+<dt>get_resnet34.py</dt><dd><ul class="simple">
+<li><p>codes for getting the ResNet-34 model for CIFAR-100 dataset</p></li>
+</ul>
+</dd>
+<dt>This code is mainly based on</dt><dd><ul class="simple">
+<li><p>ZeroQ: <a class="reference external" href="https://github.com/amirgholami/ZeroQ">https://github.com/amirgholami/ZeroQ</a></p></li>
+<li><p>HAST: <a class="reference external" href="https://github.com/lihuantong/HAST">https://github.com/lihuantong/HAST</a></p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py class">
+<dt class="sig sig-object py" id="utils.get_resnet34.CIFARResNet">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">utils.get_resnet34.</span></span><span class="sig-name descname"><span class="pre">CIFARResNet</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">channels</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">init_block_channels</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bottleneck</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">in_channels</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">3</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">in_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">(32,</span> <span class="pre">32)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_classes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#utils.get_resnet34.CIFARResNet" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Module</span></code></p>
+<p>ResNet model for CIFAR from ‘Deep Residual Learning for Image Recognition’
+Reference: <a class="reference external" href="https://arxiv.org/abs/1512.03385">https://arxiv.org/abs/1512.03385</a>.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="utils.get_resnet34.CIFARResNet.forward">
+<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#utils.get_resnet34.CIFARResNet.forward" title="Link to this definition">¶</a></dt>
+<dd><p>Forward pass the model.
+:param x: the input data</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="utils.get_resnet34.resnet34_get_model">
+<span class="sig-prename descclassname"><span class="pre">utils.get_resnet34.</span></span><span class="sig-name descname"><span class="pre">resnet34_get_model</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#utils.get_resnet34.resnet34_get_model" title="Link to this definition">¶</a></dt>
+<dd><p>Get the ResNet-34 model for CIFAR-100 dataset</p>
+</dd></dl>
+
+</section>
+<section id="module-utils.gradcam">
+<span id="gradcam-py"></span><h2>gradcam.py<a class="headerlink" href="#module-utils.gradcam" title="Link to this heading">¶</a></h2>
+<p>SynQ: Accurate Zero-shot Quantization by Synthesis-aware Fine-tuning (ICLR 2025)</p>
+<p>Authors:
+- Minjun Kim (<a class="reference external" href="mailto:minjun&#46;kim&#37;&#52;&#48;snu&#46;ac&#46;kr">minjun<span>&#46;</span>kim<span>&#64;</span>snu<span>&#46;</span>ac<span>&#46;</span>kr</a>), Seoul National University
+- Jongjin Kim (<a class="reference external" href="mailto:j2kim99&#37;&#52;&#48;snu&#46;ac&#46;kr">j2kim99<span>&#64;</span>snu<span>&#46;</span>ac<span>&#46;</span>kr</a>), Seoul National University
+- U Kang (<a class="reference external" href="mailto:ukang&#37;&#52;&#48;snu&#46;ac&#46;kr">ukang<span>&#64;</span>snu<span>&#46;</span>ac<span>&#46;</span>kr</a>), Seoul National University</p>
+<p>Version : 1.1</p>
+<p>Date : Feb. 7th, 2025</p>
+<p>Main Contact: Minjun Kim</p>
+<p>This software is free of charge under research purposes.</p>
+<p>For other purposes (e.g. commercial), please contact the authors.</p>
+<dl class="simple">
+<dt>gradcam.py</dt><dd><ul class="simple">
+<li><p>codes for calculating GradCAM and GradCAM++</p></li>
+</ul>
+</dd>
+<dt>This code is mainly based on</dt><dd><ul class="simple">
+<li><p>ZeroQ: <a class="reference external" href="https://github.com/amirgholami/ZeroQ">https://github.com/amirgholami/ZeroQ</a></p></li>
+<li><p>HAST: <a class="reference external" href="https://github.com/lihuantong/HAST">https://github.com/lihuantong/HAST</a></p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py class">
+<dt class="sig sig-object py" id="utils.gradcam.Normalize">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">utils.gradcam.</span></span><span class="sig-name descname"><span class="pre">Normalize</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mean</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">std</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#utils.gradcam.Normalize" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Normalize a tensor image with mean and standard deviation.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="utils.gradcam.Normalize.do">
+<span class="sig-name descname"><span class="pre">do</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tensor</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#utils.gradcam.Normalize.do" title="Link to this definition">¶</a></dt>
+<dd><p>Normalize a tensor image with mean and standard deviation.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>tensor</strong> – Tensor image of size (C, H, W) to be normalized.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Normalized Tensor image.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Tensor</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="utils.gradcam.Normalize.undo">
+<span class="sig-name descname"><span class="pre">undo</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tensor</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#utils.gradcam.Normalize.undo" title="Link to this definition">¶</a></dt>
+<dd><p>Denormalize a tensor image with mean and standard deviation.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>tensor</strong> – Tensor image of size (C, H, W) to be denormalized.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Denormalized Tensor image.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Tensor</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="utils.gradcam.denormalize">
+<span class="sig-prename descclassname"><span class="pre">utils.gradcam.</span></span><span class="sig-name descname"><span class="pre">denormalize</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mean</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">std</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#utils.gradcam.denormalize" title="Link to this definition">¶</a></dt>
+<dd><p>Denormalize a tensor image with mean and standard deviation.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>tensor</strong> (<em>Tensor</em>) – Tensor image of size (C, H, W) to be denormalized.</p></li>
+<li><p><strong>mean</strong> (<em>sequence</em>) – Sequence of means for each channel.</p></li>
+<li><p><strong>std</strong> (<em>sequence</em>) – Sequence of standard deviations for each channel.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Denormalized Tensor image.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Tensor</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="utils.gradcam.find_alexnet_layer">
+<span class="sig-prename descclassname"><span class="pre">utils.gradcam.</span></span><span class="sig-name descname"><span class="pre">find_alexnet_layer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">arch</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target_layer_name</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#utils.gradcam.find_alexnet_layer" title="Link to this definition">¶</a></dt>
+<dd><p>Find alexnet layer to calculate GradCAM and GradCAM++.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>arch</strong> – default torchvision densenet models.</p></li>
+<li><p><strong>target_layer_name</strong> – <p>The name of the layer with its hierarchical information.
+Please refer to usages below:</p>
+<ul>
+<li><p>’features’</p></li>
+<li><p>’features_0’</p></li>
+<li><p>’classifier’</p></li>
+<li><p>’classifier_0’</p></li>
+</ul>
+</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The found layer which will be hooked to get forward/backward pass information.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>target_layer</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="utils.gradcam.find_densenet_layer">
+<span class="sig-prename descclassname"><span class="pre">utils.gradcam.</span></span><span class="sig-name descname"><span class="pre">find_densenet_layer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">arch</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target_layer_name</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#utils.gradcam.find_densenet_layer" title="Link to this definition">¶</a></dt>
+<dd><p>Find densenet layer to calculate GradCAM and GradCAM++</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>arch</strong> – default torchvision densenet models</p></li>
+<li><p><strong>target_layer_name</strong> – <p>the name of layer with its hierarchical information.
+please refer to usages below.</p>
+<ul>
+<li><p>’features’</p></li>
+<li><p>’features_transition1’</p></li>
+<li><p>’features_transition1_norm’</p></li>
+<li><p>’features_denseblock2_denselayer12’</p></li>
+<li><p>’features_denseblock2_denselayer12_norm1’</p></li>
+<li><p>’features_denseblock2_denselayer12_norm1’</p></li>
+<li><p>’classifier’</p></li>
+</ul>
+</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>found layer which will be hooked to get forward/backward pass information.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>target_layer</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="utils.gradcam.find_resnet_layer">
+<span class="sig-prename descclassname"><span class="pre">utils.gradcam.</span></span><span class="sig-name descname"><span class="pre">find_resnet_layer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">arch</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target_layer_name</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#utils.gradcam.find_resnet_layer" title="Link to this definition">¶</a></dt>
+<dd><p>Find resnet layer to calculate GradCAM and GradCAM++</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>arch</strong> – default torchvision densenet models</p></li>
+<li><p><strong>target_layer_name</strong> – <p>the name of layer with its hierarchical information.
+please refer to usages below.</p>
+<ul>
+<li><p>’conv1’</p></li>
+<li><p>’layer1’</p></li>
+<li><p>’layer1_basicblock0’</p></li>
+<li><p>’layer1_basicblock0_relu’</p></li>
+<li><p>’layer1_bottleneck0’</p></li>
+<li><p>’layer1_bottleneck0_conv1’</p></li>
+<li><p>’layer1_bottleneck0_downsample’</p></li>
+<li><p>’layer1_bottleneck0_downsample_0’</p></li>
+<li><p>’avgpool’</p></li>
+<li><p>’fc’</p></li>
+</ul>
+</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>found layer which will be hooked to get forward/backward pass information.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>target_layer</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="utils.gradcam.find_squeezenet_layer">
+<span class="sig-prename descclassname"><span class="pre">utils.gradcam.</span></span><span class="sig-name descname"><span class="pre">find_squeezenet_layer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">arch</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target_layer_name</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#utils.gradcam.find_squeezenet_layer" title="Link to this definition">¶</a></dt>
+<dd><p>Find squeezenet layer to calculate GradCAM and GradCAM++.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>arch</strong> – Default torchvision densenet models.</p></li>
+<li><p><strong>target_layer_name</strong> – <p>The name of the layer with its hierarchical information.
+Please refer to usages below:</p>
+<ul>
+<li><p>’features_12’</p></li>
+<li><p>’features_12_expand3x3’</p></li>
+<li><p>’features_12_expand3x3_activation’</p></li>
+</ul>
+</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The found layer which will be hooked to get forward/backward pass information.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>target_layer</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="utils.gradcam.find_vgg_layer">
+<span class="sig-prename descclassname"><span class="pre">utils.gradcam.</span></span><span class="sig-name descname"><span class="pre">find_vgg_layer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">arch</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target_layer_name</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#utils.gradcam.find_vgg_layer" title="Link to this definition">¶</a></dt>
+<dd><p>Find vgg layer to calculate GradCAM and GradCAM++</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>arch</strong> – default torchvision densenet models</p></li>
+<li><p><strong>target_layer_name</strong> – <p>the name of layer with its hierarchical information.
+please refer to usages below.</p>
+<ul>
+<li><p>’features’</p></li>
+<li><p>’features_42’</p></li>
+<li><p>’classifier’</p></li>
+<li><p>’classifier_0’</p></li>
+</ul>
+</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>found layer which will be hooked to get forward/backward pass information.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>target_layer</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="utils.gradcam.normalize">
+<span class="sig-prename descclassname"><span class="pre">utils.gradcam.</span></span><span class="sig-name descname"><span class="pre">normalize</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mean</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">std</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#utils.gradcam.normalize" title="Link to this definition">¶</a></dt>
+<dd><p>Normalize a tensor image with mean and standard deviation.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>tensor</strong> – Tensor image of size (C, H, W) to be normalized.</p></li>
+<li><p><strong>mean</strong> – Sequence of means for each channel.</p></li>
+<li><p><strong>std</strong> – Sequence of standard deviations for each channel.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Normalized Tensor image.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Tensor</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="utils.gradcam.visualize_cam">
+<span class="sig-prename descclassname"><span class="pre">utils.gradcam.</span></span><span class="sig-name descname"><span class="pre">visualize_cam</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mask</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">img</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#utils.gradcam.visualize_cam" title="Link to this definition">¶</a></dt>
+<dd><p>Make heatmap from mask and synthesize GradCAM result image using heatmap and img.
+:param mask: mask shape of (1, 1, H, W) and each element has value in range [0, 1]
+:type mask: torch.tensor
+:param img: img shape of (1, 3, H, W) and each pixel value is in range [0, 1]
+:type img: torch.tensor</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>heatmap img shape of (3, H, W)
+result (torch.tensor): synthesized GradCAM result of same shape with heatmap.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>heatmap (torch.tensor)</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<section id="module-utils.log_print">
+<span id="log-print-py"></span><h2>log_print.py<a class="headerlink" href="#module-utils.log_print" title="Link to this heading">¶</a></h2>
+<p>SynQ: Accurate Zero-shot Quantization by Synthesis-aware Fine-tuning (ICLR 2025)</p>
+<p>Authors:
+- Minjun Kim (<a class="reference external" href="mailto:minjun&#46;kim&#37;&#52;&#48;snu&#46;ac&#46;kr">minjun<span>&#46;</span>kim<span>&#64;</span>snu<span>&#46;</span>ac<span>&#46;</span>kr</a>), Seoul National University
+- Jongjin Kim (<a class="reference external" href="mailto:j2kim99&#37;&#52;&#48;snu&#46;ac&#46;kr">j2kim99<span>&#64;</span>snu<span>&#46;</span>ac<span>&#46;</span>kr</a>), Seoul National University
+- U Kang (<a class="reference external" href="mailto:ukang&#37;&#52;&#48;snu&#46;ac&#46;kr">ukang<span>&#64;</span>snu<span>&#46;</span>ac<span>&#46;</span>kr</a>), Seoul National University</p>
+<p>Version : 1.1</p>
+<p>Date : Feb. 7th, 2025</p>
+<p>Main Contact: Minjun Kim</p>
+<p>This software is free of charge under research purposes.</p>
+<p>For other purposes (e.g. commercial), please contact the authors.</p>
+<dl class="simple">
+<dt>log_print.py</dt><dd><ul class="simple">
+<li><p>codes for logging the training and testing results</p></li>
+</ul>
+</dd>
+<dt>This code is mainly based on</dt><dd><ul class="simple">
+<li><p>ZeroQ: <a class="reference external" href="https://github.com/amirgholami/ZeroQ">https://github.com/amirgholami/ZeroQ</a></p></li>
+<li><p>HAST: <a class="reference external" href="https://github.com/lihuantong/HAST">https://github.com/lihuantong/HAST</a></p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py function">
+<dt class="sig sig-object py" id="utils.log_print.compute_remain_time">
+<span class="sig-prename descclassname"><span class="pre">utils.log_print.</span></span><span class="sig-name descname"><span class="pre">compute_remain_time</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">epoch</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_epochs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">count</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">iters</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data_time</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">iter_time</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mode</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'Train'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#utils.log_print.compute_remain_time" title="Link to this definition">¶</a></dt>
+<dd><p>Compute the remain time for training or testing
+:param epoch: current epoch
+:param num_epochs: total epochs
+:param count: current iteration
+:param iters: total iterations
+:param data_time: data loading time
+:param iter_time: iteration time
+:param mode: train or test</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>time string
+total_time: total time
+left_time: left time</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>time_str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="utils.log_print.print_result">
+<span class="sig-prename descclassname"><span class="pre">utils.log_print.</span></span><span class="sig-name descname"><span class="pre">print_result</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">epoch</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_epochs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">count</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">iters</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lr</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data_time</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">iter_time</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">error</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">loss</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">top5error</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mode</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'Train'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logger</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#utils.log_print.print_result" title="Link to this definition">¶</a></dt>
+<dd><p>Print the training or testing result
+:param epoch: current epoch
+:param num_epochs: total epochs
+:param count: current iteration
+:param iters: total iterations
+:param lr: learning rate
+:param data_time: data loading time
+:param iter_time: iteration time
+:param error: error rate
+:param loss: loss
+:param top5error: top5 error rate
+:param mode: train or test
+:param logger: logger</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>total time
+left_time: left time</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>total_time</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<section id="module-utils.lr_policy">
+<span id="lr-policy-py"></span><h2>lr_policy.py<a class="headerlink" href="#module-utils.lr_policy" title="Link to this heading">¶</a></h2>
+<p>SynQ: Accurate Zero-shot Quantization by Synthesis-aware Fine-tuning (ICLR 2025)</p>
+<p>Authors:
+- Minjun Kim (<a class="reference external" href="mailto:minjun&#46;kim&#37;&#52;&#48;snu&#46;ac&#46;kr">minjun<span>&#46;</span>kim<span>&#64;</span>snu<span>&#46;</span>ac<span>&#46;</span>kr</a>), Seoul National University
+- Jongjin Kim (<a class="reference external" href="mailto:j2kim99&#37;&#52;&#48;snu&#46;ac&#46;kr">j2kim99<span>&#64;</span>snu<span>&#46;</span>ac<span>&#46;</span>kr</a>), Seoul National University
+- U Kang (<a class="reference external" href="mailto:ukang&#37;&#52;&#48;snu&#46;ac&#46;kr">ukang<span>&#64;</span>snu<span>&#46;</span>ac<span>&#46;</span>kr</a>), Seoul National University</p>
+<p>Version : 1.1</p>
+<p>Date : Feb. 7th, 2025</p>
+<p>Main Contact: Minjun Kim</p>
+<p>This software is free of charge under research purposes.</p>
+<p>For other purposes (e.g. commercial), please contact the authors.</p>
+<dl class="simple">
+<dt>lr_policy.py</dt><dd><ul class="simple">
+<li><p>codes for learning rate policy</p></li>
+</ul>
+</dd>
+<dt>This code is mainly based on</dt><dd><ul class="simple">
+<li><p>ZeroQ: <a class="reference external" href="https://github.com/amirgholami/ZeroQ">https://github.com/amirgholami/ZeroQ</a></p></li>
+<li><p>HAST: <a class="reference external" href="https://github.com/lihuantong/HAST">https://github.com/lihuantong/HAST</a></p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py class">
+<dt class="sig sig-object py" id="utils.lr_policy.LRPolicy">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">utils.lr_policy.</span></span><span class="sig-name descname"><span class="pre">LRPolicy</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">lr</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_epochs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lr_policy</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'multi_step'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#utils.lr_policy.LRPolicy" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>learning rate policy</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="utils.lr_policy.LRPolicy.get_lr">
+<span class="sig-name descname"><span class="pre">get_lr</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">epoch</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#utils.lr_policy.LRPolicy.get_lr" title="Link to this definition">¶</a></dt>
+<dd><p>get current learning rate
+:param epoch: current epoch</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="utils.lr_policy.LRPolicy.set_params">
+<span class="sig-name descname"><span class="pre">set_params</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">params_dict</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#utils.lr_policy.LRPolicy.set_params" title="Link to this definition">¶</a></dt>
+<dd><p>set parameters of lr policy
+:param params_dict: parameters of lr policy</p>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-utils.model_transform">
+<span id="model-transform-py"></span><h2>model_transform.py<a class="headerlink" href="#module-utils.model_transform" title="Link to this heading">¶</a></h2>
+<p>SynQ: Accurate Zero-shot Quantization by Synthesis-aware Fine-tuning (ICLR 2025)</p>
+<p>Authors:
+- Minjun Kim (<a class="reference external" href="mailto:minjun&#46;kim&#37;&#52;&#48;snu&#46;ac&#46;kr">minjun<span>&#46;</span>kim<span>&#64;</span>snu<span>&#46;</span>ac<span>&#46;</span>kr</a>), Seoul National University
+- Jongjin Kim (<a class="reference external" href="mailto:j2kim99&#37;&#52;&#48;snu&#46;ac&#46;kr">j2kim99<span>&#64;</span>snu<span>&#46;</span>ac<span>&#46;</span>kr</a>), Seoul National University
+- U Kang (<a class="reference external" href="mailto:ukang&#37;&#52;&#48;snu&#46;ac&#46;kr">ukang<span>&#64;</span>snu<span>&#46;</span>ac<span>&#46;</span>kr</a>), Seoul National University</p>
+<p>Version : 1.1</p>
+<p>Date : Feb. 7th, 2025</p>
+<p>Main Contact: Minjun Kim</p>
+<p>This software is free of charge under research purposes.</p>
+<p>For other purposes (e.g. commercial), please contact the authors.</p>
+<dl class="simple">
+<dt>model_transform.py</dt><dd><ul class="simple">
+<li><dl class="simple">
+<dt>codes for model transformation</dt><dd><p>e.g., data parallel, model to list, list to sequential, model to state_dict</p>
+</dd>
+</dl>
+</li>
+</ul>
+</dd>
+<dt>This code is mainly based on</dt><dd><ul class="simple">
+<li><p>ZeroQ: <a class="reference external" href="https://github.com/amirgholami/ZeroQ">https://github.com/amirgholami/ZeroQ</a></p></li>
+<li><p>HAST: <a class="reference external" href="https://github.com/lihuantong/HAST">https://github.com/lihuantong/HAST</a></p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py function">
+<dt class="sig sig-object py" id="utils.model_transform.data_parallel">
+<span class="sig-prename descclassname"><span class="pre">utils.model_transform.</span></span><span class="sig-name descname"><span class="pre">data_parallel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ngpus</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gpu0</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#utils.model_transform.data_parallel" title="Link to this definition">¶</a></dt>
+<dd><p>assign model to multi-gpu mode
+:param model: target model
+:param ngpus: number of gpus to use
+:param gpu0: id of the master gpu</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>model, type is Module or Sequantial or DataParallel</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>model</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="utils.model_transform.list2sequential">
+<span class="sig-prename descclassname"><span class="pre">utils.model_transform.</span></span><span class="sig-name descname"><span class="pre">list2sequential</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#utils.model_transform.list2sequential" title="Link to this definition">¶</a></dt>
+<dd><p>Convert model to nn.Sequential
+:param model: should be type of list</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>nn.Sequential</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>model</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="utils.model_transform.model2list">
+<span class="sig-prename descclassname"><span class="pre">utils.model_transform.</span></span><span class="sig-name descname"><span class="pre">model2list</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#utils.model_transform.model2list" title="Link to this definition">¶</a></dt>
+<dd><p>convert model to list type
+:param model: should be type of list or nn.DataParallel or nn.Sequential</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>no return params</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>model</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="utils.model_transform.model2state_dict">
+<span class="sig-prename descclassname"><span class="pre">utils.model_transform.</span></span><span class="sig-name descname"><span class="pre">model2state_dict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file_path</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#utils.model_transform.model2state_dict" title="Link to this definition">¶</a></dt>
+<dd><p>Convert model to state_dict
+:param file_path: model file path</p>
+</dd></dl>
+
+</section>
+<section id="module-utils.my_utils">
+<span id="my-utils-py"></span><h2>my_utils.py<a class="headerlink" href="#module-utils.my_utils" title="Link to this heading">¶</a></h2>
+<p>SynQ: Accurate Zero-shot Quantization by Synthesis-aware Fine-tuning (ICLR 2025)</p>
+<p>Authors:
+- Minjun Kim (<a class="reference external" href="mailto:minjun&#46;kim&#37;&#52;&#48;snu&#46;ac&#46;kr">minjun<span>&#46;</span>kim<span>&#64;</span>snu<span>&#46;</span>ac<span>&#46;</span>kr</a>), Seoul National University
+- Jongjin Kim (<a class="reference external" href="mailto:j2kim99&#37;&#52;&#48;snu&#46;ac&#46;kr">j2kim99<span>&#64;</span>snu<span>&#46;</span>ac<span>&#46;</span>kr</a>), Seoul National University
+- U Kang (<a class="reference external" href="mailto:ukang&#37;&#52;&#48;snu&#46;ac&#46;kr">ukang<span>&#64;</span>snu<span>&#46;</span>ac<span>&#46;</span>kr</a>), Seoul National University</p>
+<p>Version : 1.1</p>
+<p>Date : Feb. 7th, 2025</p>
+<p>Main Contact: Minjun Kim</p>
+<p>This software is free of charge under research purposes.</p>
+<p>For other purposes (e.g. commercial), please contact the authors.</p>
+<dl class="simple">
+<dt>my_utils.py</dt><dd><ul class="simple">
+<li><p>codes for utility functions</p></li>
+</ul>
+</dd>
+<dt>This code is mainly based on</dt><dd><ul class="simple">
+<li><p>ZeroQ: <a class="reference external" href="https://github.com/amirgholami/ZeroQ">https://github.com/amirgholami/ZeroQ</a></p></li>
+<li><p>HAST: <a class="reference external" href="https://github.com/lihuantong/HAST">https://github.com/lihuantong/HAST</a></p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py function">
+<dt class="sig sig-object py" id="utils.my_utils.basic_setup">
+<span class="sig-prename descclassname"><span class="pre">utils.my_utils.</span></span><span class="sig-name descname"><span class="pre">basic_setup</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filename</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#utils.my_utils.basic_setup" title="Link to this definition">¶</a></dt>
+<dd><p>Basic setup
+:param filename: name of log file</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="utils.my_utils.check_path">
+<span class="sig-prename descclassname"><span class="pre">utils.my_utils.</span></span><span class="sig-name descname"><span class="pre">check_path</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model_path</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#utils.my_utils.check_path" title="Link to this definition">¶</a></dt>
+<dd><p>Check the path of model if it exists, if not, create it
+:param model_path: path of model</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="utils.my_utils.filter_warnings">
+<span class="sig-prename descclassname"><span class="pre">utils.my_utils.</span></span><span class="sig-name descname"><span class="pre">filter_warnings</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#utils.my_utils.filter_warnings" title="Link to this definition">¶</a></dt>
+<dd><p>Filter warnings</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="utils.my_utils.fix_seed">
+<span class="sig-prename descclassname"><span class="pre">utils.my_utils.</span></span><span class="sig-name descname"><span class="pre">fix_seed</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">seed</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#utils.my_utils.fix_seed" title="Link to this definition">¶</a></dt>
+<dd><p>Fix the seed for reproducibility
+:param seed: seed number</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="utils.my_utils.print_tensors_shape">
+<span class="sig-prename descclassname"><span class="pre">utils.my_utils.</span></span><span class="sig-name descname"><span class="pre">print_tensors_shape</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">l</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#utils.my_utils.print_tensors_shape" title="Link to this definition">¶</a></dt>
+<dd><p>Print the shape of tensors
+:param l: list of tensors</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="utils.my_utils.setup_logging">
+<span class="sig-prename descclassname"><span class="pre">utils.my_utils.</span></span><span class="sig-name descname"><span class="pre">setup_logging</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filename</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#utils.my_utils.setup_logging" title="Link to this definition">¶</a></dt>
+<dd><p>Setup the logging
+:param filename: name of log file</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="utils.my_utils.setup_logging_with_path">
+<span class="sig-prename descclassname"><span class="pre">utils.my_utils.</span></span><span class="sig-name descname"><span class="pre">setup_logging_with_path</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">log_path</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#utils.my_utils.setup_logging_with_path" title="Link to this definition">¶</a></dt>
+<dd><p>Setup the logging
+:param log_path: path of log file</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="utils.my_utils.to_device">
+<span class="sig-prename descclassname"><span class="pre">utils.my_utils.</span></span><span class="sig-name descname"><span class="pre">to_device</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">gpu</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#utils.my_utils.to_device" title="Link to this definition">¶</a></dt>
+<dd><p>Return the device
+:param gpu: gpu id</p>
+</dd></dl>
+
+</section>
+<section id="module-utils.opt_static">
+<span id="opt-static-py"></span><h2>opt_static.py<a class="headerlink" href="#module-utils.opt_static" title="Link to this heading">¶</a></h2>
+<p>SynQ: Accurate Zero-shot Quantization by Synthesis-aware Fine-tuning (ICLR 2025)</p>
+<p>Authors:
+- Minjun Kim (<a class="reference external" href="mailto:minjun&#46;kim&#37;&#52;&#48;snu&#46;ac&#46;kr">minjun<span>&#46;</span>kim<span>&#64;</span>snu<span>&#46;</span>ac<span>&#46;</span>kr</a>), Seoul National University
+- Jongjin Kim (<a class="reference external" href="mailto:j2kim99&#37;&#52;&#48;snu&#46;ac&#46;kr">j2kim99<span>&#64;</span>snu<span>&#46;</span>ac<span>&#46;</span>kr</a>), Seoul National University
+- U Kang (<a class="reference external" href="mailto:ukang&#37;&#52;&#48;snu&#46;ac&#46;kr">ukang<span>&#64;</span>snu<span>&#46;</span>ac<span>&#46;</span>kr</a>), Seoul National University</p>
+<p>Version : 1.1</p>
+<p>Date : Feb. 7th, 2025</p>
+<p>Main Contact: Minjun Kim</p>
+<p>This software is free of charge under research purposes.</p>
+<p>For other purposes (e.g. commercial), please contact the authors.</p>
+<dl class="simple">
+<dt>opt_static.py</dt><dd><ul class="simple">
+<li><p>codes for setting the options for training and testing</p></li>
+</ul>
+</dd>
+<dt>This code is mainly based on</dt><dd><ul class="simple">
+<li><p>ZeroQ: <a class="reference external" href="https://github.com/amirgholami/ZeroQ">https://github.com/amirgholami/ZeroQ</a></p></li>
+<li><p>HAST: <a class="reference external" href="https://github.com/lihuantong/HAST">https://github.com/lihuantong/HAST</a></p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py class">
+<dt class="sig sig-object py" id="utils.opt_static.NetOption">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">utils.opt_static.</span></span><span class="sig-name descname"><span class="pre">NetOption</span></span><a class="headerlink" href="#utils.opt_static.NetOption" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Options for training and testing</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="utils.opt_static.NetOption.paramscheck">
+<span class="sig-name descname"><span class="pre">paramscheck</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#utils.opt_static.NetOption.paramscheck" title="Link to this definition">¶</a></dt>
+<dd><p>Check the parameters</p>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-utils.warmup">
+<span id="warmup-py"></span><h2>warmup.py<a class="headerlink" href="#module-utils.warmup" title="Link to this heading">¶</a></h2>
+<p>SynQ: Accurate Zero-shot Quantization by Synthesis-aware Fine-tuning (ICLR 2025)</p>
+<p>Authors:
+- Minjun Kim (<a class="reference external" href="mailto:minjun&#46;kim&#37;&#52;&#48;snu&#46;ac&#46;kr">minjun<span>&#46;</span>kim<span>&#64;</span>snu<span>&#46;</span>ac<span>&#46;</span>kr</a>), Seoul National University
+- Jongjin Kim (<a class="reference external" href="mailto:j2kim99&#37;&#52;&#48;snu&#46;ac&#46;kr">j2kim99<span>&#64;</span>snu<span>&#46;</span>ac<span>&#46;</span>kr</a>), Seoul National University
+- U Kang (<a class="reference external" href="mailto:ukang&#37;&#52;&#48;snu&#46;ac&#46;kr">ukang<span>&#64;</span>snu<span>&#46;</span>ac<span>&#46;</span>kr</a>), Seoul National University</p>
+<p>Version : 1.1</p>
+<p>Date : Feb. 7th, 2025</p>
+<p>Main Contact: Minjun Kim</p>
+<p>This software is free of charge under research purposes.</p>
+<p>For other purposes (e.g. commercial), please contact the authors.</p>
+<dl class="simple">
+<dt>warmup.py</dt><dd><ul class="simple">
+<li><p>codes for warming up the dataset</p></li>
+</ul>
+</dd>
+<dt>This code is mainly based on</dt><dd><ul class="simple">
+<li><p>ZeroQ: <a class="reference external" href="https://github.com/amirgholami/ZeroQ">https://github.com/amirgholami/ZeroQ</a></p></li>
+<li><p>HAST: <a class="reference external" href="https://github.com/lihuantong/HAST">https://github.com/lihuantong/HAST</a></p></li>
+</ul>
+</dd>
+</dl>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="src.quantization_utils.html" class="btn btn-neutral float-left" title="Quantization Utils" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="src.html" class="btn btn-neutral float-right" title="Sub Modules" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, Minjun Kim.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
