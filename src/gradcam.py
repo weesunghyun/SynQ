@@ -38,7 +38,7 @@ class GradCAM:
             model_dict: Dictionary containing model architecture, input_size, and layer_name
             verbose: Print saliency map size
         """
-
+        # print(model_dict['arch'])
         self.model_arch = model_dict['arch']
         self.layer_name = model_dict.get('layer_name', None)
         self.verbose = verbose
@@ -109,6 +109,7 @@ class GradCAM:
             input_size: Size of the input image
         """
         device = 'cuda' if next(self.model_arch.parameters()).is_cuda else 'cpu'
+
         self.model_arch(torch.zeros(1, 3, *input_size, device=device))
 
     def forward(self, _input, class_idx=None, retain_graph=False):

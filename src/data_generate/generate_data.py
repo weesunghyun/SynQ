@@ -28,6 +28,7 @@ import sys
 import argparse
 
 import torch
+torch.backends.cudnn.enabled = False
 
 from distill_data import generate_calib_centers, DistillData
 

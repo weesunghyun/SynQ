@@ -8,4 +8,5 @@ python generate_data.py 		\
 		--beta=0.1 \
 		--gamma=0.5 \
 		--save_path_head=../data/imagenet \
+
 done

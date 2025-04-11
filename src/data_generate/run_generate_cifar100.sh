@@ -1,7 +1,8 @@
 for g in 1 2 3 4
 do
+		# --model=resnet34_cifar100 	 \
 python generate_data.py 		\
-		--model=resnet34_cifar100 	 \
+		--model=resnet20_cifar100 	 \
 		--batch_size=256 		\
 		--test_batch_size=512 \
 		--group=$g \
