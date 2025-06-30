@@ -64,15 +64,6 @@ def generate_calib_centers(args, teacher_model, beta_ce = 5):
     if not os.path.exists(calib_path):
         model_name = args.model
 
-        if model_name == 'resnet20_cifar10':
-            num_classes = 10
-        elif model_name == 'resnet20_cifar100':
-            num_classes = 100
-        elif model_name == 'resnet34_cifar100':
-            num_classes = 100
-        else:
-            num_classes = 1000
-
         if model_name in ['resnet20_cifar10','resnet20_cifar100', 'resnet34_cifar100']:
             shape = (args.batch_size, 3, 32, 32)
         else:
@@ -80,6 +71,13 @@ def generate_calib_centers(args, teacher_model, beta_ce = 5):
 
         teacher_model = teacher_model.cuda()
         teacher_model = teacher_model.eval()
+
+        # Determine number of classes from model output dimension
+        with torch.no_grad():
+            dummy_input = torch.randn(1, *shape[1:]).cuda()
+            dummy_output = teacher_model(dummy_input)
+            num_classes = dummy_output.shape[1]
+            print(f"Model output dimension: {num_classes} classes")
 
         refined_gaussian = []
 
@@ -313,36 +311,6 @@ class DistillData:
         check_path(data_path)
         check_path(label_path)
 
-        if model_name == 'resnet20_cifar10':
-            self.num_classes = 10
-        elif model_name == 'resnet20_cifar100':
-            self.num_classes = 100
-        elif model_name == 'resnet34_cifar100':
-            self.num_classes = 100
-        # Handle medmnist datasets
-        elif 'dermamnist' in model_name:
-            self.num_classes = 7
-        elif 'pathmnist' in model_name:
-            self.num_classes = 9
-        elif 'octmnist' in model_name:
-            self.num_classes = 4
-        elif 'pneumoniamnist' in model_name:
-            self.num_classes = 2
-        elif 'breastmnist' in model_name:
-            self.num_classes = 2
-        elif 'bloodmnist' in model_name:
-            self.num_classes = 8
-        elif 'tissuemnist' in model_name:
-            self.num_classes = 8
-        elif 'organamnist' in model_name:
-            self.num_classes = 11
-        elif 'organcmnist' in model_name:
-            self.num_classes = 11
-        elif 'organsmnist' in model_name:
-            self.num_classes = 11
-        else:
-            self.num_classes = 1000
-
         if model_name in ['resnet20_cifar10','resnet20_cifar100', 'resnet34_cifar100']:
             shape = (batch_size, 3, 32, 32)
         else:
@@ -350,6 +318,13 @@ class DistillData:
 
         teacher_model = teacher_model.cuda()
         teacher_model = teacher_model.eval()
+
+        # Determine number of classes from model output dimension
+        with torch.no_grad():
+            dummy_input = torch.randn(1, *shape[1:]).cuda()
+            dummy_output = teacher_model(dummy_input)
+            self.num_classes = dummy_output.shape[1]
+            print(f"Model output dimension: {self.num_classes} classes")
 
         refined_gaussian = []
         labels_list = []
@@ -424,10 +399,10 @@ class DistillData:
             gaussian_data = torch.randn(shape).cuda()
             gaussian_data.requires_grad = True
             # optimizer = optim.Adam([gaussian_data], lr=0.5)
-            optimizer = optim.Adam([gaussian_data], lr=0.1)
+            optimizer = optim.Adam([gaussian_data], lr=0.05)
             scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer,
                                                                 # min_lr=0.05,
-                                                                min_lr=0.01,
+                                                                min_lr=0.005,
                                                                 verbose=False,
                                                                 patience=50)
 
