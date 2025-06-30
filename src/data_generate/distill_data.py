@@ -110,9 +110,11 @@ def generate_calib_centers(args, teacher_model, beta_ce = 5):
         for i in range(num_classes//args.batch_size + 1):
             gaussian_data = torch.randn(shape).cuda()
             gaussian_data.requires_grad = True
-            optimizer = optim.Adam([gaussian_data], lr=0.5)
+            # optimizer = optim.Adam([gaussian_data], lr=0.5)
+            optimizer = optim.Adam([gaussian_data], lr=0.1)
             scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer,
-                                                                min_lr=0.05,
+                                                                # min_lr=0.05,
+                                                                min_lr=0.01,
                                                                 verbose=False,
                                                                 patience=50)
 
@@ -167,6 +169,7 @@ def generate_calib_centers(args, teacher_model, beta_ce = 5):
 
                 optimizer.zero_grad()
                 total_loss.backward()
+                torch.nn.utils.clip_grad_norm_(gaussian_data, max_norm=1.0)
                 optimizer.step()
                 scheduler.step(total_loss.item())
 
@@ -420,11 +423,13 @@ class DistillData:
 
             gaussian_data = torch.randn(shape).cuda()
             gaussian_data.requires_grad = True
-            optimizer = optim.Adam([gaussian_data], lr=0.5)
+            # optimizer = optim.Adam([gaussian_data], lr=0.5)
+            optimizer = optim.Adam([gaussian_data], lr=0.1)
             scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer,
-                                                             min_lr=1e-4,
-                                                             verbose=False,
-                                                             patience=50)
+                                                                # min_lr=0.05,
+                                                                min_lr=0.01,
+                                                                verbose=False,
+                                                                patience=50)
 
             labels = torch.randint(0, self.num_classes, (len(gaussian_data),)).cuda()
             # labels_mask = F.one_hot(labels, num_classes=self.num_classes).float()
@@ -495,12 +500,13 @@ class DistillData:
                 else:
                     total_loss = mean_loss + var_loss + loss_target
 
-                print(i, it, 'lr', optimizer.state_dict()['param_groups'][0]['lr'],
-                        'mean_loss', mean_loss.item(), 'var_loss',
-                        var_loss.item(), 'loss_target', loss_target.item())
+                print(f"Batch: {i}, Iter: {it}, LR: {optimizer.state_dict()['param_groups'][0]['lr']:.4f}, "
+                      f"Mean Loss: {mean_loss.item():.4f}, Var Loss: {var_loss.item():.4f}, "
+                      f"Target Loss: {loss_target.item():.4f}")
 
                 optimizer.zero_grad()
                 total_loss.backward()
+                torch.nn.utils.clip_grad_norm_(gaussian_data, max_norm=1.0)
                 optimizer.step()
                 scheduler.step(total_loss.item())
 
