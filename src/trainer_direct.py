@@ -445,7 +445,7 @@ class Trainer:
             iterator = iter(direct_dataload)
 
         for i in range(iters):
-            self.update_cam()
+            # self.update_cam()
 
             if epoch < 4:
                 z = Variable(torch.randn(16,

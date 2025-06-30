@@ -1,4 +1,3 @@
-config_path=
 config_path=(
     "./config/cifar100_3bit.hocon"
     "./config/cifar100_4bit.hocon"

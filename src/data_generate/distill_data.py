@@ -316,6 +316,27 @@ class DistillData:
             self.num_classes = 100
         elif model_name == 'resnet34_cifar100':
             self.num_classes = 100
+        # Handle medmnist datasets
+        elif 'dermamnist' in model_name:
+            self.num_classes = 7
+        elif 'pathmnist' in model_name:
+            self.num_classes = 9
+        elif 'octmnist' in model_name:
+            self.num_classes = 4
+        elif 'pneumoniamnist' in model_name:
+            self.num_classes = 2
+        elif 'breastmnist' in model_name:
+            self.num_classes = 2
+        elif 'bloodmnist' in model_name:
+            self.num_classes = 8
+        elif 'tissuemnist' in model_name:
+            self.num_classes = 8
+        elif 'organamnist' in model_name:
+            self.num_classes = 11
+        elif 'organcmnist' in model_name:
+            self.num_classes = 11
+        elif 'organsmnist' in model_name:
+            self.num_classes = 11
         else:
             self.num_classes = 1000
 

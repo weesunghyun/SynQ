@@ -10,7 +10,7 @@ datasets=(
 
 for dataset in ${datasets[@]}
 do
-	for g in 0 # 1 2 3 4
+	for g in 1 2 3 4
 	do
 	python generate_data.py 		\
 			--model=resnet18 	 \
