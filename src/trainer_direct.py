@@ -134,21 +134,12 @@ class Trainer:
         self.activation = []
         self.handle_list = []
 
-
-        if self.settings.dataset == "imagenet":
-            self.teacher_dict = {
-                "type": "resnet",
-                "arch": model_teacher,
-                "layer_name": "stage4",
-                "input_size": (224, 224)
-            }
-        else:
-            self.teacher_dict = {
-                "type": "resnet",
-                "arch": model_teacher,
-                "layer_name": "stage4",
-                "input_size": (32, 32)
-            }
+        self.teacher_dict = {
+            "type": "resnet",
+            "arch": model_teacher,
+            "layer_name": "stage4",
+            "input_size": (self.settings.img_size, self.settings.img_size)
+        }
 
         # if self.args.cam_type == 'cam':
         #     self.cam_teacher = CAM(self.teacher_dict, True)
@@ -230,20 +221,12 @@ class Trainer:
         """
         Update class activation map (CAM)
         """
-        if self.settings.dataset == "imagenet":
-            self.student_dict = {
-                "type": "resnet",
-                "arch": self.model,
-                "layer_name": "stage4",
-                "input_size": (224, 224)
-            }
-        else:
-            self.student_dict = {
-                "type": "resnet",
-                "arch": self.model,
-                "layer_name": "stage4",
-                "input_size": (32, 32)
-            }
+        self.student_dict = {
+            "type": "resnet",
+            "arch": self.model,
+            "layer_name": "stage4",
+            "input_size": (self.settings.img_size, self.settings.img_size)
+        }
 
         if self.args.cam_type == 'gradcam':
             self.cam_student = GradCAM(self.student_dict, True)

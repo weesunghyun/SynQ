@@ -65,6 +65,7 @@ class Option(NetOption):
 
         # ---------- Model options ---------------------------------------------
         self.num_classes = self.conf['nClasses']  # number of classes in the dataset
+        self.pretrained_path = f'./checkpoints/{self.model_name}_{self.dataset}.pth'
 
         # ---------- Quantization options ---------------------------------------
         self.qw = self.conf['qw']
@@ -120,11 +121,39 @@ class Option(NetOption):
         """
         logger.info(f"|===>The used PyTorch version is {self.torch_version}")
 
-        if self.dataset in ["cifar10", "mnist"]:
-            self.num_classes = 10
-        elif self.dataset == "cifar100":
-            self.num_classes = 100
-        elif self.dataset in ["imagenet", "thi_imgnet"]:
-            self.num_classes = 1000
-        elif self.dataset == "imagenet100":
-            self.num_classes = 100
+        # 클래스 수를 설정 파일에서 읽어오거나 기본값 사용
+        if hasattr(self, 'num_classes'):
+        # 설정 파일에 nClasses가 이미 정의되어 있음
+            pass
+        else:
+            # 기본값 설정 (하위 호환성을 위해)
+            if self.dataset in ["cifar10", "mnist"]:
+                self.num_classes = 10
+            elif self.dataset == "cifar100":
+                self.num_classes = 100
+            elif self.dataset == "imagenet" or "thi_imgnet":
+                self.num_classes = 1000
+            elif self.dataset == "imagenet100":
+                self.num_classes = 100
+            elif self.dataset == 'dermamnist':
+                self.num_classes = 7
+            elif self.dataset == 'pathmnist':
+                self.num_classes = 9
+            elif self.dataset == 'octmnist':
+                self.num_classes = 4
+            elif self.dataset == 'pneumoniamnist':
+                self.num_classes = 2
+            elif self.dataset == 'breastmnist':
+                self.num_classes = 2
+            elif self.dataset == 'bloodmnist':
+                self.num_classes = 8
+            elif self.dataset == 'tissuemnist':
+                self.num_classes = 8
+            elif self.dataset == 'organamnist':
+                self.num_classes = 11
+            elif self.dataset == 'organcmnist':
+                self.num_classes = 11
+            elif self.dataset == 'organsmnist':
+                self.num_classes = 11
+            else:
+                self.num_classes = 1000

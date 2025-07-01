@@ -56,109 +56,106 @@ from quantization_utils.quant_modules import QuantAct, QuantLinear, QuantConv2d
 from utils.get_resnet34 import resnet34_get_model
 from pytorchcv.model_provider import get_model as ptcv_get_model
 from conditional_batchnorm import CategoricalConditionalBatchNorm2d
+from tqdm import tqdm
+from collections import OrderedDict
+# from regularizer import get_reg_criterions
+
+medmnist_dataset = ["dermamnist", "pathmnist", "octmnist", "pneumoniamnist", "breastmnist", "bloodmnist", "tissuemnist", "organamnist", "organcmnist", "organsmnist"]
 
 
-class Generator(nn.Module):
-    """
-    Generator for CIFAR-10 and CIFAR-100
-    Args:
-        options: Option class
-        conf_path: Path to the configuration file
-    """
-    def __init__(self, options=None, conf_path=None):
-        super().__init__()
-        self.settings = options or Option(conf_path)
-        self.label_emb = nn.Embedding(self.settings.num_classes, self.settings.latent_dim)
-        self.init_size = self.settings.img_size // 4
-        self.l1 = nn.Sequential(nn.Linear(self.settings.latent_dim, 128 * self.init_size ** 2))
+class Generator_32(nn.Module):
+	def __init__(self, options=None, conf_path=None):
+		super(Generator_32, self).__init__()
+		self.settings = options or Option(conf_path)
+		self.label_emb = nn.Embedding(self.settings.num_classes, self.settings.latent_dim)
+		self.init_size = self.settings.img_size // 4
+		self.l1 = nn.Sequential(nn.Linear(self.settings.latent_dim, 128 * self.init_size ** 2))
 
-        self.conv_blocks0 = nn.Sequential(
-            nn.BatchNorm2d(128),
-        )
+		self.conv_blocks0 = nn.Sequential(
+			nn.BatchNorm2d(128),
+		)
 
-        self.conv_blocks1 = nn.Sequential(
-            nn.Conv2d(128, 128, 3, stride=1, padding=1),
-            nn.BatchNorm2d(128, 0.8),
-            nn.LeakyReLU(0.2, inplace=True),
-        )
+		self.conv_blocks1 = nn.Sequential(
+			nn.Conv2d(128, 128, 3, stride=1, padding=1),
+			nn.BatchNorm2d(128, 0.8),
+			nn.LeakyReLU(0.2, inplace=True),
+		)
+		self.conv_blocks2 = nn.Sequential(
+			nn.Conv2d(128, 64, 3, stride=1, padding=1),
+			nn.BatchNorm2d(64, 0.8),
+			nn.LeakyReLU(0.2, inplace=True),
+			nn.Conv2d(64, self.settings.channels, 3, stride=1, padding=1),
+			nn.Tanh(),
+			nn.BatchNorm2d(self.settings.channels, affine=False)
+		)
 
-        self.conv_blocks2 = nn.Sequential(
-            nn.Conv2d(128, 64, 3, stride=1, padding=1),
-            nn.BatchNorm2d(64, 0.8),
-            nn.LeakyReLU(0.2, inplace=True),
-            nn.Conv2d(64, self.settings.channels, 3, stride=1, padding=1),
-            nn.Tanh(),
-            nn.BatchNorm2d(self.settings.channels, affine=False)
-        )
+	def forward(self, z, labels):
+		gen_input = torch.mul(self.label_emb(labels), z)
+		out = self.l1(gen_input)
+		out = out.view(out.shape[0], 128, self.init_size, self.init_size)
+		img = self.conv_blocks0(out)
+		img = nn.functional.interpolate(img, scale_factor=2)
+		img = self.conv_blocks1(img)
+		img = nn.functional.interpolate(img, scale_factor=2)
+		img = self.conv_blocks2(img)
+		return img
 
-    def forward(self, z, labels):
-        """
-        Forward pass of the generator
-        Args:
-            z: Latent vector
-            labels: Labels
-        """
-        gen_input = torch.mul(self.label_emb(labels), z)
-        out = self.l1(gen_input)
-        out = out.view(out.shape[0], 128, self.init_size, self.init_size)
-        img = self.conv_blocks0(out)
-        img = nn.functional.interpolate(img, scale_factor=2)
-        img = self.conv_blocks1(img)
-        img = nn.functional.interpolate(img, scale_factor=2)
-        img = self.conv_blocks2(img)
-        return img
+class Generator_224(nn.Module):
+	def __init__(self, options=None, conf_path=None):
+		self.settings = options or Option(conf_path)
+
+		super(Generator_224, self).__init__()
+
+		self.init_size = self.settings.img_size // 4
+		self.l1 = nn.Sequential(nn.Linear(self.settings.latent_dim, 128 * self.init_size ** 2))
+
+		self.conv_blocks0_0 = CategoricalConditionalBatchNorm2d(self.settings.num_classes, 128)
+
+		self.conv_blocks1_0 = nn.Conv2d(128, 128, 3, stride=1, padding=1)
+		self.conv_blocks1_1 = CategoricalConditionalBatchNorm2d(self.settings.num_classes, 128, 0.8)
+		self.conv_blocks1_2 = nn.LeakyReLU(0.2, inplace=True)
+
+		self.conv_blocks2_0 = nn.Conv2d(128, 64, 3, stride=1, padding=1)
+		self.conv_blocks2_1 = CategoricalConditionalBatchNorm2d(self.settings.num_classes, 64, 0.8)
+		self.conv_blocks2_2 = nn.LeakyReLU(0.2, inplace=True)
+		self.conv_blocks2_3 = nn.Conv2d(64, self.settings.channels, 3, stride=1, padding=1)
+		self.conv_blocks2_4 = nn.Tanh()
+		self.conv_blocks2_5 = nn.BatchNorm2d(self.settings.channels, affine=False)
+
+	def forward(self, z, labels):
+		out = self.l1(z)
+		out = out.view(out.shape[0], 128, self.init_size, self.init_size)
+		img = self.conv_blocks0_0(out, labels)
+		img = nn.functional.interpolate(img, scale_factor=2)
+		img = self.conv_blocks1_0(img)
+		img = self.conv_blocks1_1(img, labels)
+		img = self.conv_blocks1_2(img)
+		img = nn.functional.interpolate(img, scale_factor=2)
+		img = self.conv_blocks2_0(img)
+		img = self.conv_blocks2_1(img, labels)
+		img = self.conv_blocks2_2(img)
+		img = self.conv_blocks2_3(img)
+		img = self.conv_blocks2_4(img)
+		img = self.conv_blocks2_5(img)
+		return img
 
 
-class GeneratorImagenet(nn.Module):
-    """
-    Generator for ImageNet
-    Args:
-        options: Option class
-        conf_path: Path to the configuration file
-    """
-    def __init__(self, options=None, conf_path=None):
-        self.settings = options or Option(conf_path)
+def create_generator(options=None, conf_path=None):
+	if options is not None:
+		settings = options
+	elif conf_path is not None:
+		settings = Option(conf_path)
+	else:
+		raise ValueError("options or conf_path must be provided")
 
-        super().__init__()
-
-        self.init_size = self.settings.img_size // 4
-        self.l1 = nn.Sequential(nn.Linear(self.settings.latent_dim, 128 * self.init_size ** 2))
-
-        self.conv_blocks0_0 = CategoricalConditionalBatchNorm2d(1000, 128)
-
-        self.conv_blocks1_0 = nn.Conv2d(128, 128, 3, stride=1, padding=1)
-        self.conv_blocks1_1 = CategoricalConditionalBatchNorm2d(1000, 128, 0.8)
-        self.conv_blocks1_2 = nn.LeakyReLU(0.2, inplace=True)
-
-        self.conv_blocks2_0 = nn.Conv2d(128, 64, 3, stride=1, padding=1)
-        self.conv_blocks2_1 = CategoricalConditionalBatchNorm2d(1000, 64, 0.8)
-        self.conv_blocks2_2 = nn.LeakyReLU(0.2, inplace=True)
-        self.conv_blocks2_3 = nn.Conv2d(64, self.settings.channels, 3, stride=1, padding=1)
-        self.conv_blocks2_4 = nn.Tanh()
-        self.conv_blocks2_5 = nn.BatchNorm2d(self.settings.channels, affine=False)
-
-    def forward(self, z, labels):
-        """
-        Forward pass of the generator
-        Args:
-            z: Latent vector
-            labels: Labels
-        """
-        out = self.l1(z)
-        out = out.view(out.shape[0], 128, self.init_size, self.init_size)
-        img = self.conv_blocks0_0(out, labels)
-        img = nn.functional.interpolate(img, scale_factor=2)
-        img = self.conv_blocks1_0(img)
-        img = self.conv_blocks1_1(img, labels)
-        img = self.conv_blocks1_2(img)
-        img = nn.functional.interpolate(img, scale_factor=2)
-        img = self.conv_blocks2_0(img)
-        img = self.conv_blocks2_1(img, labels)
-        img = self.conv_blocks2_2(img)
-        img = self.conv_blocks2_3(img)
-        img = self.conv_blocks2_4(img)
-        img = self.conv_blocks2_5(img)
-        return img
+	if settings.img_size == 32:
+		return Generator_32(options=options, conf_path=conf_path)
+	elif settings.img_size == 224:
+		return Generator_224(options=options, conf_path=conf_path)
+	# elif image_size == 64:
+	#     return Generator_64(options=options, conf_path=conf_path) # 향후 확장 가능
+	else:
+		raise ValueError(f"Unsupported image size: {settings.img_size}")
 
 
 class DirectDataset(Dataset):
@@ -175,7 +172,9 @@ class DirectDataset(Dataset):
         self.logger = logger
         self.args = args
 
-        if dataset in ["cifar10", "cifar100"]:
+
+        # 이미지 크기 기반으로 transform 설정
+        if settings.img_size == 32:
             self.train_transform = transforms.Compose([
                 transforms.RandomResizedCrop(size=32, scale=(0.5, 1.0)),
                 transforms.RandomHorizontalFlip(),
@@ -185,7 +184,7 @@ class DirectDataset(Dataset):
                 transforms.RandomResizedCrop(size=224, scale=(0.5, 1.0)),
                 transforms.RandomHorizontalFlip(),
             ])
-
+               
         if self.args.few_shot:
             self.fewshot_transform = transforms.Compose([
                 transforms.RandomResizedCrop(size=32, scale=(0.5, 1.0)),
@@ -282,6 +281,79 @@ class DirectDataset(Dataset):
         return len(self.tmp_label)
 
 
+
+def convert_state_dict(pretrained_state_dict, new_model):
+    """
+    Converts a pretrained ResNet-18 state_dict to match the key format of the new model,
+    including all 'num_batches_tracked' keys for BatchNorm layers.
+
+    Args:
+        pretrained_state_dict (OrderedDict): The state_dict object from the pretrained model.
+        new_model (torch.nn.Module): An instance of the new model architecture.
+
+    Returns:
+        OrderedDict: The converted state_dict.
+    """
+    # For debugging: Check if the problematic key exists in the source state_dict
+    if 'bn1.num_batches_tracked' not in pretrained_state_dict:
+        print("Warning: 'bn1.num_batches_tracked' not found in the source checkpoint!")
+
+    new_state_dict = OrderedDict()
+    key_map = {}
+
+    # 1. Initial block (conv1 and bn1)
+    key_map.update({
+        'conv1.weight': 'features.init_block.conv.conv.weight',
+        'bn1.weight': 'features.init_block.conv.bn.weight',
+        'bn1.bias': 'features.init_block.conv.bn.bias',
+        'bn1.running_mean': 'features.init_block.conv.bn.running_mean',
+        'bn1.running_var': 'features.init_block.conv.bn.running_var',
+        'bn1.num_batches_tracked': 'features.init_block.conv.bn.num_batches_tracked'  # The missing key
+    })
+
+    # 2. ResNet stages (layer1 to layer4)
+    for i in range(1, 5):  # Stages 1-4
+        for j in range(2):  # Units 1-2 (for ResNet-18)
+            # Body convolutions and their batchnorms
+            for conv_idx in [1, 2]:
+                old_prefix = f'layer{i}.{j}.conv{conv_idx}'
+                new_prefix = f'features.stage{i}.unit{j+1}.body.conv{conv_idx}'
+                key_map[f'{old_prefix}.weight'] = f'{new_prefix}.conv.weight'
+
+                old_bn_prefix = f'layer{i}.{j}.bn{conv_idx}'
+                new_bn_prefix = f'features.stage{i}.unit{j+1}.body.conv{conv_idx}'
+                key_map[f'{old_bn_prefix}.weight'] = f'{new_bn_prefix}.bn.weight'
+                key_map[f'{old_bn_prefix}.bias'] = f'{new_bn_prefix}.bn.bias'
+                key_map[f'{old_bn_prefix}.running_mean'] = f'{new_bn_prefix}.bn.running_mean'
+                key_map[f'{old_bn_prefix}.running_var'] = f'{new_bn_prefix}.bn.running_var'
+                key_map[f'{old_bn_prefix}.num_batches_tracked'] = f'{new_bn_prefix}.bn.num_batches_tracked'
+
+            # Downsample (identity) convolution for stages 2, 3, 4
+            if i > 1 and j == 0:
+                old_ds_prefix = f'layer{i}.{j}.downsample'
+                new_ds_prefix = f'features.stage{i}.unit{j+1}.identity_conv'
+                key_map[f'{old_ds_prefix}.0.weight'] = f'{new_ds_prefix}.conv.weight'
+                key_map[f'{old_ds_prefix}.1.weight'] = f'{new_ds_prefix}.bn.weight'
+                key_map[f'{old_ds_prefix}.1.bias'] = f'{new_ds_prefix}.bn.bias'
+                key_map[f'{old_ds_prefix}.1.running_mean'] = f'{new_ds_prefix}.bn.running_mean'
+                key_map[f'{old_ds_prefix}.1.running_var'] = f'{new_ds_prefix}.bn.running_var'
+                key_map[f'{old_ds_prefix}.1.num_batches_tracked'] = f'{new_ds_prefix}.bn.num_batches_tracked'
+
+    # 3. Final fully-connected layer
+    key_map.update({
+        'fc.weight': 'output.weight',
+        'fc.bias': 'output.bias'
+    })
+
+    # Populate the new_state_dict using the generated map
+    for old_key, new_key in key_map.items():
+        if old_key in pretrained_state_dict:
+            new_state_dict[new_key] = pretrained_state_dict[old_key]
+
+    return new_state_dict
+
+
+
 class ExperimentDesign:
     """
     Experiment design class
@@ -373,26 +445,32 @@ class ExperimentDesign:
         """
         Set model
         """
-        if self.settings.dataset in ["cifar100", "cifar10"]:
-            if self.settings.model_name == "resnet34_cifar100":
-                self.model = resnet34_get_model()
-                self.model_teacher = resnet34_get_model()
-            else:
-                self.model = ptcv_get_model(self.settings.model_name, pretrained=True)
-                self.model_teacher = ptcv_get_model(self.settings.model_name, pretrained=True)
-            self.generator = Generator(self.settings)
-            self.model_teacher.eval()
+        if self.settings.dataset in medmnist_dataset:
+            num_classes = self.settings.num_classes
+            self.model = ptcv_get_model(self.settings.model_name, pretrained=False, num_classes=num_classes)
+            self.model_teacher = ptcv_get_model(self.settings.model_name, pretrained=False, num_classes=num_classes)
+            print(f'****** Model created with {num_classes} classes for {self.settings.dataset} ******')
 
-        elif self.settings.dataset in ["imagenet"]:
-            self.model = ptcv_get_model(self.settings.model_name, pretrained=True)
-            self.model_teacher = ptcv_get_model(self.settings.model_name, pretrained=True)
-            self.generator = GeneratorImagenet(self.settings)
-            self.model_teacher.eval()
+            # Load checkpoint and handle different formats
+            checkpoint = torch.load(self.settings.pretrained_path, map_location='cpu')
+            if isinstance(checkpoint, dict) and 'net' in checkpoint:
+                converted_state_dict = convert_state_dict(checkpoint['net'], self.model)
+            else:
+                converted_state_dict = convert_state_dict(checkpoint, self.model)
+
+            self.model.load_state_dict(converted_state_dict)
+            self.model_teacher.load_state_dict(converted_state_dict)
+            print(f'****** Pretrained model {self.settings.pretrained_path} loaded ******')
 
         else:
-            assert False, "unsupport data set: " + self.settings.dataset
+            self.model = ptcv_get_model(self.settings.model_name, pretrained=True)
+            self.model_teacher = ptcv_get_model(self.settings.model_name, pretrained=True)
+
+        self.generator = create_generator(options=self.settings)
+        self.model_teacher.eval()
 
         self.model_teacher = torch.nn.SyncBatchNorm.convert_sync_batchnorm(self.model_teacher)
+
         self.model_teacher = DDP(
             self.model_teacher.to(self.args.local_rank),
             device_ids=[self.args.local_rank],

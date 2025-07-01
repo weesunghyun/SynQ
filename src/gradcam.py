@@ -110,7 +110,16 @@ class GradCAM:
         """
         device = 'cuda' if next(self.model_arch.parameters()).is_cuda else 'cpu'
 
-        self.model_arch(torch.zeros(1, 3, *input_size, device=device))
+        # Temporarily set model to eval mode to avoid BatchNorm issues with batch size 1
+        original_mode = self.model_arch.training
+        self.model_arch.eval()
+        
+        with torch.no_grad():
+            self.model_arch(torch.zeros(1, 3, *input_size, device=device))
+        
+        # Restore original mode
+        if original_mode:
+            self.model_arch.train()
 
     def forward(self, _input, class_idx=None, retain_graph=False):
         """
