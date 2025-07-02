@@ -2,8 +2,10 @@ gpu_id=0
 master_port=8900
 
 config_path=(
-    "./config/dermamnist_3bit.hocon"
-    "./config/dermamnist_4bit.hocon"
+    # "./config/dermamnist_3bit.hocon"
+    # "./config/dermamnist_4bit.hocon"
+    "./config/tissuemnist_3bit.hocon"
+    "./config/tissuemnist_4bit.hocon"
 )
 
 for config in "${config_path[@]}"; do
