@@ -112,7 +112,7 @@ def generate_calib_centers(args, teacher_model, beta_ce = 5):
             optimizer = optim.Adam([gaussian_data], lr=0.1)
             scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer,
                                                                 # min_lr=0.05,
-                                                                min_lr=0.01,
+                                                                min_lr=1e-4,
                                                                 verbose=False,
                                                                 patience=50)
 
