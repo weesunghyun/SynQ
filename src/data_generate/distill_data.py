@@ -38,6 +38,7 @@ from torch import optim
 from torch.nn import functional as F
 
 from torchvision import transforms
+from torchvision import datasets
 
 
 def check_path(model_path):
@@ -286,7 +287,7 @@ class DistillData:
         self.teacher_running_var.append(module.running_var)
 
     def get_distil_data(self, model_name="resnet18", teacher_model=None, batch_size=256,
-                      num_batch=1, group=1, aug_margin=0.4, beta=1.0, gamma=0, save_path_head=""):
+                      num_batch=1, group=1, aug_margin=0.4, beta=1.0, gamma=0, save_path_head="", init_data_path=None):
         """
         Generate the distilled data.
         Args:
@@ -310,6 +311,26 @@ class DistillData:
 
         check_path(data_path)
         check_path(label_path)
+
+        # Prepare dataset for initialization if provided
+        init_dataset = None
+        if init_data_path is not None:
+            if hasattr(teacher_model, 'img_size') and teacher_model.img_size == 32:
+                init_transform = transforms.Compose([
+                    transforms.Resize(32),
+                    transforms.CenterCrop(32),
+                    transforms.ToTensor()
+                ])
+            else:
+                init_transform = transforms.Compose([
+                    transforms.Resize(256),
+                    transforms.CenterCrop(224),
+                    transforms.ToTensor()
+                ])
+            init_dataset = datasets.ImageFolder(init_data_path, transform=init_transform)
+            init_len = len(init_dataset)
+            print(f"Init dataset loaded from {init_data_path}, {init_len} images")
+
 
         if model_name in ['resnet20_cifar10','resnet20_cifar100', 'resnet34_cifar100']:
             shape = (batch_size, 3, 32, 32)
@@ -396,7 +417,13 @@ class DistillData:
                 rrc = transforms.RandomResizedCrop(size=224,scale=(aug_margin, 1.0))
             rhf = transforms.RandomHorizontalFlip()
 
-            gaussian_data = torch.randn(shape).cuda()
+            # gaussian_data = torch.randn(shape).cuda()
+            if init_dataset is not None:
+                indices = torch.randint(0, init_len, (batch_size,))
+                imgs = [init_dataset[idx][0] for idx in indices]
+                gaussian_data = torch.stack(imgs).cuda()
+            else:
+                gaussian_data = torch.randn(shape).cuda()
             gaussian_data.requires_grad = True
             # optimizer = optim.Adam([gaussian_data], lr=0.5)
             optimizer = optim.Adam([gaussian_data], lr=0.05)

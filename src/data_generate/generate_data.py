@@ -99,6 +99,10 @@ def arg_parse():
                         type=str,
                         default='',
                         help='save_path_head')
+    parser.add_argument('--init_data_path',
+                        type=str,
+                        default=None,
+                        help='path to real images used for initialization')
     parser.add_argument('--radius', type=float, default=0.05, metavar='radius')
     parser.add_argument('--lbns', type=bool, default=False, metavar='lbns')
     parser.add_argument('--fft', type=bool, default=False, metavar='fft')
@@ -230,7 +234,8 @@ if __name__ == '__main__':
         group=args.group,
         beta=args.beta,
         gamma=args.gamma,
-        save_path_head=args.save_path_head
+        save_path_head=args.save_path_head,
+        init_data_path=args.init_data_path
     )
 
     print('****** Data Generated ******')
