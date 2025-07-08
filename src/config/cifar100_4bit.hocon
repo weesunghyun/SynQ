@@ -1,3 +1,4 @@
+quant_method = "qat"
 #  ------------ General options ----------------------------------------
 model_name = resnet20_cifar100
 generateDataPath = "/home/project/dfq/SynQ/src/data/cifar/resnet20_cifar100_refined_gaussian_hardsample_beta0.1_gamma0.5_group"

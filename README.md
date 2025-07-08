@@ -41,6 +41,12 @@ bash run_imagenet.sh
 
 To run with different settings, modify the config files under `src/config/` or the arguments passed into `src/data_generate/generate_data.py` and `src/main_direct.py`.
 
+### PTQ vs QAT
+The configuration field `quant_method` selects the quantization strategy.
+Set it to `"ptq"` to apply a data‑free PTQ calibration with learnable rounding
+(`AdaRound` style) or `"qat"` for standard quantization‑aware training.  All
+provided configs default to `"qat"`.
+
 ### Code Description
 
 This repository is written based on the codes from **ZeroQ** (CVPR '20) \[[Github](https://github.com/amirgholami/ZeroQ)\], **HAST** (CVPR '23) \[[Github](https://github.com/lihuantong/HAST)\], and a PyTorch implementation of Grad-CAM and Grad-CAM++ \[[Github](https://github.com/1Konny/gradcam_plus_plus-pytorch)\].

@@ -149,6 +149,40 @@ class Trainer:
             self.cam_teacher = GradCAMpp(self.teacher_dict, True)
         self.update_cam()
 
+    def ptq_calibrate(self, direct_dataload):
+        """Calibrate rounding parameters for PTQ."""
+        self.model.train()
+        for p in self.model.parameters():
+            if p.requires_grad:
+                p.requires_grad = False
+        opt_params = []
+        for m in self.model.modules():
+            if hasattr(m, 'alpha') or hasattr(m, 'scale'):
+                for n in ['alpha', 'scale']:
+                    if hasattr(m, n):
+                        param = getattr(m, n)
+                        param.requires_grad = True
+                        opt_params.append(param)
+        optimizer = torch.optim.Adam(opt_params, lr=1e-2)
+        iterator = iter(direct_dataload)
+        for _ in range(100):
+            try:
+                images, _ = next(iterator)
+            except StopIteration:
+                iterator = iter(direct_dataload)
+                images, _ = next(iterator)
+            images = images.to(self.args.local_rank)
+            with torch.no_grad():
+                target = self.model_teacher(images)
+            output = self.model(images)
+            loss = self.mse_loss(output, target)
+            optimizer.zero_grad()
+            loss.backward()
+            optimizer.step()
+        for m in self.model.modules():
+            if hasattr(m, 'round_mode'):
+                m.round_mode = 'hard'
+
     def apply_filters(self, images, d_zero=80):
         """
         Apply low-pass filter to images
