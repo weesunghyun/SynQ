@@ -70,6 +70,7 @@ class Option(NetOption):
         # ---------- Quantization options ---------------------------------------
         self.qw = self.conf['qw']
         self.qa = self.conf['qa']
+        self.quant_method = self.conf.get('quant_method', 'qat')
 
         # ----------KD options ---------------------------------------------
         self.temperature = self.conf['temperature']
