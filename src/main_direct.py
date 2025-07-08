@@ -53,7 +53,6 @@ from options import Option
 from dataloader import DataLoader
 from trainer_direct import Trainer
 from quantization_utils.quant_modules import QuantAct, QuantLinear, QuantConv2d
-from quantization_utils import AdaRoundConv2d, AdaRoundLinear
 from utils.get_resnet34 import resnet34_get_model
 from pytorchcv.model_provider import get_model as ptcv_get_model
 from conditional_batchnorm import CategoricalConditionalBatchNorm2d
@@ -548,20 +547,12 @@ class ExperimentDesign:
         weight_bit = self.settings.qw
         act_bit = self.settings.qa
 
-        use_ptq = getattr(self.settings, 'quant_method', 'qat') == 'ptq'
-
         if isinstance(model, nn.Conv2d):
-            if use_ptq:
-                quant_mod = AdaRoundConv2d(weight_bit=weight_bit)
-            else:
-                quant_mod = QuantConv2d(weight_bit=weight_bit)
+            quant_mod = QuantConv2d(weight_bit=weight_bit)
             quant_mod.set_param(model)
             return quant_mod
         if isinstance(model, nn.Linear):
-            if use_ptq:
-                quant_mod = AdaRoundLinear(weight_bit=weight_bit)
-            else:
-                quant_mod = QuantLinear(weight_bit=weight_bit)
+            quant_mod = QuantLinear(weight_bit=weight_bit)
             quant_mod.set_param(model)
             return quant_mod
         if isinstance(model, (nn.ReLU, nn.ReLU6)):
@@ -643,11 +634,6 @@ class ExperimentDesign:
                                                       batch_size= bs,
                                                       sampler = DistributedSampler(dataset))
         test_error, _, test5_error = self.trainer.test(epoch=-1)
-
-        if self.settings.quant_method == 'ptq':
-            self.trainer.ptq_calibrate(direct_dataload)
-            test_error, _, test5_error = self.trainer.test(epoch=0)
-            return test_error, test5_error
 
         try:
             for epoch in range(self.start_epoch, self.settings.num_epochs):
