@@ -1,4 +1,3 @@
-quant_method = "qat"
 #  ------------ General options ----------------------------------------
 model_name = resnet18
 generateDataPath = "./data/tissuemnist/resnet18_tissuemnist_refined_gaussian_hardsample_beta0.1_gamma0.5_group"
