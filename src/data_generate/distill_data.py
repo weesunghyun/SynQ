@@ -111,7 +111,7 @@ def generate_calib_centers(args, teacher_model, beta_ce = 5):
             gaussian_data = torch.randn(shape).cuda()
             gaussian_data.requires_grad = True
             # optimizer = optim.Adam([gaussian_data], lr=0.5)
-            optimizer = optim.Adam([gaussian_data], lr=0.1)
+            optimizer = optim.Adam([gaussian_data], lr=0.05)
             scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer,
                                                                 # min_lr=0.05,
                                                                 min_lr=1e-4,
@@ -434,13 +434,13 @@ class DistillData:
                 imgs = [init_dataset[idx][0] for idx in indices]
                 gaussian_data = torch.stack(imgs).cuda()
             else:
-                gaussian_data = torch.randn(shape).cuda()
+                gaussian_data = torch.randn(shape).cuda()/5.0
             gaussian_data.requires_grad = True
             # optimizer = optim.Adam([gaussian_data], lr=0.5)
-            optimizer = optim.Adam([gaussian_data], lr=0.05)
+            optimizer = optim.Adam([gaussian_data], lr=0.005)
             scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer,
                                                                 # min_lr=0.05,
-                                                                min_lr=0.005,
+                                                                min_lr=1e-4,
                                                                 verbose=False,
                                                                 patience=50)
 
