@@ -36,6 +36,7 @@ import torch
 from torch import nn
 from torch import optim
 from torch.nn import functional as F
+from collections import defaultdict
 
 from torchvision import transforms
 from torchvision import datasets
@@ -178,6 +179,7 @@ def generate_calib_centers(args, teacher_model, beta_ce = 5):
                     if torch.isnan(gaussian_data).any() or torch.isinf(gaussian_data).any():
                         print("NaN detected in gaussian_data, reinitializing")
                         gaussian_data.normal_()
+                        optimizer.state = defaultdict(dict)
 
                 scheduler.step(total_loss.item())
 
@@ -526,6 +528,7 @@ class DistillData:
                     if torch.isnan(gaussian_data).any() or torch.isinf(gaussian_data).any():
                         print("NaN detected in gaussian_data, reinitializing")
                         gaussian_data.normal_()
+                        optimizer.state = defaultdict(dict)
 
                 scheduler.step(total_loss.item())
 
