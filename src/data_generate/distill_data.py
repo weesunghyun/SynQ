@@ -36,6 +36,7 @@ import torch
 from torch import nn
 from torch import optim
 from torch.nn import functional as F
+from collections import defaultdict
 
 from torchvision import transforms
 from torchvision import datasets
@@ -170,6 +171,16 @@ def generate_calib_centers(args, teacher_model, beta_ce = 5):
                 total_loss.backward()
                 torch.nn.utils.clip_grad_norm_(gaussian_data, max_norm=1.0)
                 optimizer.step()
+
+                # Clamp values to avoid extremely large magnitudes
+                with torch.no_grad():
+                    gaussian_data.clamp_(-10, 10)
+                    # Reinitialize if NaN or Inf appears
+                    if torch.isnan(gaussian_data).any() or torch.isinf(gaussian_data).any():
+                        print("NaN detected in gaussian_data, reinitializing")
+                        gaussian_data.normal_()
+                        optimizer.state = defaultdict(dict)
+
                 scheduler.step(total_loss.item())
 
             with torch.no_grad():
@@ -510,6 +521,15 @@ class DistillData:
                 total_loss.backward()
                 torch.nn.utils.clip_grad_norm_(gaussian_data, max_norm=1.0)
                 optimizer.step()
+
+                # Clamp values to avoid extremely large magnitudes
+                with torch.no_grad():
+                    gaussian_data.clamp_(-10, 10)
+                    if torch.isnan(gaussian_data).any() or torch.isinf(gaussian_data).any():
+                        print("NaN detected in gaussian_data, reinitializing")
+                        gaussian_data.normal_()
+                        optimizer.state = defaultdict(dict)
+
                 scheduler.step(total_loss.item())
 
 
