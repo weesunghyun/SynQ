@@ -439,8 +439,8 @@ class ExperimentDesign:
         self._set_dataloader()
         self._set_model()
         self._replace()
-		self.logger.info(self.model_teacher)
-		self.logger.info(self.model)
+        self.logger.info(self.model_teacher)
+        self.logger.info(self.model)
         self._set_trainer()
 
     def _set_gpu(self):
