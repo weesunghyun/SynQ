@@ -59,6 +59,7 @@ from conditional_batchnorm import CategoricalConditionalBatchNorm2d
 from tqdm import tqdm
 from collections import OrderedDict
 # from regularizer import get_reg_criterions
+from models import ResNet18, ResNet50
 
 # Classification task datasets from MedMNIST2D
 CLASSIFICATION_DATASETS = {
@@ -165,6 +166,9 @@ def create_generator(options=None, conf_path=None):
 
 	if settings.img_size == 32:
 		return Generator_32(options=options, conf_path=conf_path)
+	elif settings.img_size == 28:
+		# For 28x28 models, use Generator_32 as they have similar architecture
+		return Generator_32(options=options, conf_path=conf_path)
 	elif settings.img_size == 224:
 		return Generator_224(options=options, conf_path=conf_path)
 	# elif image_size == 64:
@@ -189,14 +193,16 @@ class DirectDataset(Dataset):
 
 
         # 이미지 크기 기반으로 transform 설정
-        if settings.img_size == 32:
+        if settings.img_size in [28, 32]:
             self.train_transform = transforms.Compose([
-                transforms.RandomResizedCrop(size=32, scale=(0.5, 1.0)),
+				transforms.RandomResizedCrop(size=settings.img_size, scale=(0.5, 1.0)),
+				transforms.Lambda(lambda x: x.repeat(3, 1, 1) if x.size(0) == 1 else x),  # Convert grayscale to RGB
                 transforms.RandomHorizontalFlip(),
             ])
         else:
             self.train_transform = transforms.Compose([
                 transforms.RandomResizedCrop(size=224, scale=(0.5, 1.0)),
+				transforms.Lambda(lambda x: x.repeat(3, 1, 1) if x.size(0) == 1 else x),  # Convert grayscale to RGB
                 transforms.RandomHorizontalFlip(),
             ])
                
@@ -462,20 +468,33 @@ class ExperimentDesign:
         """
         if self.settings.dataset in medmnist_dataset:
             num_classes = self.settings.num_classes
-            self.model = ptcv_get_model(self.settings.model_name, pretrained=False, num_classes=num_classes)
-            self.model_teacher = ptcv_get_model(self.settings.model_name, pretrained=False, num_classes=num_classes)
-            print(f'****** Model created with {num_classes} classes for {self.settings.dataset} ******')
 
-            # Load checkpoint and handle different formats
-            checkpoint = torch.load(self.settings.pretrained_path, map_location='cpu')
-            if isinstance(checkpoint, dict) and 'net' in checkpoint:
-                converted_state_dict = convert_state_dict(checkpoint['net'], self.model)
+            if self.settings.img_size == 28:
+                self.model = ResNet18(in_channels=3, num_classes=num_classes, img_size=self.settings.img_size)
+                self.model_teacher = ResNet18(in_channels=3, num_classes=num_classes, img_size=self.settings.img_size)
+                print(f'****** 28x28 ResNet18 model created with {num_classes} classes for {self.settings.dataset} ******')
+
+                # Load checkpoint and handle different formats
+                checkpoint = torch.load(self.settings.pretrained_path, map_location='cpu')
+
+                self.model.load_state_dict(checkpoint['net'])
+                self.model_teacher.load_state_dict(checkpoint['net'])
+                print(f'****** Pretrained model {self.settings.pretrained_path} loaded ******')
             else:
-                converted_state_dict = convert_state_dict(checkpoint, self.model)
+                self.model = ptcv_get_model(self.settings.model_name, pretrained=False, num_classes=num_classes)
+                self.model_teacher = ptcv_get_model(self.settings.model_name, pretrained=False, num_classes=num_classes)
+                print(f'****** Model created with {num_classes} classes for {self.settings.dataset} ******')
 
-            self.model.load_state_dict(converted_state_dict)
-            self.model_teacher.load_state_dict(converted_state_dict)
-            print(f'****** Pretrained model {self.settings.pretrained_path} loaded ******')
+                # Load checkpoint and handle different formats
+                checkpoint = torch.load(self.settings.pretrained_path, map_location='cpu')
+                if isinstance(checkpoint, dict) and 'net' in checkpoint:
+                    converted_state_dict = convert_state_dict(checkpoint['net'], self.model)
+                else:
+                    converted_state_dict = convert_state_dict(checkpoint, self.model)
+
+                self.model.load_state_dict(converted_state_dict)
+                self.model_teacher.load_state_dict(converted_state_dict)
+                print(f'****** Pretrained model {self.settings.pretrained_path} loaded ******')
 
         else:
             self.model = ptcv_get_model(self.settings.model_name, pretrained=True)

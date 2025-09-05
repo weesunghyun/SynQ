@@ -69,7 +69,11 @@ def generate_calib_centers(args, teacher_model, beta_ce = 5):
         if model_name in ['resnet20_cifar10','resnet20_cifar100', 'resnet34_cifar100']:
             shape = (args.batch_size, 3, 32, 32)
         else:
-            shape = (args.batch_size, 3, 224, 224)
+            if hasattr(teacher_model, 'img_size'):
+                shape = (args.batch_size, 3, teacher_model.img_size, teacher_model.img_size)
+            else:
+                # 기본적으로 224 크기로 처리
+                shape = (args.batch_size, 3, 224, 224)
 
         teacher_model = teacher_model.cuda()
         teacher_model = teacher_model.eval()
@@ -175,11 +179,11 @@ def generate_calib_centers(args, teacher_model, beta_ce = 5):
                 # Clamp values to avoid extremely large magnitudes
                 with torch.no_grad():
                     gaussian_data.clamp_(-10, 10)
-                    # Reinitialize if NaN or Inf appears
-                    if torch.isnan(gaussian_data).any() or torch.isinf(gaussian_data).any():
-                        print("NaN detected in gaussian_data, reinitializing")
-                        gaussian_data.normal_()
-                        optimizer.state = defaultdict(dict)
+                    # # Reinitialize if NaN or Inf appears
+                    # if torch.isnan(gaussian_data).any() or torch.isinf(gaussian_data).any():
+                    #     print("NaN detected in gaussian_data, reinitializing")
+                    #     gaussian_data.normal_()
+                    #     optimizer.state = defaultdict(dict)
 
                 scheduler.step(total_loss.item())
 
@@ -326,10 +330,10 @@ class DistillData:
         # Prepare dataset for initialization if provided
         init_dataset = None
         if init_data_path is not None:
-            if hasattr(teacher_model, 'img_size') and teacher_model.img_size == 32:
+            if hasattr(teacher_model, 'img_size'):
                 init_transform = transforms.Compose([
-                    transforms.Resize(32),
-                    transforms.CenterCrop(32),
+                    transforms.Resize(teacher_model.img_size),
+                    transforms.CenterCrop(teacher_model.img_size),
                     transforms.ToTensor()
                 ])
             else:
@@ -346,7 +350,10 @@ class DistillData:
         if model_name in ['resnet20_cifar10','resnet20_cifar100', 'resnet34_cifar100']:
             shape = (batch_size, 3, 32, 32)
         else:
-            shape = (batch_size, 3, 224, 224)
+            if hasattr(teacher_model, 'img_size'):
+                shape = (batch_size, 3, teacher_model.img_size, teacher_model.img_size)
+            else:
+                shape = (batch_size, 3, 224, 224)
 
         teacher_model = teacher_model.cuda()
         teacher_model = teacher_model.eval()
@@ -425,7 +432,10 @@ class DistillData:
             if model_name in ['resnet20_cifar10', 'resnet20_cifar100', 'resnet34_cifar100']:
                 rrc = transforms.RandomResizedCrop(size=32,scale=(aug_margin, 1.0))
             else:
-                rrc = transforms.RandomResizedCrop(size=224,scale=(aug_margin, 1.0))
+                if hasattr(teacher_model, 'img_size'):
+                    rrc = transforms.RandomResizedCrop(size=teacher_model.img_size,scale=(aug_margin, 1.0))
+                else:
+                    rrc = transforms.RandomResizedCrop(size=224,scale=(aug_margin, 1.0))
             rhf = transforms.RandomHorizontalFlip()
 
             # gaussian_data = torch.randn(shape).cuda()
@@ -434,13 +444,13 @@ class DistillData:
                 imgs = [init_dataset[idx][0] for idx in indices]
                 gaussian_data = torch.stack(imgs).cuda()
             else:
-                gaussian_data = torch.randn(shape).cuda()/5.0
+                gaussian_data = torch.randn(shape).cuda()/100.0
             gaussian_data.requires_grad = True
-            # optimizer = optim.Adam([gaussian_data], lr=0.5)
-            optimizer = optim.Adam([gaussian_data], lr=0.005)
+            optimizer = optim.Adam([gaussian_data], lr=0.05)
+            # optimizer = optim.Adam([gaussian_data], lr=1e-10)
             scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer,
-                                                                # min_lr=0.05,
-                                                                min_lr=1e-4,
+                                                                min_lr=0.005,
+                                                                # min_lr=1e-4,
                                                                 verbose=False,
                                                                 patience=50)
 
@@ -525,10 +535,10 @@ class DistillData:
                 # Clamp values to avoid extremely large magnitudes
                 with torch.no_grad():
                     gaussian_data.clamp_(-10, 10)
-                    if torch.isnan(gaussian_data).any() or torch.isinf(gaussian_data).any():
-                        print("NaN detected in gaussian_data, reinitializing")
-                        gaussian_data.normal_()
-                        optimizer.state = defaultdict(dict)
+                    # if torch.isnan(gaussian_data).any() or torch.isinf(gaussian_data).any():
+                    #     print("NaN detected in gaussian_data, reinitializing")
+                    #     gaussian_data.normal_()
+                    #     optimizer.state = defaultdict(dict)
 
                 scheduler.step(total_loss.item())
 
