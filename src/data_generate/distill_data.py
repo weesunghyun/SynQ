@@ -493,7 +493,15 @@ class DistillData:
                 # loss_target = beta * F.kl_div(input=F.log_softmax(output, dim=1),
                 #                               target=labels_mask.to(output.device),
                 #                               reduction='batchmean')
-                loss_target = beta * ((1-p).pow(gamma) * ce_loss(output, labels)).mean()
+                # INT-LOSS-04: pow() 함수의 기울기 NaN 문제 최종 해결
+                # p값이 1.0이 되는 것을 방지하여 1-p가 0이 되지 않도록 원천 차단
+                p_clamped = p.clamp(max=1.0 - 1e-7) # p의 최댓값을 1보다 아주 약간 작게 제한
+
+                if gamma == 0:
+                    loss_target = beta * (ce_loss(output, labels)).mean()
+                else:
+                    # 안정화된 p_clamped 값을 사용하여 loss 계산
+                    loss_target = beta * ((1 - p_clamped).pow(gamma) * ce_loss(output, labels)).mean()                
 
                 mean_loss = torch.zeros(1).cuda()
                 var_loss = torch.zeros(1).cuda()
