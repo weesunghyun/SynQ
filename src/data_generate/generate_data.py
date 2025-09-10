@@ -31,6 +31,7 @@ import torch
 torch.backends.cudnn.enabled = False
 
 from distill_data import generate_calib_centers, DistillData
+from dsv_synthesis import generate_dsv_data
 from collections import OrderedDict
 from pytorchcv.model_provider import get_model as ptcv_get_model
 
@@ -104,6 +105,15 @@ def arg_parse():
                         type=float,
                         default=0.0,
                         help='gamma')
+    parser.add_argument('--synth_method',
+                        type=str,
+                        default='model_inversion',
+                        choices=['model_inversion', 'dsv'],
+                        help='data synthesis method')
+    parser.add_argument('--dsv_iter', type=int, default=200,
+                        help='number of iterations for DSV synthesis')
+    parser.add_argument('--dsv_lr', type=float, default=0.1,
+                        help='learning rate for DSV synthesis')
     parser.add_argument('--save_path_head',
                         type=str,
                         default='',
@@ -250,19 +260,22 @@ if __name__ == '__main__':
         model = ptcv_get_model(args.model, pretrained=True)
         print('****** Full precision model loaded ******')
 
-    if args.lbns:
-        args.calib_centers = generate_calib_centers(args, model.cuda())
+    if args.synth_method == 'model_inversion':
+        if args.lbns:
+            args.calib_centers = generate_calib_centers(args, model.cuda())
 
-    DD = DistillData(args)
-    dataloader = DD.get_distil_data(
-        model_name=args.model,
-        teacher_model=model.cuda(),
-        batch_size=args.batch_size,
-        group=args.group,
-        beta=args.beta,
-        gamma=args.gamma,
-        save_path_head=args.save_path_head,
-        init_data_path=args.init_data_path
-    )
+        DD = DistillData(args)
+        DD.get_distil_data(
+            model_name=args.model,
+            teacher_model=model.cuda(),
+            batch_size=args.batch_size,
+            group=args.group,
+            beta=args.beta,
+            gamma=args.gamma,
+            save_path_head=args.save_path_head,
+            init_data_path=args.init_data_path
+        )
+    else:
+        generate_dsv_data(args, model.cuda())
 
     print('****** Data Generated ******')

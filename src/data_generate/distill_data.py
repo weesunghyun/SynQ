@@ -105,9 +105,16 @@ def generate_calib_centers(args, teacher_model, beta_ce = 5):
             teacher_running_mean.append(module.running_mean)
             teacher_running_var.append(module.running_var)
 
+        bn_modules = []
         for _, m in teacher_model.named_modules():
             if isinstance(m, nn.BatchNorm2d):
                 m.register_forward_hook(hook_fn_forward)
+                bn_modules.append(m)
+
+        # Temporarily increase BatchNorm epsilon for stability
+        bn_eps_backup = [m.eps for m in bn_modules]
+        for m in bn_modules:
+            m.eps = max(m.eps, 1e-3)
 
         total_time = time.time()
 
@@ -165,7 +172,14 @@ def generate_calib_centers(args, teacher_model, beta_ce = 5):
                 mean_loss = mean_loss / len(mean_list)
                 var_loss = var_loss / len(mean_list)
 
-                total_loss = mean_loss + var_loss + loss_target
+                # variance floor loss to prevent collapse
+                var_floor = 1e-6
+                var_floor_loss = torch.zeros(1).cuda()
+                for v in var_list:
+                    var_floor_loss += torch.mean(torch.clamp(var_floor - v, min=0.0))
+                var_floor_loss = var_floor_loss / len(var_list)
+
+                total_loss = mean_loss + var_loss + loss_target + 0.01 * var_floor_loss
 
                 print(i, it, 'lr', optimizer.state_dict()['param_groups'][0]['lr'],
                     'mean_loss', mean_loss.item(), 'var_loss',
@@ -173,6 +187,8 @@ def generate_calib_centers(args, teacher_model, beta_ce = 5):
 
                 optimizer.zero_grad()
                 total_loss.backward()
+                if gaussian_data.grad is not None:
+                    gaussian_data.grad.data.clamp_(-1, 1)
                 torch.nn.utils.clip_grad_norm_(gaussian_data, max_norm=1.0)
                 optimizer.step()
 
@@ -205,6 +221,11 @@ def generate_calib_centers(args, teacher_model, beta_ce = 5):
 
         print(f"Total time for {num_classes//args.batch_size} "
               f"batches: {time.time()-total_time:.2f} sec.")
+
+        # Restore BatchNorm eps values
+        for m, eps in zip(bn_modules, bn_eps_backup):
+            m.eps = eps
+
         check_path(calib_path)
         with open(calib_path, "wb") as fp:
             pickle.dump(refined_gaussian, fp, protocol=pickle.HIGHEST_PROTOCOL)
@@ -371,11 +392,18 @@ class DistillData:
         ce_loss = nn.CrossEntropyLoss(reduction='none').cuda()
         mse_loss = nn.MSELoss().cuda()
 
+        bn_modules = []
         for _, m in teacher_model.named_modules():
             if isinstance(m, nn.BatchNorm2d):
                 m.register_forward_hook(self.hook_fn_forward)
+                bn_modules.append(m)
 
-                total_calib_means = []
+        # Temporarily boost BatchNorm epsilon for numerical stability
+        bn_eps_backup = [m.eps for m in bn_modules]
+        for m in bn_modules:
+            m.eps = max(m.eps, 1e-3)
+
+        total_calib_means = []
         total_calib_vars = []
         sum_means_squared = []
         num_centers = self.num_classes // batch_size + (self.num_classes % batch_size != 0)
@@ -518,10 +546,17 @@ class DistillData:
                 mean_loss = mean_loss / len(self.mean_list)
                 var_loss = var_loss / len(self.mean_list)
 
+                # variance floor loss using BN feature variances
+                var_floor = 1e-6
+                var_floor_loss = torch.zeros(1).cuda()
+                for v in self.var_list:
+                    var_floor_loss += torch.mean(torch.clamp(var_floor - v, min=0.0))
+                var_floor_loss = var_floor_loss / len(self.var_list)
+
                 if self.args.lbns:
-                    total_loss = 0.4 * (mean_loss + var_loss) + loss_target + 0.02 * lbns_loss
+                    total_loss = 0.4 * (mean_loss + var_loss) + loss_target + 0.02 * lbns_loss + 0.01 * var_floor_loss
                 else:
-                    total_loss = mean_loss + var_loss + loss_target
+                    total_loss = mean_loss + var_loss + loss_target + 0.01 * var_floor_loss
 
                 print(f"Batch: {i}, Iter: {it}, LR: {optimizer.state_dict()['param_groups'][0]['lr']:.4f}, "
                       f"Mean Loss: {mean_loss.item():.4f}, Var Loss: {var_loss.item():.4f}, "
@@ -529,6 +564,8 @@ class DistillData:
 
                 optimizer.zero_grad()
                 total_loss.backward()
+                if gaussian_data.grad is not None:
+                    gaussian_data.grad.data.clamp_(-1, 1)
                 torch.nn.utils.clip_grad_norm_(gaussian_data, max_norm=1.0)
                 optimizer.step()
 
@@ -563,6 +600,11 @@ class DistillData:
 
         print(f"Total time for {self.args.num_data//batch_size} "
               f"batches: {time.time()-total_time:.2f} sec.")
+
+        # Restore BatchNorm eps values
+        for m, eps in zip(bn_modules, bn_eps_backup):
+            m.eps = eps
+
         with open(data_path, "wb") as fp:  # Pickling
             pickle.dump(refined_gaussian, fp, protocol=pickle.HIGHEST_PROTOCOL)
         with open(label_path, "wb") as fp:  # Pickling
